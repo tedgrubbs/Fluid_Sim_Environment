@@ -1,3 +1,5 @@
 Main
 *.dat
 .ipynb_checkpoints
+*.csv
+*.json
