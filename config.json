@@ -1,0 +1,18 @@
+{
+	"grid_size_x": 64,
+	"grid_size_y": 64,
+	"real_size_x": 1.0,
+	"real_size_y": 1.0,
+	"frame_rate": 0,
+	"dt": 1e-05,
+	"dx": 0.015625,
+	"dy": 0.015625,
+	"viscosity": 1.8e-05,
+	"c": 347.0,
+	"force": 0.0,
+	"run_graphics": 1,
+	"render_grid_size_x": 512,
+	"render_grid_size_y": 512,
+	"tolerance": 0.0,
+	"max_run_time": 100000
+}
