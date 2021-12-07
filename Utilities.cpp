@@ -10,6 +10,9 @@ using namespace std;
 double MIN_RENDERABLE_SPEED = -DBL_MIN;
 double MAX_RENDERABLE_SPEED = DBL_MAX;
 
+double particle_x = 0.5;
+double particle_y = 0.8;
+
 // convert coordinate to opengl system
 inline float convert_x_to_opengl(unsigned int x) {
   return x / (float) sim.grid_size_x;
@@ -103,44 +106,57 @@ void render() {
 
   glBegin(GL_POINTS);
 
-  // cout << sim.u_max << endl;
+// cout << sim.u_max << endl;
 
-    for (unsigned int x=0; x<sim.grid_size_x; ++x) {
-      for (unsigned int y=0; y<sim.grid_size_y; ++y) {
+  for (unsigned int x=0; x<sim.grid_size_x; ++x) {
+    for (unsigned int y=0; y<sim.grid_size_y; ++y) {
 
-        if (sim.boundary[x][y] == 0) {
-          color_val_x = (fabs(sim.u[x][y]) - sim.u_min) / (sim.u_max - sim.u_min);
-          color_val_y = (fabs(sim.v[x][y]) - sim.v_min) / (sim.v_max - sim.v_min);
+      if (sim.boundary[x][y] == 0) {
+        color_val_x = (fabs(sim.u[x][y]) - sim.u_min) / (sim.u_max - sim.u_min);
+        color_val_y = (fabs(sim.v[x][y]) - sim.v_min) / (sim.v_max - sim.v_min);
 
-          if (fabs(sim.u[x][y]) < MIN_RENDERABLE_SPEED) {
-            color_val_x = 0.;
-          }
-          if (fabs(sim.v[x][y]) < MIN_RENDERABLE_SPEED) {
-            color_val_y = 0.;
-          }
-          if (fabs(sim.u[x][y]) > MAX_RENDERABLE_SPEED) {
-            color_val_x = 1;
-          }
-          if (fabs(sim.v[x][y]) > MAX_RENDERABLE_SPEED) {
-            color_val_y = 1;
-          }
-
-          glColor4f(color_val_x, 0., color_val_y, 1);
-          glVertex2f(convert_x_to_opengl(x), convert_y_to_opengl(y));
+        if (fabs(sim.u[x][y]) < MIN_RENDERABLE_SPEED) {
+          color_val_x = 0.;
         }
+        if (fabs(sim.v[x][y]) < MIN_RENDERABLE_SPEED) {
+          color_val_y = 0.;
+        }
+        if (fabs(sim.u[x][y]) > MAX_RENDERABLE_SPEED) {
+          color_val_x = 1;
+        }
+        if (fabs(sim.v[x][y]) > MAX_RENDERABLE_SPEED) {
+          color_val_y = 1;
+        }
+
+        glColor4f(color_val_x, 0., color_val_y, 1);
+        glVertex2f(convert_x_to_opengl(x), convert_y_to_opengl(y));
       }
     }
+  }
 
-    // draws boundary. Have to draw this on top of other plot for it to show up properly
-    glColor3ub(169, 169, 169);
-    for (unsigned int x=0; x<sim.grid_size_x; ++x) {
-      for (unsigned int y=0; y<sim.grid_size_y; ++y) {
-        if (sim.boundary[x][y] != 0) {
-          glVertex2f(convert_x_to_opengl(x), convert_y_to_opengl(y));
-        }
+  // draws boundary. Have to draw this on top of other plot for it to show up properly
+  glColor3ub(169, 169, 169);
+  for (unsigned int x=0; x<sim.grid_size_x; ++x) {
+    for (unsigned int y=0; y<sim.grid_size_y; ++y) {
+      if (sim.boundary[x][y] != 0) {
+        glVertex2f(convert_x_to_opengl(x), convert_y_to_opengl(y));
       }
     }
+  }
   glEnd();
+
+  int particle_x_pos =  particle_x*sim.grid_size_x;
+  int particle_y_pos =  particle_y*sim.grid_size_y;
+
+  particle_x = particle_x + sim.dt*sim.u[particle_x_pos][particle_y_pos];
+  particle_y = particle_y + sim.dt*sim.v[particle_x_pos][particle_y_pos];
+
+  glPointSize(16);
+  glBegin(GL_POINTS);
+  glColor3ub(0, 255, 0);
+  glVertex2f(particle_x, particle_y);
+  glEnd();
+
 
   glFinish();
 
@@ -250,7 +266,7 @@ void read_config() {
 
   sim.mach = 0.1;
   sim.Re = 400.;
-  sim.u_lid = 1.0;
+  sim.u_lid = 2.0;
 
   sim.a1 = sim.dt / sim.dx;
   sim.a2 = sim.dt / sim.dx;
@@ -272,7 +288,6 @@ void read_config() {
   info_struct.render_grid_size_x = stoi(config["render_grid_size_x"]);
   info_struct.render_grid_size_y = stoi(config["render_grid_size_y"]);
   info_struct.max_run_time = stoi(config["max_run_time"]);
-
 
   json_file.close();
 
