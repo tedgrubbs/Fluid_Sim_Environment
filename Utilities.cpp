@@ -1,54 +1,66 @@
 #include "Utilities.h"
 
-struct Sim_Struct sim_struct;
+struct Sim_Struct sim;
 struct Info_Struct info_struct;
 
 size_t TIMESTEP = 0;
 
 using namespace std;
 
-double MIN_RENDERABLE_SPEED = 0.;
-double MAX_RENDERABLE_SPEED = 1e-6;
+double MIN_RENDERABLE_SPEED = -DBL_MIN;
+double MAX_RENDERABLE_SPEED = DBL_MAX;
 
 // convert coordinate to opengl system
 inline float convert_x_to_opengl(unsigned int x) {
-  return x / (float) sim_struct.grid_size_x;
+  return x / (float) sim.grid_size_x;
 }
 
 inline float convert_y_to_opengl(unsigned int x) {
-  return x / (float) sim_struct.grid_size_y;
+  return x / (float) sim.grid_size_y;
+}
+
+template <typename grid_type>
+grid_type ** create2dArray(unsigned int sizex, unsigned int sizey) {
+  grid_type ** v;
+  v = (grid_type **) calloc(sizex, sizeof(grid_type *));
+  for(int i=0; i<sizex; ++i) {
+    v[i] = (grid_type *) calloc(sizey, sizeof(grid_type));
+  }
+  return v;
 }
 
 void record_speed(size_t x, size_t y) {
-  sim_struct.speed[s_i(x,y)] = sqrt(pow(sim_struct.u[s_i(x,y)], 2.) + pow(sim_struct.v[s_i(x,y)], 2.));
+  sim.speed[x][y] = sqrt(pow(sim.u[x][y], 2.) + pow(sim.v[x][y], 2.));
 
-  if (sim_struct.u[s_i(x,y)] > sim_struct.u_max && sim_struct.u[s_i(x,y)] < MAX_RENDERABLE_SPEED) {
-    sim_struct.u_max = fabs(sim_struct.u[s_i(x,y)]);
+  if (sim.u[x][y] > sim.u_max && sim.u[x][y] < MAX_RENDERABLE_SPEED) {
+    sim.u_max = fabs(sim.u[x][y]);
   }
 
-  if (sim_struct.u[s_i(x,y)] < sim_struct.u_min && sim_struct.u[s_i(x,y)] > MIN_RENDERABLE_SPEED) {
-    sim_struct.u_min = fabs(sim_struct.u[s_i(x,y)]);
+  if (sim.u[x][y] < sim.u_min && sim.u[x][y] > MIN_RENDERABLE_SPEED) {
+    sim.u_min = fabs(sim.u[x][y]);
   }
 
-  if (sim_struct.v[s_i(x,y)] > sim_struct.v_max && sim_struct.v[s_i(x,y)] < MAX_RENDERABLE_SPEED) {
-    sim_struct.v_max = fabs(sim_struct.v[s_i(x,y)]);
+  if (sim.v[x][y] > sim.v_max && sim.v[x][y] < MAX_RENDERABLE_SPEED) {
+    sim.v_max = fabs(sim.v[x][y]);
   }
 
-  if (sim_struct.v[s_i(x,y)] < sim_struct.v_min && sim_struct.v[s_i(x,y)] > MIN_RENDERABLE_SPEED) {
-    sim_struct.v_min = fabs(sim_struct.v[s_i(x,y)]);
+  if (sim.v[x][y] < sim.v_min && sim.v[x][y] > MIN_RENDERABLE_SPEED) {
+    sim.v_min = fabs(sim.v[x][y]);
   }
 }
 
 void check_residual() {
   double res_sum = 0.;
-  for (int i=0; i<sim_struct.grid_size_x*sim_struct.grid_size_y; i++) {
-    res_sum += fabs(sim_struct.speed[i] - sim_struct.residual[i]);
-    sim_struct.residual[i] = sim_struct.speed[i];
+  for (int i=0; i<sim.grid_size_x; ++i) {
+    for (int j=0; j<sim.grid_size_y; ++j) {
+      res_sum += fabs(sim.speed[i][j] - sim.residual[i][j]);
+      sim.residual[i][j] = sim.speed[i][j];
+    }
   }
 
   std::cout << "Residual at time " << TIMESTEP << " " << res_sum << std::endl;
 
-  if (res_sum < sim_struct.tolerance) {
+  if (res_sum < sim.tolerance) {
     save_speed_to_file();
     std::cout << "Convergence found. Exiting.\n";
     exit(0);
@@ -62,17 +74,19 @@ void save_speed_to_file() {
   vmag_fp = fopen("Data_Output/V_mag_file.csv","w");
   u_fp = fopen("Data_Output/U_file.csv","w");
   v_fp = fopen("Data_Output/V_file.csv","w");
-  for (unsigned int x=0; x<sim_struct.grid_size_x; x++) {
-    for (unsigned int y=0; y<sim_struct.grid_size_y; y++) {
-      fprintf(vmag_fp, "%.10lf", sim_struct.speed[s_i(x,y)]);
-      fprintf(u_fp, "%.10lf", sim_struct.u[s_i(x,y)]);
-      fprintf(v_fp, "%.10lf", sim_struct.v[s_i(x,y)]);
-      if (y == sim_struct.grid_size_y-1 && x == sim_struct.grid_size_x-1) {
-        // print nothing at end
+  for (unsigned int y=0; y<sim.grid_size_y; ++y) {
+    for (unsigned int x=0; x<sim.grid_size_x; ++x) {
+      fprintf(vmag_fp, "%.10lf", sim.speed[x][y]);
+      fprintf(u_fp, "%.10lf", sim.u[x][y]);
+      fprintf(v_fp, "%.10lf", sim.v[x][y]);
+      if (x == (sim.grid_size_x-1) ) {
+        fprintf(u_fp, "\n" );
+        fprintf(v_fp, "\n" );
+        fprintf(vmag_fp, "\n" );
       } else {
-        fprintf(vmag_fp, "," );
-        fprintf(u_fp, "," );
-        fprintf(v_fp, "," );
+        fprintf(u_fp, " " );
+        fprintf(v_fp, " " );
+        fprintf(vmag_fp, " " );
       }
     }
   }
@@ -89,25 +103,25 @@ void render() {
 
   glBegin(GL_POINTS);
 
-  // cout << sim_struct.u_max << endl;
+  // cout << sim.u_max << endl;
 
-    for (unsigned int x=0; x<sim_struct.grid_size_x; x++) {
-      for (unsigned int y=0; y<sim_struct.grid_size_y; y++) {
+    for (unsigned int x=0; x<sim.grid_size_x; ++x) {
+      for (unsigned int y=0; y<sim.grid_size_y; ++y) {
 
-        if (sim_struct.boundary[s_i(x, y)] == 0) {
-          color_val_x = (fabs(sim_struct.u[s_i(x, y)]) - sim_struct.u_min) / (sim_struct.u_max - sim_struct.u_min);
-          color_val_y = (fabs(sim_struct.v[s_i(x, y)]) - sim_struct.v_min) / (sim_struct.v_max - sim_struct.v_min);
+        if (sim.boundary[x][y] == 0) {
+          color_val_x = (fabs(sim.u[x][y]) - sim.u_min) / (sim.u_max - sim.u_min);
+          color_val_y = (fabs(sim.v[x][y]) - sim.v_min) / (sim.v_max - sim.v_min);
 
-          if (fabs(sim_struct.u[s_i(x, y)]) < MIN_RENDERABLE_SPEED) {
+          if (fabs(sim.u[x][y]) < MIN_RENDERABLE_SPEED) {
             color_val_x = 0.;
           }
-          if (fabs(sim_struct.v[s_i(x, y)]) < MIN_RENDERABLE_SPEED) {
+          if (fabs(sim.v[x][y]) < MIN_RENDERABLE_SPEED) {
             color_val_y = 0.;
           }
-          if (fabs(sim_struct.u[s_i(x, y)]) > MAX_RENDERABLE_SPEED) {
+          if (fabs(sim.u[x][y]) > MAX_RENDERABLE_SPEED) {
             color_val_x = 1;
           }
-          if (fabs(sim_struct.v[s_i(x, y)]) > MAX_RENDERABLE_SPEED) {
+          if (fabs(sim.v[x][y]) > MAX_RENDERABLE_SPEED) {
             color_val_y = 1;
           }
 
@@ -119,14 +133,9 @@ void render() {
 
     // draws boundary. Have to draw this on top of other plot for it to show up properly
     glColor3ub(169, 169, 169);
-    for (unsigned int x=0; x<sim_struct.grid_size_x; x++) {
-      for (unsigned int y=0; y<sim_struct.grid_size_y; y++) {
-        unsigned int right = (x+1) % sim_struct.grid_size_x;
-        unsigned int left = (sim_struct.grid_size_x + x - 1) % sim_struct.grid_size_x;
-
-        unsigned int up = (y+1) % sim_struct.grid_size_y;
-        unsigned int down = (sim_struct.grid_size_y + y - 1) % sim_struct.grid_size_y;
-        if (sim_struct.boundary[s_i(x,y)] != 0) {
+    for (unsigned int x=0; x<sim.grid_size_x; ++x) {
+      for (unsigned int y=0; y<sim.grid_size_y; ++y) {
+        if (sim.boundary[x][y] != 0) {
           glVertex2f(convert_x_to_opengl(x), convert_y_to_opengl(y));
         }
       }
@@ -145,37 +154,21 @@ void leave_glut(unsigned char key, int xx, int yy) {
   }
 }
 
-double * create_double_grid() {
-  return (double *) malloc(sim_struct.grid_size_x * sim_struct.grid_size_y * sizeof(double));
-}
-
-int * create_int_grid() {
-  return (int *) malloc(sim_struct.grid_size_x * sim_struct.grid_size_y * sizeof(int));
-}
-
 void read_grid_and_init_struct() {
 
-  sim_struct.rho = create_double_grid();
-  sim_struct.u = create_double_grid();
-  sim_struct.rho_u = create_double_grid();
-  sim_struct.v = create_double_grid();
-  sim_struct.rho_v = create_double_grid();
-  sim_struct.rho_s = create_double_grid();
-  sim_struct.u_s = create_double_grid();
-  sim_struct.rho_u_s = create_double_grid();
-  sim_struct.v_s = create_double_grid();
-  sim_struct.speed = create_double_grid();
-  sim_struct.rho_v_s = create_double_grid();
-  sim_struct.E2 = create_double_grid();
-  sim_struct.E3 = create_double_grid();
-  sim_struct.F2 = create_double_grid();
-  sim_struct.F3 = create_double_grid();
-  sim_struct.E2_s = create_double_grid();
-  sim_struct.E3_s = create_double_grid();
-  sim_struct.F2_s = create_double_grid();
-  sim_struct.F3_s = create_double_grid();
-  sim_struct.boundary = create_int_grid();
-  sim_struct.residual = create_double_grid();
+  sim.r = create2dArray<double>(sim.grid_size_x, sim.grid_size_y);
+  sim.u = create2dArray<double>(sim.grid_size_x, sim.grid_size_y);
+  sim.ru = create2dArray<double>(sim.grid_size_x, sim.grid_size_y);
+  sim.v = create2dArray<double>(sim.grid_size_x, sim.grid_size_y);
+  sim.rv = create2dArray<double>(sim.grid_size_x, sim.grid_size_y);
+  sim.rs = create2dArray<double>(sim.grid_size_x, sim.grid_size_y);
+  sim.us = create2dArray<double>(sim.grid_size_x, sim.grid_size_y);
+  sim.rus = create2dArray<double>(sim.grid_size_x, sim.grid_size_y);
+  sim.vs = create2dArray<double>(sim.grid_size_x, sim.grid_size_y);
+  sim.speed = create2dArray<double>(sim.grid_size_x, sim.grid_size_y);
+  sim.rvs = create2dArray<double>(sim.grid_size_x, sim.grid_size_y);
+  sim.boundary = create2dArray<int>(sim.grid_size_x, sim.grid_size_y);
+  sim.residual = create2dArray<double>(sim.grid_size_x, sim.grid_size_y);
 
 
   FILE * csv;
@@ -208,12 +201,12 @@ void read_grid_and_init_struct() {
     tok = strtok(NULL, ",\n");
     temp_boundary = atof(tok);
 
-    sim_struct.rho[s_i(temp_xi, temp_yi)] = temp_rho;
-    sim_struct.u[s_i(temp_xi, temp_yi)] = temp_u;
-    sim_struct.rho_u[s_i(temp_xi, temp_yi)] = temp_rho * temp_u;
-    sim_struct.v[s_i(temp_xi, temp_yi)] = temp_v;
-    sim_struct.rho_v[s_i(temp_xi, temp_yi)] = temp_rho * temp_v;
-    sim_struct.boundary[s_i(temp_xi, temp_yi)] = temp_boundary;
+    sim.r[temp_xi][temp_yi] = temp_rho;
+    sim.u[temp_xi][temp_yi] = temp_u;
+    sim.ru[temp_xi][temp_yi] = temp_rho * temp_u;
+    sim.v[temp_xi][temp_yi] = temp_v;
+    sim.rv[temp_xi][temp_yi] = temp_rho * temp_v;
+    sim.boundary[temp_xi][temp_yi] = temp_boundary;
 
   }
   fclose(csv);
@@ -247,17 +240,34 @@ void read_config() {
     }
   }
 
-  sim_struct.grid_size_x = stoi(config["grid_size_x"]);
-  sim_struct.grid_size_y = stoi(config["grid_size_y"]);
-  sim_struct.dt = stod(config["dt"]);
-  sim_struct.dx = stod(config["dx"]);
-  sim_struct.dy = stod(config["dy"]);
-  sim_struct.mu = stod(config["viscosity"]);
-  sim_struct.c = stod(config["c"]);
+  sim.grid_size_x = stoi(config["grid_size_x"]);
+  sim.grid_size_y = stoi(config["grid_size_y"]);
+  sim.dt = stod(config["dt"]);
+  sim.dx = stod(config["dx"]);
+  sim.dy = stod(config["dy"]);
+  sim.mu = stod(config["viscosity"]);
+  sim.c = stod(config["c"]);
+
+  sim.mach = 0.1;
+  sim.Re = 400.;
+  sim.u_lid = 1.0;
+
+  sim.a1 = sim.dt / sim.dx;
+  sim.a2 = sim.dt / sim.dx;
+  sim.a3 = sim.dt / (sim.dx*sim.mach*sim.mach);
+  sim.a4 = sim.dt / (sim.dy*sim.mach*sim.mach);
+  sim.a5 = 4. * sim.dt / (3.*sim.Re*sim.dx*sim.dx);
+  sim.a6 = sim.dt / (sim.Re*sim.dy*sim.dy);
+  sim.a7 = sim.dt / (sim.Re*sim.dx*sim.dx);
+  sim.a8 = 4.*sim.dt / (3.*sim.Re*sim.dy*sim.dy);
+  sim.a9 = sim.dt / (12. * sim.Re * sim.dx*sim.dy);
+  sim.a10 = 2.*(sim.a5+sim.a6);
+  sim.a11 = 2.*(sim.a7+sim.a8);
+
   info_struct.framerate = stoi(config["frame_rate"]);
-  sim_struct.force = stod(config["force"]);
+  sim.force = stod(config["force"]);
   info_struct.run_graphics = stoi(config["run_graphics"]);
-  sim_struct.tolerance = stod(config["tolerance"]);
+  sim.tolerance = stod(config["tolerance"]);
   info_struct.MAX_THREADS = omp_get_max_threads();
   info_struct.render_grid_size_x = stoi(config["render_grid_size_x"]);
   info_struct.render_grid_size_y = stoi(config["render_grid_size_y"]);
@@ -270,5 +280,5 @@ void read_config() {
 
 // scaler_index
 inline size_t s_i(size_t x, size_t y) {
-  return (x*sim_struct.grid_size_y + y);
+  return (x*sim.grid_size_y + y);
 }

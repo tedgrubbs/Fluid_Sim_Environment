@@ -1,7 +1,7 @@
 #include "Utilities.h"
 #include "Solver.h"
 
-extern struct Sim_Struct sim_struct;
+extern struct Sim_Struct sim;
 extern struct Info_Struct info_struct;
 
 extern size_t TIMESTEP;
@@ -13,14 +13,14 @@ void update(int value) {
 
 
 
-  sim_struct.u_max = -DBL_MAX;
-  sim_struct.u_min = DBL_MAX;
-  sim_struct.v_max = -DBL_MAX;
-  sim_struct.v_min = DBL_MAX;
+  sim.u_max = -DBL_MAX;
+  sim.u_min = DBL_MAX;
+  sim.v_max = -DBL_MAX;
+  sim.v_min = DBL_MAX;
 
   run_sim_timestep();
 
-  if ((TIMESTEP+1) % 100 == 0 && sim_struct.tolerance != 0.) {
+  if ((TIMESTEP+1) % 100 == 0 && sim.tolerance != 0.) {
     check_residual();
   }
   TIMESTEP += 1;
@@ -49,15 +49,15 @@ int main(int argc, char const *argv[]) {
   read_grid_and_init_struct();
 
   printf("Framerate: %d\n", info_struct.framerate);
-  printf("Grid size: %d x %d\n", sim_struct.grid_size_x, sim_struct.grid_size_y);
-  printf("Delta t: %lf\n", sim_struct.dt);
-  printf("Delta x: %lf\n", sim_struct.dx);
-  printf("Delta y: %lf\n", sim_struct.dy);
-  printf("Viscosity: %lf\n", sim_struct.mu);
-  printf("Speed of sound: %lf\n", sim_struct.c);
+  printf("Grid size: %d x %d\n", sim.grid_size_x, sim.grid_size_y);
+  printf("Delta t: %lf\n", sim.dt);
+  printf("Delta x: %lf\n", sim.dx);
+  printf("Delta y: %lf\n", sim.dy);
+  printf("Viscosity: %lf\n", sim.mu);
+  printf("Speed of sound: %lf\n", sim.c);
   printf("%d threads detected\n", info_struct.MAX_THREADS);
 
-  printf("Maximum allowed timestep by Courant stability: %lf\n", sim_struct.dx/sim_struct.c);
+  printf("Maximum allowed timestep by Courant stability: %lf\n", sim.dx/sim.c);
 
   if (!info_struct.run_graphics) {
     while (true) {
@@ -80,8 +80,8 @@ int main(int argc, char const *argv[]) {
     glutKeyboardFunc(leave_glut);
     glOrtho(0.0, 1.0, 0.0, 1.0, -1.0, 1.0);
 
-    float p_size_x = (float)glutGet(GLUT_WINDOW_WIDTH) / (float)sim_struct.grid_size_x ;
-    float p_size_y = (float)glutGet(GLUT_WINDOW_HEIGHT) / (float)sim_struct.grid_size_y ;
+    float p_size_x = (float)glutGet(GLUT_WINDOW_WIDTH) / (float)sim.grid_size_x ;
+    float p_size_y = (float)glutGet(GLUT_WINDOW_HEIGHT) / (float)sim.grid_size_y ;
     if (p_size_x > p_size_y) {
       std::cout << "Points size: " << p_size_x << std::endl;
       glPointSize(p_size_x);

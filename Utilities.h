@@ -31,33 +31,26 @@ struct Sim_Struct {
   double dy;
   double mu;
   double c;
+  double mach;
+  double Re;
+  double a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11;
 
-  double * rho;
-  double * u;
-  double * rho_u;
-  double * v;
-  double * rho_v;
+  double ** r;
+  double ** u;
+  double ** ru;
+  double ** v;
+  double ** rv;
 
-  double * speed;
+  double ** speed;
 
-  double * rho_s;
-  double * u_s;
-  double * rho_u_s;
-  double * v_s;
-  double * rho_v_s;
+  double ** rs;
+  double ** us;
+  double ** rus;
+  double ** vs;
+  double ** rvs;
 
-  // 2nd and 3rd components of E and F vectors as defined by MacCormack stencil
-  double * E2;
-  double * E3;
-  double * F2;
-  double * F3;
-
-  double * E2_s;
-  double * E3_s;
-  double * F2_s;
-  double * F3_s;
-
-  int * boundary;
+  int ** boundary;
+  double u_lid;
 
   // Max and min of each variable for easy normalization in rendering
   double rho_max;
@@ -69,7 +62,7 @@ struct Sim_Struct {
 
   double force; // constant force term applied to all cells
 
-  double * residual; // stores previous velocity field in order to calculate change between timesteps for convergence studies.
+  double ** residual; // stores previous velocity field in order to calculate change between timesteps for convergence studies.
   double tolerance;
 
 };

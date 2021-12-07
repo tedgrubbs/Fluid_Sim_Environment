@@ -6,8 +6,8 @@ plt.style.use('dark_background')
 
 # Use this to quickly redefine grid and config variables
 
-grid_size_x = 64
-grid_size_y = 64
+grid_size_x = 256
+grid_size_y = 256
 rho = np.zeros((grid_size_x,grid_size_y))
 u = np.zeros((grid_size_x,grid_size_y))
 v = np.zeros((grid_size_x,grid_size_y))
@@ -27,6 +27,7 @@ boundary[-1,:-1] = 1
 
 # Initializing density everywhere
 rho[:,:] = 1.
+u[:,-1] = 1.
 
 output = pd.DataFrame(columns=['xi','yi','rho','u','v','boundary'])
 
@@ -47,7 +48,7 @@ config['grid_size_y'] = grid_size_y
 config['real_size_x'] = 1.
 config['real_size_y'] = 1.
 config['frame_rate'] = 0
-config['dt'] = 1e-5
+config['dt'] = 0.000175
 config['dx'] = 1./grid_size_x*config['real_size_x']
 config['dy'] = 1./grid_size_y*config['real_size_x']
 config['viscosity'] = 1.8e-5
