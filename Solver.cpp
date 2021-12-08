@@ -160,7 +160,6 @@ void run_sim_timestep() {
     for ( j=0; j<sim.grid_size_y; ++j) {
       sim.u[i][j] = sim.ru[i][j] / sim.r[i][j];
       sim.v[i][j] = sim.rv[i][j] / sim.r[i][j];
-      record_speed(i,j);
     }
   }
 

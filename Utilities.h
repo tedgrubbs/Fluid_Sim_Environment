@@ -11,7 +11,9 @@
 #include <map>
 #include <chrono>
 #include <omp.h>
-#include <GL/freeglut.h>
+
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
 void render();
 void leave_glut(unsigned char key, int xx, int yy);
