@@ -1,5 +1,4 @@
-#include "Utilities.h"
-#include "Solver.h"
+#include "Simulation.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -58,7 +57,7 @@ int main(int argc, char const *argv[]) {
 
   begin = std::chrono::high_resolution_clock::now();
 
-  read_config();
+  
   read_grid_and_init_struct();
 
   printf("Framerate: %d\n", info_struct.framerate);

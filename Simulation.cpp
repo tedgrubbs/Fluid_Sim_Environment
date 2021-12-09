@@ -1,24 +1,4 @@
-#include "Utilities.h"
-
-struct Sim_Struct sim;
-struct Info_Struct info_struct;
-
-size_t TIMESTEP = 0;
-
-using namespace std;
-
-double MIN_RENDERABLE_SPEED = 0.;
-double MAX_RENDERABLE_SPEED = DBL_MAX;
-
-
-// convert coordinate to opengl system
-inline float convert_x_to_opengl(unsigned int x) {
-  return x / (float) sim.grid_size_x;
-}
-
-inline float convert_y_to_opengl(unsigned int x) {
-  return x / (float) sim.grid_size_y;
-}
+#include "Simulation.h"
 
 template <typename grid_type>
 grid_type ** create2dArray(unsigned int sizex, unsigned int sizey) {
@@ -28,6 +8,73 @@ grid_type ** create2dArray(unsigned int sizex, unsigned int sizey) {
     v[i] = (grid_type *) calloc(sizey, sizeof(grid_type));
   }
   return v;
+}
+
+template <typename grid_type>
+void delete_2d_Array(grid_type ** v, unsigned int sizex) {
+  for(int i=0; i<sizex; i++) {
+    free(v[i]);
+  }
+  free(v);
+}
+
+Simulation::Simulation() {
+  read_config();
+}
+
+void Simulation::read_config() {
+  map<string,string> config;
+
+  ifstream json_file;
+  json_file.open("config.json");
+
+  string line;
+  string json_var;
+  string json_val;
+
+  while (getline(json_file, line)) {
+    if (line.find("\"") != string::npos) {
+      json_var.assign(line.substr(line.find("\"") + 1, line.find(":") - line.find("\"") - 2));
+      json_val.assign(line.substr(line.find(":") + 1, line.find(",") - line.find(":") - 1 ));
+      config[json_var] = json_val;
+    }
+  }
+
+  sim.grid_size_x = stoi(config["grid_size_x"]);
+  sim.grid_size_y = stoi(config["grid_size_y"]);
+  sim.dt = stod(config["dt"]);
+  sim.dx = stod(config["dx"]);
+  sim.dy = stod(config["dy"]);
+  sim.mu = stod(config["viscosity"]);
+  sim.c = stod(config["c"]);
+
+  sim.mach = 0.1;
+  sim.Re = 400.;
+  sim.u_lid = 2.0;
+
+  sim.a1 = sim.dt / sim.dx;
+  sim.a2 = sim.dt / sim.dx;
+  sim.a3 = sim.dt / (sim.dx*sim.mach*sim.mach);
+  sim.a4 = sim.dt / (sim.dy*sim.mach*sim.mach);
+  sim.a5 = 4. * sim.dt / (3.*sim.Re*sim.dx*sim.dx);
+  sim.a6 = sim.dt / (sim.Re*sim.dy*sim.dy);
+  sim.a7 = sim.dt / (sim.Re*sim.dx*sim.dx);
+  sim.a8 = 4.*sim.dt / (3.*sim.Re*sim.dy*sim.dy);
+  sim.a9 = sim.dt / (12. * sim.Re * sim.dx*sim.dy);
+  sim.a10 = 2.*(sim.a5+sim.a6);
+  sim.a11 = 2.*(sim.a7+sim.a8);
+
+  info_struct.framerate = stoi(config["frame_rate"]);
+  sim.force = stod(config["force"]);
+  info_struct.run_graphics = stoi(config["run_graphics"]);
+  sim.tolerance = stod(config["tolerance"]);
+  info_struct.MAX_THREADS = omp_get_max_threads();
+  if (info_struct.run_graphics) info_struct.MAX_THREADS -= 2; // need to leave some cpu threads open when running graphics to make it smoother.
+  info_struct.render_grid_size_x = stoi(config["render_grid_size_x"]);
+  info_struct.render_grid_size_y = stoi(config["render_grid_size_y"]);
+  info_struct.max_run_time = stoi(config["max_run_time"]);
+
+  json_file.close();
 }
 
 void record_speed(size_t x, size_t y) {
@@ -159,63 +206,6 @@ string remove_quotes(string s) {
     new_s.assign(new_s.substr(0, new_s.find("\"")));
   }
   return new_s;
-}
-
-void read_config() {
-
-  map<string,string> config;
-
-  ifstream json_file;
-  json_file.open("config.json");
-
-  string line;
-  string json_var;
-  string json_val;
-
-  while (getline(json_file, line)) {
-    if (line.find("\"") != string::npos) {
-      json_var.assign(line.substr(line.find("\"") + 1, line.find(":") - line.find("\"") - 2));
-      json_val.assign(line.substr(line.find(":") + 1, line.find(",") - line.find(":") - 1 ));
-      config[json_var] = json_val;
-    }
-  }
-
-  sim.grid_size_x = stoi(config["grid_size_x"]);
-  sim.grid_size_y = stoi(config["grid_size_y"]);
-  sim.dt = stod(config["dt"]);
-  sim.dx = stod(config["dx"]);
-  sim.dy = stod(config["dy"]);
-  sim.mu = stod(config["viscosity"]);
-  sim.c = stod(config["c"]);
-
-  sim.mach = 0.1;
-  sim.Re = 400.;
-  sim.u_lid = 2.0;
-
-  sim.a1 = sim.dt / sim.dx;
-  sim.a2 = sim.dt / sim.dx;
-  sim.a3 = sim.dt / (sim.dx*sim.mach*sim.mach);
-  sim.a4 = sim.dt / (sim.dy*sim.mach*sim.mach);
-  sim.a5 = 4. * sim.dt / (3.*sim.Re*sim.dx*sim.dx);
-  sim.a6 = sim.dt / (sim.Re*sim.dy*sim.dy);
-  sim.a7 = sim.dt / (sim.Re*sim.dx*sim.dx);
-  sim.a8 = 4.*sim.dt / (3.*sim.Re*sim.dy*sim.dy);
-  sim.a9 = sim.dt / (12. * sim.Re * sim.dx*sim.dy);
-  sim.a10 = 2.*(sim.a5+sim.a6);
-  sim.a11 = 2.*(sim.a7+sim.a8);
-
-  info_struct.framerate = stoi(config["frame_rate"]);
-  sim.force = stod(config["force"]);
-  info_struct.run_graphics = stoi(config["run_graphics"]);
-  sim.tolerance = stod(config["tolerance"]);
-  info_struct.MAX_THREADS = omp_get_max_threads();
-  if (info_struct.run_graphics) info_struct.MAX_THREADS -= 2; // need to leave some cpu threads open when running graphics to make it smoother.
-  info_struct.render_grid_size_x = stoi(config["render_grid_size_x"]);
-  info_struct.render_grid_size_y = stoi(config["render_grid_size_y"]);
-  info_struct.max_run_time = stoi(config["max_run_time"]);
-
-  json_file.close();
-
 }
 
 // scaler_index

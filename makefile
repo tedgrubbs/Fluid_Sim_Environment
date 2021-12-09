@@ -1,23 +1,23 @@
 LIBS=-fopenmp -L/usr/local/lib -lglfw3 -lrt -lm -ldl -lX11 -lpthread -lxcb -lXau -lXdmcp
 
 
-Main: Main.o Utilities.o Solver.o glad.o
-	ccache g++ -o Main Main.o Utilities.o Solver.o glad.o $(LIBS)
+Main: Main.o Simulation.o MacCormack.o glad.o
+	ccache g++ -o Main Main.o Simulation.o MacCormack.o glad.o $(LIBS)
 
-Utilities.o: Utilities.cpp Utilities.h
-	ccache g++ -c  Utilities.cpp -o Utilities.o -fopenmp
+Simulation.o: Simulation.cpp Simulation.h
+	ccache g++ -c  Simulation.cpp -o Simulation.o -fopenmp
 
-Solver.o: Solver.cpp Solver.h Utilities.h
-	ccache g++ -c  Solver.cpp -o Solver.o -w -fopenmp
+MacCormack.o: MacCormack.cpp Simulation.h
+	ccache g++ -c  MacCormack.cpp -o MacCormack.o -w -fopenmp
 
-Main.o: Main.cpp Utilities.h Solver.h
+Main.o: Main.cpp Simulation.h
 	ccache g++ -c  Main.cpp -o Main.o -fopenmp
 
 glad.o: glad.c
 	ccache g++ -c $(pkg-config --cflags glfw3) glad.c
 
 clean:
-	rm Main.o Solver.o Utilities.o glad.o
+	rm ./*.o
 
 run:
 	./Main
