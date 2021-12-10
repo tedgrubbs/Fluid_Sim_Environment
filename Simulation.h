@@ -15,6 +15,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+using namespace std;
+
 const double MIN_RENDERABLE_SPEED = 0.;
 const double MAX_RENDERABLE_SPEED = DBL_MAX;
 
@@ -69,6 +71,7 @@ class Simulation {
     void read_grid_and_init_struct();
     void read_config();
     void check_residual();
+    void record_speed(size_t x, size_t y);
     void save_speed_to_file();
     inline size_t s_i(size_t x, size_t y);
 

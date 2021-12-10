@@ -46,7 +46,7 @@ void Simulation::run() {
 void Simulation::update() {
   run_solver_step();
 
-  if ((TIMESTEP+1) % 100 == 0 && sim.tolerance != 0.) {
+  if ((TIMESTEP+1) % 100 == 0 && tolerance != 0.) {
     check_residual();
   }
 
@@ -166,6 +166,26 @@ void Simulation::read_grid_and_init_struct() {
     boundary[temp_xi][temp_yi] = temp_boundary;
   }
   fclose(csv);
+}
+
+void Simulation::record_speed(size_t x, size_t y) {
+  speed[x][y] = sqrt(pow(u[x][y], 2.) + pow(v[x][y], 2.));
+
+  if (fabs(u[x][y]) > u_max && fabs(u[x][y]) < MAX_RENDERABLE_SPEED) {
+    u_max = fabs(u[x][y]);
+  }
+
+  if (fabs(u[x][y]) < u_min && fabs(u[x][y]) > MIN_RENDERABLE_SPEED) {
+    u_min = fabs(u[x][y]);
+  }
+
+  if (fabs(v[x][y]) > v_max && fabs(v[x][y]) < MAX_RENDERABLE_SPEED) {
+    v_max = fabs(v[x][y]);
+  }
+
+  if (fabs(v[x][y]) < v_min && fabs(v[x][y]) > MIN_RENDERABLE_SPEED) {
+    v_min = fabs(v[x][y]);
+  }
 }
 
 void Simulation::init_graphics() {
@@ -302,6 +322,8 @@ void Simulation::render() {
 
   float color_val_x;
   float color_val_y;
+  float vertex_data[6*grid_size_x*grid_size_y];
+  
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(color_val_x,color_val_y)
   for ( int x=0; x<grid_size_x; ++x) {
     for ( int y=0; y<grid_size_y; ++y) {
