@@ -33,7 +33,6 @@ void delete_1d_Array(grid_type * v) {
 Simulation::Simulation() {
 
   read_config();
-
   read_grid_and_init_struct();
 
   // printf("Framerate: %d\n", framerate);
@@ -53,16 +52,8 @@ Simulation::Simulation() {
 
 void Simulation::run() {
 
-  std::chrono::high_resolution_clock::time_point begin,end;
-  std::chrono::microseconds duration;
-
   for (TIMESTEP=0; TIMESTEP<max_run_time; ++TIMESTEP) {
-    // begin = std::chrono::high_resolution_clock::now();
     run_solver_step();
-    // end = std::chrono::high_resolution_clock::now();
-    // duration = std::chrono::duration_cast<std::chrono::microseconds>(end - begin);
-    // std::cout << "Runtime: " << duration.count()/1000. << " milliseconds" << std::endl;
-
 
     if ((TIMESTEP+1) % 100 == 0 && tolerance != 0.) check_residual();
     if (run_graphics) {
@@ -70,6 +61,11 @@ void Simulation::run() {
       if (glfwWindowShouldClose(window)) break;
     }
   }
+
+  // Handling end of sim operations
+  save_speed_to_file();
+  
+
 }
 
 void Simulation::read_config() {
@@ -100,7 +96,7 @@ void Simulation::read_config() {
 
   mach = 0.1;
   Re = 400.;
-  u_lid = 2.0;
+  u_lid = 1.0;
 
   framerate = stoi(config["frame_rate"]);
   force = stod(config["force"]);
@@ -276,7 +272,7 @@ int Simulation::init_graphics() {
 
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data)*VERTEX_COUNT, vertex_data, GL_DYNAMIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float)*VERTEX_COUNT, vertex_data, GL_DYNAMIC_DRAW);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0); // position attribute
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // color attribute
@@ -353,7 +349,7 @@ void Simulation::render() {
 
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   void *ptr = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-  memcpy(ptr, vertex_data, sizeof(vertex_data)*VERTEX_COUNT);
+  memcpy(ptr, vertex_data, sizeof(float)*VERTEX_COUNT);
   glUnmapBuffer(GL_ARRAY_BUFFER);
 
   glPointSize(9);
@@ -385,29 +381,29 @@ void Simulation::check_residual() {
 }
 
 void Simulation::save_speed_to_file() {
-  FILE * vmag_fp;
+  FILE * rho_fp;
   FILE * u_fp;
   FILE * v_fp;
-  vmag_fp = fopen("Data_Output/V_mag_file.csv","w");
-  u_fp = fopen("Data_Output/U_file.csv","w");
-  v_fp = fopen("Data_Output/V_file.csv","w");
+  rho_fp = fopen("Data_Output/rho_file.dat","w");
+  u_fp = fopen("Data_Output/U_file.dat","w");
+  v_fp = fopen("Data_Output/V_file.dat","w");
   for (unsigned int y=0; y<grid_size_y; ++y) {
     for (unsigned int x=0; x<grid_size_x; ++x) {
-      fprintf(vmag_fp, "%.10lf", speed[x][y]);
+      fprintf(rho_fp, "%.10lf", r[x][y]);
       fprintf(u_fp, "%.10lf", u[x][y]);
       fprintf(v_fp, "%.10lf", v[x][y]);
       if (x == (grid_size_x-1) ) {
         fprintf(u_fp, "\n" );
         fprintf(v_fp, "\n" );
-        fprintf(vmag_fp, "\n" );
+        fprintf(rho_fp, "\n" );
       } else {
         fprintf(u_fp, " " );
         fprintf(v_fp, " " );
-        fprintf(vmag_fp, " " );
+        fprintf(rho_fp, " " );
       }
     }
   }
-  fclose(vmag_fp);fclose(u_fp);fclose(v_fp);
+  fclose(rho_fp);fclose(u_fp);fclose(v_fp);
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
