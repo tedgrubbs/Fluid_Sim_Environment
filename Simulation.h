@@ -114,6 +114,14 @@ class MacCormack : public Simulation {
   private:
     virtual void run_solver_step();
 
+    double ** rs;
+    double ** us;
+    double ** rus;
+    double ** vs;
+    double ** rvs;
+
+    double a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11;
+
   public:
     MacCormack();
 

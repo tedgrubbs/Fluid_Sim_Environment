@@ -129,12 +129,7 @@ void Simulation::read_grid_and_init_struct() {
   ru = create2dArray<double>(grid_size_x, grid_size_y);
   v = create2dArray<double>(grid_size_x, grid_size_y);
   rv = create2dArray<double>(grid_size_x, grid_size_y);
-  // rs = create2dArray<double>(grid_size_x, grid_size_y);
-  // us = create2dArray<double>(grid_size_x, grid_size_y);
-  // rus = create2dArray<double>(grid_size_x, grid_size_y);
-  // vs = create2dArray<double>(grid_size_x, grid_size_y);
   speed = create2dArray<double>(grid_size_x, grid_size_y);
-  // rvs = create2dArray<double>(grid_size_x, grid_size_y);
   boundary = create2dArray<int>(grid_size_x, grid_size_y);
   residual = create2dArray<double>(grid_size_x, grid_size_y);
 
