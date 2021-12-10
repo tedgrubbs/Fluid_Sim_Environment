@@ -85,7 +85,6 @@ class Simulation {
     void save_speed_to_file();
     inline size_t s_i(size_t x, size_t y);
 
-    void update();
     virtual void run_solver_step()=0;
 
   protected:

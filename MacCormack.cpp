@@ -1,7 +1,7 @@
 #include "Simulation.h"
 
-unsigned int i;
-unsigned int j;
+size_t i;
+size_t j;
 
 MacCormack::MacCormack() : Simulation() {
 

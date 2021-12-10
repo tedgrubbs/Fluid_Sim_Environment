@@ -53,17 +53,14 @@ Simulation::Simulation() {
 
 void Simulation::run() {
   for (TIMESTEP=0; TIMESTEP<max_run_time; ++TIMESTEP) {
-    update();
-    if (glfwWindowShouldClose(window)) break;
+    run_solver_step();
+
+    if ((TIMESTEP+1) % 100 == 0 && tolerance != 0.) check_residual();
+    if (run_graphics) {
+      render();
+      if (glfwWindowShouldClose(window)) break;
+    }
   }
-}
-
-void Simulation::update() {
-  run_solver_step();
-
-  if ((TIMESTEP+1) % 100 == 0 && tolerance != 0.) check_residual();
-  if (run_graphics) render();
-
 }
 
 void Simulation::read_config() {
@@ -112,7 +109,7 @@ void Simulation::read_config() {
   force = stod(config["force"]);
   run_graphics = stoi(config["run_graphics"]);
   tolerance = stod(config["tolerance"]);
-  MAX_THREADS = omp_get_max_threads();
+  MAX_THREADS = omp_get_max_threads()-4;
   if (run_graphics) MAX_THREADS -= 2; // need to leave some cpu threads open when running graphics to make it smoother.
   render_grid_size_x = stoi(config["render_grid_size_x"]);
   render_grid_size_y = stoi(config["render_grid_size_y"]);
