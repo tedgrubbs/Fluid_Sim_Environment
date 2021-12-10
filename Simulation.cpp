@@ -36,15 +36,15 @@ Simulation::Simulation() {
 
   read_grid_and_init_struct();
 
-  printf("Framerate: %d\n", framerate);
-  printf("Grid size: %d x %d\n", grid_size_x, grid_size_y);
-  printf("Delta t: %lf\n", dt);
-  printf("Delta x: %lf\n", dx);
-  printf("Delta y: %lf\n", dy);
-  printf("Viscosity: %lf\n", mu);
-  printf("Speed of sound: %lf\n", c);
-  printf("%d threads detected\n", MAX_THREADS);
-  printf("Maximum allowed timestep by Courant stability: %lf\n", dx/c);
+  // printf("Framerate: %d\n", framerate);
+  // printf("Grid size: %d x %d\n", grid_size_x, grid_size_y);
+  // printf("Delta t: %lf\n", dt);
+  // printf("Delta x: %lf\n", dx);
+  // printf("Delta y: %lf\n", dy);
+  // printf("Viscosity: %lf\n", mu);
+  // printf("Speed of sound: %lf\n", c);
+  // printf("%d threads detected\n", MAX_THREADS);
+  // printf("Maximum allowed timestep by Courant stability: %lf\n", dx/c);
 
   if (run_graphics) {
     init_graphics();
@@ -57,11 +57,11 @@ void Simulation::run() {
   std::chrono::microseconds duration;
 
   for (TIMESTEP=0; TIMESTEP<max_run_time; ++TIMESTEP) {
-    begin = std::chrono::high_resolution_clock::now();
+    // begin = std::chrono::high_resolution_clock::now();
     run_solver_step();
-    end = std::chrono::high_resolution_clock::now();
-    duration = std::chrono::duration_cast<std::chrono::microseconds>(end - begin);
-    std::cout << "Runtime: " << duration.count()/1000. << " milliseconds" << std::endl;
+    // end = std::chrono::high_resolution_clock::now();
+    // duration = std::chrono::duration_cast<std::chrono::microseconds>(end - begin);
+    // std::cout << "Runtime: " << duration.count()/1000. << " milliseconds" << std::endl;
 
 
     if ((TIMESTEP+1) % 100 == 0 && tolerance != 0.) check_residual();
