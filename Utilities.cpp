@@ -208,7 +208,7 @@ void read_config() {
   sim.force = stod(config["force"]);
   info_struct.run_graphics = stoi(config["run_graphics"]);
   sim.tolerance = stod(config["tolerance"]);
-  info_struct.MAX_THREADS = omp_get_max_threads();
+  info_struct.MAX_THREADS = omp_get_max_threads()-4;
   if (info_struct.run_graphics) info_struct.MAX_THREADS -= 2; // need to leave some cpu threads open when running graphics to make it smoother.
   info_struct.render_grid_size_x = stoi(config["render_grid_size_x"]);
   info_struct.render_grid_size_y = stoi(config["render_grid_size_y"]);
