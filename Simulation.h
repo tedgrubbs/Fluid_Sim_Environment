@@ -20,29 +20,21 @@ using namespace std;
 const double MIN_RENDERABLE_SPEED = 0.;
 const double MAX_RENDERABLE_SPEED = DBL_MAX;
 
-const char *vertexShaderSource ="#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "layout (location = 1) in vec3 aColor;\n"
-    "out vec3 ourColor;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(aPos, 1.0);\n"
-    "   ourColor = aColor;\n"
-    "}\0";
-
-const char *fragmentShaderSource = "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "in vec3 ourColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = vec4(ourColor, 1.0f);\n"
-    "}\n\0";
-
 template <typename grid_type>
 grid_type ** create2dArray(unsigned int sizex, unsigned int sizey);
 
 template <typename grid_type>
+grid_type * create1dArray(unsigned int size);
+
+template <typename grid_type>
 void delete_2d_Array(grid_type ** v, unsigned int sizex);
+
+template <typename grid_type>
+void delete_1d_Array(grid_type * v);
+
+void leave_glut(unsigned char key, int xx, int yy);
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void processInput(GLFWwindow *window);
 
 class Simulation {
   private:
@@ -61,12 +53,30 @@ class Simulation {
     unsigned int max_run_time;
     size_t TIMESTEP;
 
-    void init_graphics();
+    // Graphics functions and persistent variables
+    int init_graphics();
     void render();
-    void leave_glut(unsigned char key, int xx, int yy);
-    void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-    void processInput(GLFWwindow *window);
     unsigned int VBO, VAO;
+    unsigned int VERTEX_COUNT;
+    float * vertex_data;
+    GLFWwindow * window;
+    const char * vertexShaderSource ="#version 330 core\n"
+        "layout (location = 0) in vec3 aPos;\n"
+        "layout (location = 1) in vec3 aColor;\n"
+        "out vec3 ourColor;\n"
+        "void main()\n"
+        "{\n"
+        "   gl_Position = vec4(aPos, 1.0);\n"
+        "   ourColor = aColor;\n"
+        "}\0";
+
+    const char * fragmentShaderSource = "#version 330 core\n"
+        "out vec4 FragColor;\n"
+        "in vec3 ourColor;\n"
+        "void main()\n"
+        "{\n"
+        "   FragColor = vec4(ourColor, 1.0f);\n"
+        "}\n\0";
 
     void read_grid_and_init_struct();
     void read_config();

@@ -11,6 +11,13 @@ grid_type ** create2dArray(unsigned int sizex, unsigned int sizey) {
 }
 
 template <typename grid_type>
+grid_type * create1dArray(unsigned int size) {
+  grid_type * v;
+  v = (grid_type *) calloc(size, sizeof(grid_type));
+  return v;
+}
+
+template <typename grid_type>
 void delete_2d_Array(grid_type ** v, unsigned int sizex) {
   for(int i=0; i<sizex; i++) {
     free(v[i]);
@@ -18,8 +25,15 @@ void delete_2d_Array(grid_type ** v, unsigned int sizex) {
   free(v);
 }
 
+template <typename grid_type>
+void delete_1d_Array(grid_type * v) {
+  free(v);
+}
+
 Simulation::Simulation() {
+
   read_config();
+
   read_grid_and_init_struct();
 
   printf("Framerate: %d\n", framerate);
@@ -40,19 +54,15 @@ Simulation::Simulation() {
 void Simulation::run() {
   for (TIMESTEP=0; TIMESTEP<max_run_time; ++TIMESTEP) {
     update();
+    if (glfwWindowShouldClose(window)) break;
   }
 }
 
 void Simulation::update() {
   run_solver_step();
 
-  if ((TIMESTEP+1) % 100 == 0 && tolerance != 0.) {
-    check_residual();
-  }
-
-  if (run_graphics) {
-    render();
-  }
+  if ((TIMESTEP+1) % 100 == 0 && tolerance != 0.) check_residual();
+  if (run_graphics) render();
 
 }
 
@@ -188,7 +198,7 @@ void Simulation::record_speed(size_t x, size_t y) {
   }
 }
 
-void Simulation::init_graphics() {
+int Simulation::init_graphics() {
   // GL initialization
 
   // double particle_x = 0.9;
@@ -203,7 +213,7 @@ void Simulation::init_graphics() {
   glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
   glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
 
-  GLFWwindow* window = glfwCreateWindow(render_grid_size_x, render_grid_size_y, "BIG BOY", NULL, NULL);
+  window = glfwCreateWindow(render_grid_size_x, render_grid_size_y, "BIG BOY", NULL, NULL);
   if (window == NULL) {
     std::cout << "Failed to create GLFW window" << std::endl;
     glfwTerminate();
@@ -260,16 +270,14 @@ void Simulation::init_graphics() {
   glDeleteShader(fragmentShader);
 
   // Setting up vertex buffers
-  float vertex_data[6*grid_size_x*grid_size_y]; //(float *) calloc(6*grid_size_x*grid_size_y, sizeof(float));;
-  // only need to define x and y coordinates
+  VERTEX_COUNT = 6*grid_size_x*grid_size_y;
+  vertex_data = create1dArray<float>(VERTEX_COUNT);
+
+  // only need to define x and y coordinates bc calloc
   for (int x=0; x<grid_size_x; ++x) {
     for (int y=0; y<grid_size_y; ++y) {
       vertex_data[(x*grid_size_x+y)*6 + 0] = ((float) x / (float) (grid_size_x-1)) * (1.f - -1.f) + -1.f;
       vertex_data[(x*grid_size_x+y)*6 + 1] = ((float) y / (float) (grid_size_y-1)) * (1.f - -1.f) + -1.f;
-      vertex_data[(x*grid_size_x+y)*6 + 2] = 0.f;
-      vertex_data[(x*grid_size_x+y)*6 + 3] = 0.f;
-      vertex_data[(x*grid_size_x+y)*6 + 4] = 0.f;
-      vertex_data[(x*grid_size_x+y)*6 + 5] = 0.f;
     }
   }
 
@@ -279,23 +287,25 @@ void Simulation::init_graphics() {
 
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), vertex_data, GL_DYNAMIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data)*VERTEX_COUNT, vertex_data, GL_DYNAMIC_DRAW);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0); // position attribute
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // color attribute
   glEnableVertexAttribArray(1);
 
   glUseProgram(shaderProgram);
-  glfwSwapInterval(0);
+  glfwSwapInterval(framerate);
 
-
-  // glDeleteVertexArrays(1, &VAO);
-  // glDeleteBuffers(1, &VBO);
-  // glDeleteProgram(shaderProgram);
-  // glfwTerminate();
+  return 0;
 }
 
 void Simulation::render() {
+  if (glfwWindowShouldClose(window)) {
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glfwTerminate();
+    return;
+  }
   u_max = -DBL_MAX;
   u_min = DBL_MAX;
   v_max = -DBL_MAX;
@@ -322,8 +332,7 @@ void Simulation::render() {
 
   float color_val_x;
   float color_val_y;
-  float vertex_data[6*grid_size_x*grid_size_y];
-  
+
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(color_val_x,color_val_y)
   for ( int x=0; x<grid_size_x; ++x) {
     for ( int y=0; y<grid_size_y; ++y) {
@@ -355,7 +364,7 @@ void Simulation::render() {
 
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   void *ptr = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-  memcpy(ptr, vertex_data, sizeof(vertex_data));
+  memcpy(ptr, vertex_data, sizeof(vertex_data)*VERTEX_COUNT);
   glUnmapBuffer(GL_ARRAY_BUFFER);
 
   glPointSize(9);
@@ -366,19 +375,9 @@ void Simulation::render() {
   glfwPollEvents();
 }
 
-void Simulation::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-  // make sure the viewport matches the new window dimensions; note that width and
-  // height will be significantly larger than specified on retina displays.
-  glViewport(0, 0, width, height);
-}
 
-void Simulation::processInput(GLFWwindow *window) {
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-      glfwSetWindowShouldClose(window, true);
-  }
-}
 
-void check_residual() {
+void Simulation::check_residual() {
   double res_sum = 0.;
   for (int i=0; i<grid_size_x; ++i) {
     for (int j=0; j<grid_size_y; ++j) {
@@ -396,7 +395,7 @@ void check_residual() {
   }
 }
 
-void save_speed_to_file() {
+void Simulation::save_speed_to_file() {
   FILE * vmag_fp;
   FILE * u_fp;
   FILE * v_fp;
@@ -422,6 +421,18 @@ void save_speed_to_file() {
   fclose(vmag_fp);fclose(u_fp);fclose(v_fp);
 }
 
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+  // make sure the viewport matches the new window dimensions; note that width and
+  // height will be significantly larger than specified on retina displays.
+  glViewport(0, 0, width, height);
+}
+
+void processInput(GLFWwindow *window) {
+  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+      glfwSetWindowShouldClose(window, true);
+  }
+}
+
 string remove_quotes(string s) {
   string new_s(s);
   if (new_s.find("\"") != string::npos) {
@@ -432,6 +443,6 @@ string remove_quotes(string s) {
 }
 
 // scaler_index
-inline size_t s_i(size_t x, size_t y) {
-  return (x*grid_size_y + y);
-}
+// inline size_t s_i(size_t x, size_t y) {
+//   return (x*grid_size_y + y);
+// }

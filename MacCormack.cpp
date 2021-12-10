@@ -6,7 +6,6 @@ size_t j;
 MacCormack::MacCormack() : Simulation() {};
 
 void MacCormack::run_solver_step() {
-  cout << "Stepping\n";
 }
 //
 // void run_sim_timestep() {
