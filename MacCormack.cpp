@@ -1,7 +1,5 @@
 #include "Simulation.h"
 
-size_t i;
-size_t j;
 
 MacCormack::MacCormack() : Simulation() {
 

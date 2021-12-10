@@ -121,6 +121,10 @@ class MacCormack : public Simulation {
 
     double a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11;
 
+    // iteration variables defined here is faster
+    size_t i;
+    size_t j;
+
   public:
     MacCormack();
 
