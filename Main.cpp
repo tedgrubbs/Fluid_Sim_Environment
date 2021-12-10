@@ -35,11 +35,9 @@ std::chrono::high_resolution_clock::time_point begin,end;
 std::chrono::microseconds duration;
 
 void update(int value) {
-  begin = std::chrono::high_resolution_clock::now();
+
   run_sim_timestep();
-  end = std::chrono::high_resolution_clock::now();
-  duration = std::chrono::duration_cast<std::chrono::microseconds>(end - begin);
-  std::cout << "Runtime: " << duration.count()/1000. << " milliseconds" << std::endl;
+
 
   if ((TIMESTEP+1) % 100 == 0 && sim.tolerance != 0.) {
     check_residual();
@@ -47,7 +45,9 @@ void update(int value) {
   TIMESTEP += 1;
 
   if (TIMESTEP == info_struct.max_run_time) {
-
+    end = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(end - begin);
+    std::cout << "Runtime: " << duration.count()/1000. << " milliseconds" << std::endl;
     save_speed_to_file();
     exit(0);
   }
@@ -57,21 +57,21 @@ void update(int value) {
 
 int main(int argc, char const *argv[]) {
 
-
+  begin = std::chrono::high_resolution_clock::now();
 
   read_config();
   read_grid_and_init_struct();
 
-  printf("Framerate: %d\n", info_struct.framerate);
-  printf("Grid size: %d x %d\n", sim.grid_size_x, sim.grid_size_y);
-  printf("Delta t: %lf\n", sim.dt);
-  printf("Delta x: %lf\n", sim.dx);
-  printf("Delta y: %lf\n", sim.dy);
-  printf("Viscosity: %lf\n", sim.mu);
-  printf("Speed of sound: %lf\n", sim.c);
-  printf("%d threads detected\n", info_struct.MAX_THREADS);
-
-  printf("Maximum allowed timestep by Courant stability: %lf\n", sim.dx/sim.c);
+  // printf("Framerate: %d\n", info_struct.framerate);
+  // printf("Grid size: %d x %d\n", sim.grid_size_x, sim.grid_size_y);
+  // printf("Delta t: %lf\n", sim.dt);
+  // printf("Delta x: %lf\n", sim.dx);
+  // printf("Delta y: %lf\n", sim.dy);
+  // printf("Viscosity: %lf\n", sim.mu);
+  // printf("Speed of sound: %lf\n", sim.c);
+  // printf("%d threads detected\n", info_struct.MAX_THREADS);
+  //
+  // printf("Maximum allowed timestep by Courant stability: %lf\n", sim.dx/sim.c);
 
   if (!info_struct.run_graphics) {
     while (true) {
