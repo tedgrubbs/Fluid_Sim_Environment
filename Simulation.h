@@ -78,4 +78,6 @@ struct Info_Struct {
   unsigned int max_run_time;
 };
 
+void run_sim_timestep();
+
 #endif
