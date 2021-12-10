@@ -3,3 +3,4 @@ Main
 .ipynb_checkpoints
 *.csv
 *.json
+*.o
