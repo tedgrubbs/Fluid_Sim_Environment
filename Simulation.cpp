@@ -102,18 +102,6 @@ void Simulation::read_config() {
   Re = 400.;
   u_lid = 2.0;
 
-  // a1 = dt / dx;
-  // a2 = dt / dx;
-  // a3 = dt / (dx*mach*mach);
-  // a4 = dt / (dy*mach*mach);
-  // a5 = 4. * dt / (3.*Re*dx*dx);
-  // a6 = dt / (Re*dy*dy);
-  // a7 = dt / (Re*dx*dx);
-  // a8 = 4.*dt / (3.*Re*dy*dy);
-  // a9 = dt / (12. * Re * dx*dy);
-  // a10 = 2.*(a5+a6);
-  // a11 = 2.*(a7+a8);
-
   framerate = stoi(config["frame_rate"]);
   force = stod(config["force"]);
   run_graphics = stoi(config["run_graphics"]);
