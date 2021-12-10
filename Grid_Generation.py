@@ -6,8 +6,8 @@ plt.style.use('dark_background')
 
 # Use this to quickly redefine grid and config variables
 
-grid_size_x = 64
-grid_size_y = 64
+grid_size_x = 64+2
+grid_size_y = 64+2
 rho = np.zeros((grid_size_x,grid_size_y))
 u = np.zeros((grid_size_x,grid_size_y))
 v = np.zeros((grid_size_x,grid_size_y))
@@ -17,13 +17,21 @@ for i in range(grid_size_x):
     for j in range(grid_size_y):
         indices[i,j] = [i,j]
 
-# Top and bottom walls
-boundary[:,0] = 1
-boundary[:,-1] = 2
+# Bottom wall
+boundary[:,0] = -1
+boundary[:,1] = 1
 
-# left and right walls
-boundary[0,:-1] = 1
-boundary[-1,:-1] = 1
+# Top wall
+boundary[:,-1] = -1
+boundary[:,-2] = 2
+
+# left wall
+boundary[0,:] = -1
+boundary[1,1:-2] = 1
+
+# right wall
+boundary[-1,:] = -1
+boundary[-2,1:-2] = 1
 
 # Initializing density everywhere
 rho[:,:] = 1.

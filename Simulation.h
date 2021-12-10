@@ -125,6 +125,12 @@ class MacCormack : public Simulation {
     size_t i;
     size_t j;
 
+    // defining array of functions to handle different regions separately
+    void (MacCormack:: * func_ptr[3])(size_t x, size_t y);
+    void free_flow_star(size_t x, size_t y);
+    void stationary_wall_star(size_t x, size_t y);
+    void moving_wall_star(size_t x, size_t y);
+
   public:
     MacCormack();
 

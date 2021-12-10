@@ -64,7 +64,7 @@ void Simulation::run() {
 
   // Handling end of sim operations
   save_speed_to_file();
-  
+
 
 }
 
@@ -321,6 +321,18 @@ void Simulation::render() {
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(color_val_x,color_val_y)
   for ( int x=0; x<grid_size_x; ++x) {
     for ( int y=0; y<grid_size_y; ++y) {
+
+      if (boundary[x][y] == -1) {
+        vertex_data[(x*grid_size_x+y)*6 + 3] = 84./255.;
+        vertex_data[(x*grid_size_x+y)*6 + 4] = 84./255.;
+        vertex_data[(x*grid_size_x+y)*6 + 5] = 84./255.;
+        continue;
+      } else if (boundary[x][y] == 2) {
+        vertex_data[(x*grid_size_x+y)*6 + 3] = 0.0;
+        vertex_data[(x*grid_size_x+y)*6 + 4] = 1.;
+        vertex_data[(x*grid_size_x+y)*6 + 5] = 0.0;
+        continue;
+      }
 
       color_val_x = (fabs(u[x][y]) - u_min) / (u_max - u_min);
       color_val_y = (fabs(v[x][y]) - v_min) / (v_max - v_min);

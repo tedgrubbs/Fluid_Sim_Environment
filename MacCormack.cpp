@@ -24,76 +24,90 @@ MacCormack::MacCormack() : Simulation() {
   a10 = 2.*(a5+a6);
   a11 = 2.*(a7+a8);
 
-};
+  func_ptr[0] = &MacCormack::free_flow_star;
+  func_ptr[1] = &MacCormack::stationary_wall_star;
+  func_ptr[2] = &MacCormack::moving_wall_star;
+
+}
+
+void MacCormack::free_flow_star(size_t i, size_t j) {
+  rs[i][j] = r[i][j] - a1 * (ru[i+1][j] - ru[i][j]) - a2 * (rv[i][j+1] - rv[i][j]);
+
+  rus[i][j] = ru[i][j] - a3 * (r[i+1][j] - r[i][j])
+    - a1 * (r[i+1][j]*u[i+1][j]*u[i+1][j] - r[i][j]*u[i][j]*u[i][j])
+    - a2 * (r[i][j+1]*u[i][j+1]*v[i][j+1] - r[i][j]*u[i][j]*v[i][j])
+    - a10 * u[i][j]
+    + a5 * (u[i+1][j] + u[i-1][j])
+    + a6 * (u[i][j+1] + u[i][j-1])
+    + a9 * (v[i+1][j+1] + v[i-1][j-1] - v[i+1][j-1] - v[i-1][j+1]);
+
+  rvs[i][j] = rv[i][j] - a4 * (r[i][j+1] - r[i][j])
+    - a1 * (r[i+1][j]*u[i+1][j]*v[i+1][j] - r[i][j]*u[i][j]*v[i][j])
+    - a2 * (r[i][j+1]*v[i][j+1]*v[i][j+1] - r[i][j]*v[i][j]*v[i][j])
+    - a11 * v[i][j]
+    + a7 * (v[i+1][j] + v[i-1][j])
+    + a8 * (v[i][j+1] + v[i][j-1])
+    + a9 * (u[i+1][j+1] + u[i-1][j-1] - u[i+1][j-1] - u[i-1][j+1]);
+}
+
+void MacCormack::stationary_wall_star(size_t i, size_t j) {
+
+  rus[i][j] = 0.;
+  rvs[i][j] = 0.;
+
+  // stationary left wall
+  if (boundary[i-1][j] == -1)  {
+    rs[i][j] = r[i][j] - 0.5*a1 * (-ru[i+2][j] + 4.*ru[i+1][j] - 3.*ru[i][j]);
+  }
+
+  // stationary right wall
+  else if (boundary[i+1][j] == -1) {
+    rs[i][j] = r[i][j] + 0.5*a1 * (-ru[i-2][j] + 4.*ru[i-1][j] - 3.*ru[i][j]);
+  }
+
+  // stationary bottom wall
+  else if (boundary[i][j-1] == -1) {
+    rs[i][j] = r[i][j] - 0.5*a2 * (-rv[i][j+2] + 4.*rv[i][j+1] - 3.*rv[i][j]);
+  }
+
+  // stationary top wall
+  else if (boundary[i][j+1] == -1) {
+    rs[i][j] = r[i][j] + 0.5*a2 * (-rv[i][j-2] + 4.*rv[i][j-1] - 3.*rv[i][j]);
+  }
+
+
+}
+
+// The nature of the upwind difference at the lid edges causes density at the corners to increase indefinitely.
+// I think the density at these corners should not differ too greatly from the neighboring gridpoints so
+// doing an average instead of the original difference makes more physical sense.
+void MacCormack::moving_wall_star(size_t i, size_t j) {
+
+  if (boundary[i][j+1] == -1) {
+
+    if (boundary[i-1][j] == -1) {
+      rs[i][j] = 1./3. * (r[i][j] + r[i+1][j] + r[i][j-1]);
+    } else if (boundary[i+1][j] == -1) {
+      rs[i][j] = 1./3. * (r[i][j] + r[i-1][j] + r[i][j-1]);
+    } else {
+      rs[i][j] = r[i][j] - 0.5*a1*u_lid * (r[i+1][j] - r[i-1][j]) + 0.5*a2 * (-rv[i][j-2] + 4.*rv[i][j-1] - 3.*rv[i][j]);
+    }
+
+    rus[i][j] = u_lid * rs[i][j];
+    rvs[i][j] = 0.;
+  }
+
+}
 
 void MacCormack::run_solver_step() {
 
   // predictor step for interior points
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(i,j)
-  for (i=1; i<(grid_size_x-1); ++i) {
-    for (j=1; j<(grid_size_y-1); ++j) {
-
-      rs[i][j] = r[i][j] - a1 * (ru[i+1][j] - ru[i][j]) - a2 * (rv[i][j+1] - rv[i][j]);
-
-      rus[i][j] = ru[i][j] - a3 * (r[i+1][j] - r[i][j])
-        - a1 * (r[i+1][j]*u[i+1][j]*u[i+1][j] - r[i][j]*u[i][j]*u[i][j])
-        - a2 * (r[i][j+1]*u[i][j+1]*v[i][j+1] - r[i][j]*u[i][j]*v[i][j])
-        - a10 * u[i][j]
-        + a5 * (u[i+1][j] + u[i-1][j])
-        + a6 * (u[i][j+1] + u[i][j-1])
-        + a9 * (v[i+1][j+1] + v[i-1][j-1] - v[i+1][j-1] - v[i-1][j+1]);
-
-      rvs[i][j] = rv[i][j] - a4 * (r[i][j+1] - r[i][j])
-        - a1 * (r[i+1][j]*u[i+1][j]*v[i+1][j] - r[i][j]*u[i][j]*v[i][j])
-        - a2 * (r[i][j+1]*v[i][j+1]*v[i][j+1] - r[i][j]*v[i][j]*v[i][j])
-        - a11 * v[i][j]
-        + a7 * (v[i+1][j] + v[i-1][j])
-        + a8 * (v[i][j+1] + v[i][j-1])
-        + a9 * (u[i+1][j+1] + u[i-1][j-1] - u[i+1][j-1] - u[i-1][j+1]);
-
+  for (i=0; i<(grid_size_x); ++i) {
+    for (j=0; j<(grid_size_y); ++j) {
+      if (boundary[i][j] == -1) continue;
+      (this->*func_ptr[boundary[i][j]])(i, j);
     }
-  }
-
-  // left and right wall boundary conditions
-  #pragma omp parallel for num_threads(MAX_THREADS) collapse(1) private(i,j)
-  for (j=0; j<grid_size_y; ++j) {
-
-    i = 0;
-    rs[i][j] = r[i][j] - 0.5*a1 * (-ru[i+2][j] + 4.*ru[i+1][j] - 3.*ru[i][j]);
-    // The nature of the upwind difference at the lid edges causes density at the corners to increase indefinitely.
-    // I think the density at these corners should not differ too greatly from the neighboring gridpoints so
-    // doing an average instead of the original difference makes more physical sense.
-    if (j == (grid_size_y-1)) {
-      rs[i][j] = 1./3. * (r[i][j] + r[i+1][j] + r[i][j-1]);
-    }
-
-    rus[i][j] = 0.;
-    rvs[i][j] = 0.;
-
-    i = (grid_size_x-1);
-    rs[i][j] = r[i][j] + 0.5*a1 * (-ru[i-2][j] + 4.*ru[i-1][j] - 3.*ru[i][j]);
-    if (j == (grid_size_y-1)) {
-      rs[i][j] = 1./3. * (r[i][j] + r[i-1][j] + r[i][j-1]);
-    }
-
-    rus[i][j] = 0.;
-    rvs[i][j] = 0.;
-
-  }
-
-  // top and bottom boundary conditions
-  #pragma omp parallel for num_threads(MAX_THREADS) collapse(1) private(i,j)
-  for (i=1; i<(grid_size_x-1); ++i) {
-    j = 0;
-    rs[i][j] = r[i][j] - 0.5*a2 * (-rv[i][j+2] + 4.*rv[i][j+1] - 3.*rv[i][j]);
-    rus[i][j] = 0.;
-    rvs[i][j] = 0.;
-
-    j = (grid_size_x-1);
-    rs[i][j] = r[i][j] - 0.5*a1*u_lid * (r[i+1][j] - r[i-1][j]) + 0.5*a2 * (-rv[i][j-2] + 4.*rv[i][j-1] - 3.*rv[i][j]);
-
-    rus[i][j] = u_lid * rs[i][j];
-    rvs[i][j] = 0.;
   }
 
   // corrector step for interior points
@@ -110,6 +124,7 @@ void MacCormack::run_solver_step() {
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(i,j)
   for (i=1; i<(grid_size_x-1); ++i) {
     for (j=1; j<(grid_size_y-1); ++j) {
+      if (boundary[i][j] == -1) continue;
 
       r[i][j] = 0.5 * ((r[i][j] + rs[i][j])
         - a1 * (rus[i][j] - rus[i-1][j])
@@ -139,19 +154,22 @@ void MacCormack::run_solver_step() {
   // left and right wall boundary conditions
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(1) private(i,j)
   for (j=0; j<grid_size_y; ++j) {
-    i = 0;
+
+    i = 1;
+    if (boundary[i][j] == -1) continue;
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a1 * (-rus[i+2][j] + 4.*rus[i+1][j] - 3.*rus[i][j]));
     // need to add trick for corners, otherwise you get infinite densities here
-    if (j == (grid_size_y-1)) {
+    if (j == (grid_size_y-2)) {
       r[i][j] = 1./3. * (rs[i][j] + rs[i+1][j] + rs[i][j-1]);
     }
 
     ru[i][j] = 0.;
     rv[i][j] = 0.;
 
-    i = (grid_size_x-1);
+    i = (grid_size_x-2);
+    if (boundary[i][j] == -1) continue;
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] + 0.5*a1 * (-rus[i-2][j] + 4.*rus[i-1][j] - 3.*rus[i][j]));
-    if (j == (grid_size_y-1)) {
+    if (j == (grid_size_y-2)) {
       r[i][j] = 1./3. * (rs[i][j] + rs[i-1][j] + rs[i][j-1]);
     }
 
@@ -161,12 +179,15 @@ void MacCormack::run_solver_step() {
 
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(1) private(i,j)
   for (i=1; i<(grid_size_x-1); ++i) {
-    j = 0;
+
+    j = 1;
+    if (boundary[i][j] == -1) continue;
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a2 * (-rvs[i][j+2] + 4.*rvs[i][j+1] - 3.*rvs[i][j]));
     ru[i][j] = 0.;
     rv[i][j] = 0.;
 
-    j = (grid_size_y-1);
+    j = (grid_size_y-2);
+    if (boundary[i][j] == -1) continue;
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a1*u_lid * (rs[i+1][j] - rs[i-1][j]) + 0.5*a2 * (-rvs[i][j-2] + 4.*rvs[i][j-1] - 3.*rvs[i][j]));
 
     ru[i][j] = r[i][j] * u_lid;
