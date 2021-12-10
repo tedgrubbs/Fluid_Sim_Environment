@@ -52,8 +52,17 @@ Simulation::Simulation() {
 }
 
 void Simulation::run() {
+
+  std::chrono::high_resolution_clock::time_point begin,end;
+  std::chrono::microseconds duration;
+
   for (TIMESTEP=0; TIMESTEP<max_run_time; ++TIMESTEP) {
+    begin = std::chrono::high_resolution_clock::now();
     run_solver_step();
+    end = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(end - begin);
+    std::cout << "Runtime: " << duration.count()/1000. << " milliseconds" << std::endl;
+
 
     if ((TIMESTEP+1) % 100 == 0 && tolerance != 0.) check_residual();
     if (run_graphics) {
