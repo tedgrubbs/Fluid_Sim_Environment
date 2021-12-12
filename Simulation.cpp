@@ -48,6 +48,8 @@ Simulation::Simulation() {
   if (run_graphics) {
     init_graphics();
   }
+    
+  
 }
 
 void Simulation::run() {
@@ -55,11 +57,15 @@ void Simulation::run() {
   for (TIMESTEP=0; TIMESTEP<max_run_time; ++TIMESTEP) {
     run_solver_step();
 
-    if ((TIMESTEP+1) % 100 == 0 && tolerance != 0.) check_residual();
+    if ((TIMESTEP+1) % 100 == 0 && tolerance != 0.) {
+      check_residual();
+    }
+    
     if (run_graphics) {
       render();
       if (glfwWindowShouldClose(window)) break;
     }
+
   }
 
   // Handling end of sim operations
@@ -273,6 +279,11 @@ int Simulation::init_graphics() {
     for (int y=0; y<grid_size_y; ++y) {
       vertex_data[(x*grid_size_x+y)*6 + 0] = ((float) x / (float) (grid_size_x-1)) * (1.f - -1.f) + -1.f;
       vertex_data[(x*grid_size_x+y)*6 + 1] = ((float) y / (float) (grid_size_y-1)) * (1.f - -1.f) + -1.f;
+      if (boundary[x][y] == -1) {
+        vertex_data[(x*grid_size_x+y)*6 + 3] = 84./255.;
+        vertex_data[(x*grid_size_x+y)*6 + 4] = 84./255.;
+        vertex_data[(x*grid_size_x+y)*6 + 5] = 84./255.;
+      }
     }
   }
 
@@ -336,16 +347,8 @@ void Simulation::render() {
     for (y=0; y<grid_size_y; ++y) {
 
       if (boundary[x][y] == -1) {
-        vertex_data[(x*grid_size_x+y)*6 + 3] = 84./255.;
-        vertex_data[(x*grid_size_x+y)*6 + 4] = 84./255.;
-        vertex_data[(x*grid_size_x+y)*6 + 5] = 84./255.;
         continue;
-      } else if (boundary[x][y] == 2) {
-        vertex_data[(x*grid_size_x+y)*6 + 3] = 0.0;
-        vertex_data[(x*grid_size_x+y)*6 + 4] = 1.;
-        vertex_data[(x*grid_size_x+y)*6 + 5] = 0.0;
-        continue;
-      }
+      } 
 
       color_val_x = (fabs(u[x][y]) - u_min) / (u_max - u_min);
       color_val_y = (fabs(v[x][y]) - v_min) / (v_max - v_min);
