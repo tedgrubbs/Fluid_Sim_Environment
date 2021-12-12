@@ -35,7 +35,7 @@ boundary[-2,1:-2] = 1
 
 # Initializing density everywhere
 rho[:,:] = 1.
-u[:,-1] = 1.
+u[:,-2] = 1.
 
 output = pd.DataFrame(columns=['xi','yi','rho','u','v','boundary'])
 
