@@ -102,8 +102,18 @@ void Simulation::read_config() {
   force = stod(config["force"]);
   run_graphics = stoi(config["run_graphics"]);
   tolerance = stod(config["tolerance"]);
-  MAX_THREADS = omp_get_max_threads()-4;
-  if (run_graphics) MAX_THREADS -= 2; // need to leave some cpu threads open when running graphics to make it smoother.
+
+  /*
+    Laptop definitely runs fastest with all threads being used. More threads also helps
+    the render() function update the vertex_data array faster. However this speed drops
+    quickly once the cpu temperature increases.
+
+    On my desktop which has a gpu I've noticed that graphics framerate can drop when using
+    all threads. Depending on the size of the system being simulated, using fewer threads can also
+    be the faster option. But this should be rigorously tested.
+  */
+  MAX_THREADS = omp_get_max_threads();
+  // if (run_graphics) MAX_THREADS -= 2; // need to leave some cpu threads open when running graphics to make it smoother.
   render_grid_size_x = stoi(config["render_grid_size_x"]);
   render_grid_size_y = stoi(config["render_grid_size_y"]);
   max_run_time = stoi(config["max_run_time"]);
@@ -296,15 +306,18 @@ void Simulation::render() {
   v_max = -DBL_MAX;
   v_min = DBL_MAX;
 
+  // loop indices
+  int x,y;
+
   // int particle_x_pos =  particle_x*grid_size_x;
   // int particle_y_pos =  particle_y*grid_size_y;
   //
   // particle_x = particle_x + dt*u[particle_x_pos][particle_y_pos];
   // particle_y = particle_y + dt*v[particle_x_pos][particle_y_pos];
 
-  #pragma omp parallel for num_threads(MAX_THREADS) collapse(2)
-  for ( int x=0; x<grid_size_x; ++x) {
-    for ( int y=0; y<grid_size_y; ++y) {
+  #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(x,y)
+  for (x=0; x<grid_size_x; ++x) {
+    for (y=0; y<grid_size_y; ++y) {
       record_speed(x,y);
     }
   }
@@ -318,9 +331,9 @@ void Simulation::render() {
   float color_val_x;
   float color_val_y;
 
-  #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(color_val_x,color_val_y)
-  for ( int x=0; x<grid_size_x; ++x) {
-    for ( int y=0; y<grid_size_y; ++y) {
+  #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(color_val_x,color_val_y) private(x,y)
+  for (x=0; x<grid_size_x; ++x) {
+    for (y=0; y<grid_size_y; ++y) {
 
       if (boundary[x][y] == -1) {
         vertex_data[(x*grid_size_x+y)*6 + 3] = 84./255.;
