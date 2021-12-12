@@ -48,8 +48,8 @@ Simulation::Simulation() {
   if (run_graphics) {
     init_graphics();
   }
-    
-  
+
+
 }
 
 void Simulation::run() {
@@ -60,7 +60,7 @@ void Simulation::run() {
     if ((TIMESTEP+1) % 100 == 0 && tolerance != 0.) {
       check_residual();
     }
-    
+
     if (run_graphics) {
       render();
       if (glfwWindowShouldClose(window)) break;
@@ -114,12 +114,10 @@ void Simulation::read_config() {
     the render() function update the vertex_data array faster. However this speed drops
     quickly once the cpu temperature increases.
 
-    On my desktop which has a gpu I've noticed that graphics framerate can drop when using
-    all threads. Depending on the size of the system being simulated, using fewer threads can also
-    be the faster option. But this should be rigorously tested.
+    On my desktop which I have found that using 4 threads is the fastest option. Most likely
+    because there are 4 real cores on the CPU.
   */
-  MAX_THREADS = omp_get_max_threads();
-  // if (run_graphics) MAX_THREADS -= 2; // need to leave some cpu threads open when running graphics to make it smoother.
+  MAX_THREADS = 4;//omp_get_max_threads();
   render_grid_size_x = stoi(config["render_grid_size_x"]);
   render_grid_size_y = stoi(config["render_grid_size_y"]);
   max_run_time = stoi(config["max_run_time"]);
@@ -348,7 +346,7 @@ void Simulation::render() {
 
       if (boundary[x][y] == -1) {
         continue;
-      } 
+      }
 
       color_val_x = (fabs(u[x][y]) - u_min) / (u_max - u_min);
       color_val_y = (fabs(v[x][y]) - v_min) / (v_max - v_min);
