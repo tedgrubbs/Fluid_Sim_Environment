@@ -24,13 +24,6 @@ MacCormack::MacCormack() : Simulation() {
   a10 = 2.*(a5+a6);
   a11 = 2.*(a7+a8);
 
-  func_ptr[0] = &MacCormack::free_flow_predictor;
-  func_ptr[1] = &MacCormack::stationary_wall_predictor;
-  func_ptr[2] = &MacCormack::moving_wall_predictor;
-  func_ptr[3] = &MacCormack::free_flow_corrector;
-  func_ptr[4] = &MacCormack::stationary_wall_corrector;
-  func_ptr[5] = &MacCormack::moving_wall_corrector;
-
 }
 
 void MacCormack::free_flow_predictor(size_t i, size_t j) {
@@ -175,8 +168,17 @@ void MacCormack::run_solver_step() {
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(i,j)
   for (i=0; i<(grid_size_x); ++i) {
     for (j=0; j<(grid_size_y); ++j) {
-      if (boundary[i][j] == -1) continue;
-      (this->*func_ptr[boundary[i][j]])(i, j);
+
+      if (boundary[i][j] == 0) {
+        free_flow_predictor(i,j);
+      } else if (boundary[i][j] == 1) {
+        stationary_wall_predictor(i,j);
+      } else if (boundary[i][j] == 2) {
+        moving_wall_predictor(i,j);
+      } else {
+        continue;
+      }
+
     }
   }
 
@@ -193,8 +195,15 @@ void MacCormack::run_solver_step() {
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(i,j)
   for (i=0; i<grid_size_x; ++i) {
     for (j=0; j<grid_size_y; ++j) {
-      if (boundary[i][j] == -1) continue;
-      (this->*func_ptr[boundary[i][j] + 3])(i, j);
+      if (boundary[i][j] == 0) {
+        free_flow_corrector(i,j);
+      } else if (boundary[i][j] == 1) {
+        stationary_wall_corrector(i,j);
+      } else if (boundary[i][j] == 2) {
+          moving_wall_corrector(i,j);
+      } else {
+        continue;
+      }
     }
   }
 
