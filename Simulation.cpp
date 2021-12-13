@@ -416,8 +416,8 @@ void Simulation::save_speed_to_file() {
   for (unsigned int y=0; y<grid_size_y; ++y) {
     for (unsigned int x=0; x<grid_size_x; ++x) {
       fprintf(rho_fp, "%.10lf", r[x][y]);
-      fprintf(u_fp, "%.10lf", u[x][y]);
-      fprintf(v_fp, "%.10lf", v[x][y]);
+      fprintf(u_fp, "%0.3E", u[x][y]);
+      fprintf(v_fp, "%0.3E", v[x][y]);
       if (x == (grid_size_x-1) ) {
         fprintf(u_fp, "\n" );
         fprintf(v_fp, "\n" );

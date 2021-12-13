@@ -6,8 +6,8 @@ plt.style.use('dark_background')
 
 # Use this to quickly redefine grid and config variables
 
-grid_size_x = 64+2
-grid_size_y = 64+2
+grid_size_x = 65+2
+grid_size_y = 65+2
 rho = np.zeros((grid_size_x,grid_size_y))
 u = np.zeros((grid_size_x,grid_size_y))
 v = np.zeros((grid_size_x,grid_size_y))
@@ -17,25 +17,89 @@ for i in range(grid_size_x):
     for j in range(grid_size_y):
         indices[i,j] = [i,j]
 
-# Bottom wall
-boundary[:,0] = -1
-boundary[:,1] = 1
+rho[:,:] = 1.
 
-# Top wall
+# top wall
 boundary[:,-1] = -1
-boundary[:,-2] = 2
+rho[:,-1] = 0
 
-# left wall
-boundary[0,:] = -1
-boundary[1,1:-2] = 1
+# bottom wall
+boundary[:,0] = -1
+rho[:,0] = 0
 
 # right wall
-boundary[-1,:] = -1
-boundary[-2,1:-2] = 1
+boundary[-1, :] = -1
+rho[-1, :] = 0
 
+
+# left wall
+boundary[0, :] = -1
+rho[0, :] = 0
+
+# left moving lid
+# boundary[1, 1:-1] = 2
+# boundary[2:-1,1] = 1
+# boundary[2:-1,-2] = 1
+# boundary[-2, 1:-1] = 1
+
+# right moving lid
+# boundary[-2, 1:-1] = 2
+# boundary[1:-2,1] = 1
+# boundary[1:-2,-2] = 1
+# boundary[1, 1:-1] = 1
+
+# bottom moving lid
+# boundary[-2, 1:-1] = 1
+# boundary[1:-2,-2] = 1
+# boundary[1, 1:-1] = 1
+# boundary[1:-1,1] = 2
+
+# top moving lid
+boundary[-2, 1:-1] = 1
+boundary[1, 1:-1] = 1
+boundary[1:-1,1] = 1
+boundary[2:-2,-2] = 2
+
+# left and right moving lid
+# boundary[1, 1:-1] = 2
+# boundary[-2, 1:-1] = 2
+# boundary[2:-2,1] = 1
+# boundary[2:-2,-2] = 1
+
+# all lids moving
+# boundary[1, 1:-1] = 2
+# boundary[-2, 1:-1] = 2
+# boundary[2:-2,1] = 2
+# boundary[2:-2,-2] = 2
+
+# 3 lids moving
+# boundary[1, 1:-1] = 2
+# boundary[-2, 1:-1] = 2
+# boundary[2:-2,1] = 1
+# boundary[2:-2,-2] = 2
+
+# top lid moving with barrier in center
+# boundary[1:-1,-2] = 1
+# boundary[1, 1:-2] = 1
+# boundary[-2, 1:-2] = 1
+# boundary[1:-2, 1] = 1
+
+# boundary[33, :] = -1
+# boundary[34, 1:-1] = 2
+# boundary[32, 1:-1] = 2
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
+
+ax.imshow(boundary.transpose())
+ax.invert_yaxis()
+plt.show()
 # Initializing density everywhere
-rho[:,:] = 1.
+
 u[:,-2] = 1.
+
+
+
 
 output = pd.DataFrame(columns=['xi','yi','rho','u','v','boundary'])
 
@@ -57,12 +121,12 @@ config['real_size_x'] = 1.
 config['real_size_y'] = 1.
 config['frame_rate'] = 0
 config['dt'] = 0.000175
-config['dx'] = 1./grid_size_x*config['real_size_x']
-config['dy'] = 1./grid_size_y*config['real_size_x']
+config['dx'] = 1./(grid_size_x-3)*config['real_size_x']
+config['dy'] = 1./(grid_size_y-3)*config['real_size_x']
 config['viscosity'] = 1.8e-5
 config['c'] = 347.0
 config['force'] = 0.
-config['run_graphics'] = 1
+config['run_graphics'] = 0
 config['render_grid_size_x'] = 512
 config['render_grid_size_y'] = 512
 config["tolerance"] = 0.00
