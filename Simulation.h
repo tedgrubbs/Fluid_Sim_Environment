@@ -137,6 +137,11 @@ class MacCormack : public Simulation {
     void stationary_wall_corrector(size_t x, size_t y);
     void moving_wall_corrector(size_t x, size_t y);
 
+    void inlet_predictor(size_t x, size_t y);
+    void inlet_corrector(size_t x, size_t y);
+    void outlet_predictor(size_t x, size_t y);
+    void outlet_corrector(size_t x, size_t y);
+
   public:
     MacCormack();
 

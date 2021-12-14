@@ -275,16 +275,15 @@ int Simulation::init_graphics() {
   // only need to define x and y coordinates bc calloc
   for (int x=0; x<grid_size_x; ++x) {
     for (int y=0; y<grid_size_y; ++y) {
-      vertex_data[(x*grid_size_x+y)*6 + 0] = ((float) x / (float) (grid_size_x-1)) * (1.f - -1.f) + -1.f;
-      vertex_data[(x*grid_size_x+y)*6 + 1] = ((float) y / (float) (grid_size_y-1)) * (1.f - -1.f) + -1.f;
+      vertex_data[(x*grid_size_y+y)*6 + 0] = ((float) x / (float) (grid_size_x-1)) * (1.f - -1.f) + -1.f;
+      vertex_data[(x*grid_size_y+y)*6 + 1] = ((float) y / (float) (grid_size_y-1)) * (1.f - -1.f) + -1.f;
       if (boundary[x][y] == -1) {
-        vertex_data[(x*grid_size_x+y)*6 + 3] = 84./255.;
-        vertex_data[(x*grid_size_x+y)*6 + 4] = 84./255.;
-        vertex_data[(x*grid_size_x+y)*6 + 5] = 84./255.;
+        vertex_data[(x*grid_size_y+y)*6 + 3] = 84./255.;
+        vertex_data[(x*grid_size_y+y)*6 + 4] = 84./255.;
+        vertex_data[(x*grid_size_y+y)*6 + 5] = 84./255.;
       }
     }
   }
-
 
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
@@ -364,9 +363,9 @@ void Simulation::render() {
         color_val_y = 1.;
       }
 
-      vertex_data[(x*grid_size_x+y)*6 + 3] = color_val_x;
-      vertex_data[(x*grid_size_x+y)*6 + 4] = 0.0;
-      vertex_data[(x*grid_size_x+y)*6 + 5] = color_val_y;
+      vertex_data[(x*grid_size_y+y)*6 + 3] = color_val_x;
+      vertex_data[(x*grid_size_y+y)*6 + 4] = 0.0;
+      vertex_data[(x*grid_size_y+y)*6 + 5] = color_val_y;
 
     }
   }
