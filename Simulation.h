@@ -125,6 +125,15 @@ class MacCormack : public Simulation {
 
     bool forward_diff_first;
 
+    enum REGIONS {
+      EXTERNAL=-1,
+      FREE_FLOW=0,
+      STATIONARY=1,
+      MOVING_LID=2,
+      INLET=3,
+      OUTLET=4
+    };
+
     // iteration variables defined here is faster
     size_t i;
     size_t j;

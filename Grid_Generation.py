@@ -2,7 +2,16 @@ import numpy as np
 import pandas as pd
 import json
 from matplotlib import pyplot as plt
+from enum import IntEnum
 plt.style.use('dark_background')
+
+class Region(IntEnum):
+    EXTERNAL = -1
+    FREE_FLOW = 0
+    STATIONARY = 1
+    MOVING_LID = 2
+    INLET = 3
+    OUTLET = 4
 
 # Use this to quickly redefine grid and config variables
 
@@ -20,21 +29,21 @@ for i in range(grid_size_x):
 rho[:,:] = 1.
 
 # top wall
-boundary[:,-1] = -1
-rho[:,-1] = 0
+boundary[:,-1] = Region.EXTERNAL
+rho[:,-1] = 0.
 
 # bottom wall
-boundary[:,0] = -1
-rho[:,0] = 0
+boundary[:,0] = Region.EXTERNAL
+rho[:,0] = 0.
 
 # right wall
-boundary[-1, :] = -1
-rho[-1, :] = 0
+boundary[-1, :] = Region.EXTERNAL
+rho[-1, :] = 0.
 
 
 # left wall
-boundary[0, :] = -1
-rho[0, :] = 0
+boundary[0, :] = Region.EXTERNAL
+rho[0, :] = 0.
 
 # left moving lid
 # boundary[1, 1:-1] = 2
@@ -55,10 +64,10 @@ rho[0, :] = 0
 # boundary[1:-1,1] = 2
 
 # top moving lid
-boundary[-2, 1:-1] = 1
-boundary[1, 1:-1] = 1
-boundary[1:-1,1] = 1
-boundary[2:-2,-2] = 2
+boundary[-2, 1:-1] = Region.STATIONARY
+boundary[1, 1:-1] = Region.STATIONARY
+boundary[1:-1,1] = Region.STATIONARY
+boundary[2:-2,-2] = Region.MOVING_LID
 
 # left and right moving lid
 # boundary[1, 1:-1] = 2
