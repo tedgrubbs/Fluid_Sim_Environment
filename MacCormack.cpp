@@ -262,6 +262,13 @@ void MacCormack::outlet_corrector(size_t i, size_t j) {
 
 void MacCormack::run_solver_step() {
 
+  /*
+    Using forward differences for all predictor steps produces a slightly different
+    result from using only backward differences. However the 2 are nearly the same when
+    compared to using an alternating difference scheme. Supposedly an alternating scheme
+    is more accurate but I currently have not been able to verify this. 
+  */
+
   if (TIMESTEP % 2 == 0) {
     forward_diff_first = true;
   } else {
