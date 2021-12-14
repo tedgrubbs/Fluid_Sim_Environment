@@ -51,7 +51,7 @@ class Simulation {
     unsigned int render_grid_size_x;
     unsigned int render_grid_size_y;
     unsigned int max_run_time;
-    size_t TIMESTEP;
+
 
     // Graphics functions and persistent variables
     int init_graphics();
@@ -88,6 +88,8 @@ class Simulation {
     virtual void run_solver_step()=0;
 
   protected:
+    size_t TIMESTEP;
+
     unsigned int grid_size_x, grid_size_y;
     double dt, dx, dy;
     double mu, c, mach, Re;
@@ -120,6 +122,8 @@ class MacCormack : public Simulation {
     double ** rvs;
 
     double a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11;
+
+    bool forward_diff_first;
 
     // iteration variables defined here is faster
     size_t i;

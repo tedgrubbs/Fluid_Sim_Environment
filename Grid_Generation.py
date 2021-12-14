@@ -96,7 +96,7 @@ ax.invert_yaxis()
 plt.show()
 # Initializing density everywhere
 
-u[:,-2] = 1.
+# u[:,-2] = 1.
 
 
 
