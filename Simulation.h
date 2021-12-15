@@ -90,6 +90,15 @@ class Simulation {
   protected:
     size_t TIMESTEP;
 
+    enum REGIONS {
+      EXTERNAL=-1,
+      FREE_FLOW=0,
+      STATIONARY=1,
+      MOVING_LID=2,
+      INLET=3,
+      OUTLET=4
+    };
+
     unsigned int grid_size_x, grid_size_y;
     double dt, dx, dy;
     double mu, c, mach, Re;
@@ -124,15 +133,6 @@ class MacCormack : public Simulation {
     double a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11;
 
     bool forward_diff_first;
-
-    enum REGIONS {
-      EXTERNAL=-1,
-      FREE_FLOW=0,
-      STATIONARY=1,
-      MOVING_LID=2,
-      INLET=3,
-      OUTLET=4
-    };
 
     // iteration variables defined here is faster
     size_t i;

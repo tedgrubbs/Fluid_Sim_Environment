@@ -57,9 +57,9 @@ void Simulation::run() {
   for (TIMESTEP=0; TIMESTEP<max_run_time; ++TIMESTEP) {
     run_solver_step();
 
-    if ((TIMESTEP+1) % 100 == 0 && tolerance != 0.) {
-      check_residual();
-    }
+    // if ((TIMESTEP+1) % 100 == 0 && tolerance != 0.) {
+    //   check_residual();
+    // }
 
     if (run_graphics) {
       render();
@@ -177,26 +177,6 @@ void Simulation::read_grid_and_init_struct() {
   fclose(csv);
 }
 
-void Simulation::record_speed(size_t x, size_t y) {
-  speed[x][y] = sqrt(pow(u[x][y], 2.) + pow(v[x][y], 2.));
-
-  if (fabs(u[x][y]) > u_max && fabs(u[x][y]) < MAX_RENDERABLE_SPEED) {
-    u_max = fabs(u[x][y]);
-  }
-
-  if (fabs(u[x][y]) < u_min && fabs(u[x][y]) > MIN_RENDERABLE_SPEED) {
-    u_min = fabs(u[x][y]);
-  }
-
-  if (fabs(v[x][y]) > v_max && fabs(v[x][y]) < MAX_RENDERABLE_SPEED) {
-    v_max = fabs(v[x][y]);
-  }
-
-  if (fabs(v[x][y]) < v_min && fabs(v[x][y]) > MIN_RENDERABLE_SPEED) {
-    v_min = fabs(v[x][y]);
-  }
-}
-
 int Simulation::init_graphics() {
   // GL initialization
 
@@ -277,7 +257,7 @@ int Simulation::init_graphics() {
     for (int y=0; y<grid_size_y; ++y) {
       vertex_data[(x*grid_size_y+y)*6 + 0] = ((float) x / (float) (grid_size_x-1)) * (1.f - -1.f) + -1.f;
       vertex_data[(x*grid_size_y+y)*6 + 1] = ((float) y / (float) (grid_size_y-1)) * (1.f - -1.f) + -1.f;
-      if (boundary[x][y] == -1) {
+      if (boundary[x][y] == EXTERNAL) {
         vertex_data[(x*grid_size_y+y)*6 + 3] = 84./255.;
         vertex_data[(x*grid_size_y+y)*6 + 4] = 84./255.;
         vertex_data[(x*grid_size_y+y)*6 + 5] = 84./255.;
@@ -316,6 +296,7 @@ void Simulation::render() {
 
   // loop indices
   int x,y;
+  double absu, absv;
 
   // int particle_x_pos =  particle_x*grid_size_x;
   // int particle_y_pos =  particle_y*grid_size_y;
@@ -323,10 +304,22 @@ void Simulation::render() {
   // particle_x = particle_x + dt*u[particle_x_pos][particle_y_pos];
   // particle_y = particle_y + dt*v[particle_x_pos][particle_y_pos];
 
-  #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(x,y)
+  #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(x,y,absu,absv)
   for (x=0; x<grid_size_x; ++x) {
     for (y=0; y<grid_size_y; ++y) {
-      record_speed(x,y);
+      absu = fabs(u[x][y]);
+      absv = fabs(v[x][y]);
+      if (absu > u_max && absu < MAX_RENDERABLE_SPEED) {
+        u_max = absu;
+      } else if (absu < u_min && absu > MIN_RENDERABLE_SPEED) {
+        u_min = absu;
+      }
+
+      if (absv > v_max && absv < MAX_RENDERABLE_SPEED) {
+        v_max = absv;
+      } else if (absv < v_min && absv > MIN_RENDERABLE_SPEED) {
+        v_min = absv;
+      }
     }
   }
 
@@ -339,27 +332,29 @@ void Simulation::render() {
   float color_val_x;
   float color_val_y;
 
-  #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(color_val_x,color_val_y) private(x,y)
+  #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(color_val_x,color_val_y) private(x,y,absu,absv)
   for (x=0; x<grid_size_x; ++x) {
     for (y=0; y<grid_size_y; ++y) {
 
-      if (boundary[x][y] == -1) {
+      if (boundary[x][y] == EXTERNAL) {
         continue;
       }
+      absu = fabs(u[x][y]);
+      absv = fabs(v[x][y]);
 
-      color_val_x = (fabs(u[x][y]) - u_min) / (u_max - u_min);
-      color_val_y = (fabs(v[x][y]) - v_min) / (v_max - v_min);
+      color_val_x = (absu - u_min) / (u_max - u_min);
+      color_val_y = (absv - v_min) / (v_max - v_min);
 
-      if (fabs(u[x][y]) < MIN_RENDERABLE_SPEED) {
+      if (absu < MIN_RENDERABLE_SPEED) {
         color_val_x = 0.;
       }
-      if (fabs(v[x][y]) < MIN_RENDERABLE_SPEED) {
+      if (absv < MIN_RENDERABLE_SPEED) {
         color_val_y = 0.;
       }
-      if (fabs(u[x][y]) > MAX_RENDERABLE_SPEED) {
+      if (absu > MAX_RENDERABLE_SPEED) {
         color_val_x = 1.;
       }
-      if (fabs(v[x][y]) > MAX_RENDERABLE_SPEED) {
+      if (absv > MAX_RENDERABLE_SPEED) {
         color_val_y = 1.;
       }
 
