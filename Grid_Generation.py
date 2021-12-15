@@ -20,7 +20,8 @@ grid_size_y = 65+2
 rho = np.zeros((grid_size_x,grid_size_y))
 u = np.zeros((grid_size_x,grid_size_y))
 v = np.zeros((grid_size_x,grid_size_y))
-boundary = np.zeros((grid_size_x,grid_size_y),dtype='int')
+region = np.zeros((grid_size_x,grid_size_y),dtype='int')
+boundary_v = np.zeros((grid_size_x,grid_size_y))
 indices = np.zeros((grid_size_x,grid_size_y,2),dtype='int')
 for i in range(grid_size_x):
     for j in range(grid_size_y):
@@ -30,84 +31,85 @@ rho[:,:] = 1.
 u[:,-2] = 1.
 
 # top wall
-boundary[:,-1] = Region.EXTERNAL
+region[:,-1] = Region.EXTERNAL
 rho[:,-1] = 0.
 
 # bottom wall
-boundary[:,0] = Region.EXTERNAL
+region[:,0] = Region.EXTERNAL
 rho[:,0] = 0.
 
 # right wall
-boundary[-1, :] = Region.EXTERNAL
+region[-1, :] = Region.EXTERNAL
 rho[-1, :] = 0.
 
 
 # left wall
-boundary[0, :] = Region.EXTERNAL
+region[0, :] = Region.EXTERNAL
 rho[0, :] = 0.
 
 # left moving lid
-# boundary[1, 1:-1] = 2
-# boundary[2:-1,1] = 1
-# boundary[2:-1,-2] = 1
-# boundary[-2, 1:-1] = 1
+# region[1, 1:-1] = 2
+# region[2:-1,1] = 1
+# region[2:-1,-2] = 1
+# region[-2, 1:-1] = 1
 
 # right moving lid
-# boundary[-2, 1:-1] = 2
-# boundary[1:-2,1] = 1
-# boundary[1:-2,-2] = 1
-# boundary[1, 1:-1] = 1
+# region[-2, 1:-1] = 2
+# region[1:-2,1] = 1
+# region[1:-2,-2] = 1
+# region[1, 1:-1] = 1
 
 # bottom moving lid
-# boundary[-2, 1:-1] = 1
-# boundary[1:-2,-2] = 1
-# boundary[1, 1:-1] = 1
-# boundary[1:-1,1] = 2
+# region[-2, 1:-1] = 1
+# region[1:-2,-2] = 1
+# region[1, 1:-1] = 1
+# region[1:-1,1] = 2
 
 # top moving lid with in and outlet
-# boundary[-2, 1:-1] = Region.OUTLET
-# boundary[1, 1:-1] = Region.INLET
-# boundary[1:-2,1] = Region.STATIONARY
-# boundary[1:-2,-2] = Region.MOVING_LID
+# region[-2, 1:-1] = Region.OUTLET
+# region[1, 1:-1] = Region.INLET
+# region[1:-2,1] = Region.STATIONARY
+# region[1:-2,-2] = Region.MOVING_LID
 
 # top moving lid with in and outlet. This configuration reproduce Borg's result when using only forward differences with predictor step
-boundary[-2, 1:-1] = Region.STATIONARY
-boundary[1, 1:-1] = Region.STATIONARY
-boundary[1:-2,1] = Region.STATIONARY
-boundary[2:-2,-2] = Region.MOVING_LID
+region[-2, 1:-1] = Region.STATIONARY
+region[1, 1:-1] = Region.STATIONARY
+region[1:-2,1] = Region.STATIONARY
+region[2:-2,-2] = Region.MOVING_LID
+boundary_v[2:-2,-2] = 1.0
 
 # left and right moving lid
-# boundary[1, 1:-1] = 2
-# boundary[-2, 1:-1] = 2
-# boundary[2:-2,1] = 1
-# boundary[2:-2,-2] = 1
+# region[1, 1:-1] = 2
+# region[-2, 1:-1] = 2
+# region[2:-2,1] = 1
+# region[2:-2,-2] = 1
 
 # all lids moving
-# boundary[1, 1:-1] = 2
-# boundary[-2, 1:-1] = 2
-# boundary[2:-2,1] = 2
-# boundary[2:-2,-2] = 2
+# region[1, 1:-1] = 2
+# region[-2, 1:-1] = 2
+# region[2:-2,1] = 2
+# region[2:-2,-2] = 2
 
 # 3 lids moving
-# boundary[1, 1:-1] = 2
-# boundary[-2, 1:-1] = 2
-# boundary[2:-2,1] = 1
-# boundary[2:-2,-2] = 2
+# region[1, 1:-1] = 2
+# region[-2, 1:-1] = 2
+# region[2:-2,1] = 1
+# region[2:-2,-2] = 2
 
 # top lid moving with barrier in center
-# boundary[1:-1,-2] = 1
-# boundary[1, 1:-2] = 1
-# boundary[-2, 1:-2] = 1
-# boundary[1:-2, 1] = 1
+# region[1:-1,-2] = 1
+# region[1, 1:-2] = 1
+# region[-2, 1:-2] = 1
+# region[1:-2, 1] = 1
 
-# boundary[33, :] = -1
-# boundary[34, 1:-1] = 2
-# boundary[32, 1:-1] = 2
+# region[33, :] = -1
+# region[34, 1:-1] = 2
+# region[32, 1:-1] = 2
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
 
-ax.imshow(boundary.transpose())
+ax.imshow(region.transpose())
 ax.invert_yaxis()
 plt.show()
 # Initializing density everywhere
@@ -117,14 +119,15 @@ plt.show()
 
 
 
-output = pd.DataFrame(columns=['xi','yi','rho','u','v','boundary'])
+output = pd.DataFrame(columns=['xi','yi','rho','u','v','region','boundary_v'])
 
 output['xi'] = indices.reshape((-1,2))[:,0]
 output['yi'] = indices.reshape((-1,2))[:,1]
 output['rho'] = rho.reshape(-1)
 output['u'] = u.reshape(-1)
 output['v'] = v.reshape(-1)
-output['boundary'] = boundary.reshape(-1)
+output['region'] = region.reshape(-1)
+output['boundary_v'] = boundary_v.reshape(-1)
 
 output.to_csv('grid_variables.csv',index=False)
 

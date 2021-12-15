@@ -102,7 +102,6 @@ void Simulation::read_config() {
 
   mach = stod(config["Mach"]);
   Re = stod(config["Reynolds"]);
-  u_lid = 1.0;
 
   framerate = stoi(config["frame_rate"]);
   force = stod(config["force"]);
@@ -134,8 +133,9 @@ void Simulation::read_grid_and_init_struct() {
   v = create2dArray<double>(grid_size_x, grid_size_y);
   rv = create2dArray<double>(grid_size_x, grid_size_y);
   speed = create2dArray<double>(grid_size_x, grid_size_y);
-  boundary = create2dArray<int>(grid_size_x, grid_size_y);
+  region = create2dArray<int>(grid_size_x, grid_size_y);
   residual = create2dArray<double>(grid_size_x, grid_size_y);
+  boundary_v = create2dArray<double>(grid_size_x, grid_size_y);
 
   FILE * csv;
   csv = fopen("grid_variables.csv", "r");
@@ -144,8 +144,8 @@ void Simulation::read_grid_and_init_struct() {
 
   while (fgets(line, 4096, csv)) {
 
-    int temp_xi, temp_yi, temp_boundary;
-    double temp_rho, temp_u, temp_v;
+    int temp_xi, temp_yi, temp_region;
+    double temp_rho, temp_u, temp_v, temp_bv;
 
     char * tok;
 
@@ -165,14 +165,18 @@ void Simulation::read_grid_and_init_struct() {
     temp_v = atof(tok);
 
     tok = strtok(NULL, ",\n");
-    temp_boundary = atof(tok);
+    temp_region = atof(tok);
+
+    tok = strtok(NULL, ",\n");
+    temp_bv = atof(tok);
 
     r[temp_xi][temp_yi] = temp_rho;
     u[temp_xi][temp_yi] = temp_u;
     ru[temp_xi][temp_yi] = temp_rho * temp_u;
     v[temp_xi][temp_yi] = temp_v;
     rv[temp_xi][temp_yi] = temp_rho * temp_v;
-    boundary[temp_xi][temp_yi] = temp_boundary;
+    region[temp_xi][temp_yi] = temp_region;
+    boundary_v[temp_xi][temp_yi] = temp_bv;
   }
   fclose(csv);
 }
@@ -257,7 +261,7 @@ int Simulation::init_graphics() {
     for (int y=0; y<grid_size_y; ++y) {
       vertex_data[(x*grid_size_y+y)*6 + 0] = ((float) x / (float) (grid_size_x-1)) * (1.f - -1.f) + -1.f;
       vertex_data[(x*grid_size_y+y)*6 + 1] = ((float) y / (float) (grid_size_y-1)) * (1.f - -1.f) + -1.f;
-      if (boundary[x][y] == EXTERNAL) {
+      if (region[x][y] == EXTERNAL) {
         vertex_data[(x*grid_size_y+y)*6 + 3] = 84./255.;
         vertex_data[(x*grid_size_y+y)*6 + 4] = 84./255.;
         vertex_data[(x*grid_size_y+y)*6 + 5] = 84./255.;
@@ -336,7 +340,7 @@ void Simulation::render() {
   for (x=0; x<grid_size_x; ++x) {
     for (y=0; y<grid_size_y; ++y) {
 
-      if (boundary[x][y] == EXTERNAL) {
+      if (region[x][y] == EXTERNAL) {
         continue;
       }
       absu = fabs(u[x][y]);

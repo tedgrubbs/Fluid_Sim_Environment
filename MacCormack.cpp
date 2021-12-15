@@ -3,7 +3,7 @@
 
 MacCormack::MacCormack() : Simulation() {
 
-  dt = 0.5 * dx / (1./mach + fabs(u_lid));
+  dt = 0.5 * dx / (1./mach + fabs(1.0));
   cout << "MacCormack timestep defined by stability criteria: " << dt << endl;
 
   rs = create2dArray<double>(grid_size_x, grid_size_y);
@@ -108,22 +108,22 @@ void MacCormack::stationary_wall_predictor(size_t i, size_t j) {
   rvs[i][j] = 0.;
 
   // stationary left wall
-  if (boundary[i-1][j] == EXTERNAL)  {
+  if (region[i-1][j] == EXTERNAL)  {
     rs[i][j] = r[i][j] - 0.5*a1 * (-ru[i+2][j] + 4.*ru[i+1][j] - 3.*ru[i][j]);
   }
 
   // stationary right wall
-  else if (boundary[i+1][j] == EXTERNAL) {
+  else if (region[i+1][j] == EXTERNAL) {
     rs[i][j] = r[i][j] + 0.5*a1 * (-ru[i-2][j] + 4.*ru[i-1][j] - 3.*ru[i][j]);
   }
 
   // stationary bottom wall
-  else if (boundary[i][j-1] == EXTERNAL) {
+  else if (region[i][j-1] == EXTERNAL) {
     rs[i][j] = r[i][j] - 0.5*a2 * (-rv[i][j+2] + 4.*rv[i][j+1] - 3.*rv[i][j]);
   }
 
   // stationary top wall
-  else if (boundary[i][j+1] == EXTERNAL) {
+  else if (region[i][j+1] == EXTERNAL) {
     rs[i][j] = r[i][j] + 0.5*a2 * (-rv[i][j-2] + 4.*rv[i][j-1] - 3.*rv[i][j]);
   }
 }
@@ -134,22 +134,22 @@ void MacCormack::stationary_wall_corrector(size_t i, size_t j) {
   rv[i][j] = 0.;
 
   // stationary left wall
-  if (boundary[i-1][j] == EXTERNAL)  {
+  if (region[i-1][j] == EXTERNAL)  {
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a1 * (-rus[i+2][j] + 4.*rus[i+1][j] - 3.*rus[i][j]));
   }
 
   // stationary right wall
-  else if (boundary[i+1][j] == EXTERNAL) {
+  else if (region[i+1][j] == EXTERNAL) {
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] + 0.5*a1 * (-rus[i-2][j] + 4.*rus[i-1][j] - 3.*rus[i][j]));
   }
 
   // stationary bottom wall
-  else if (boundary[i][j-1] == EXTERNAL) {
+  else if (region[i][j-1] == EXTERNAL) {
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a2 * (-rvs[i][j+2] + 4.*rvs[i][j+1] - 3.*rvs[i][j]));
   }
 
   // stationary top wall
-  else if (boundary[i][j+1] == EXTERNAL) {
+  else if (region[i][j+1] == EXTERNAL) {
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] + 0.5*a2 * (-rvs[i][j-2] + 4.*rvs[i][j-1] - 3.*rvs[i][j]));
   }
 
@@ -158,28 +158,28 @@ void MacCormack::stationary_wall_corrector(size_t i, size_t j) {
 void MacCormack::moving_wall_predictor(size_t i, size_t j) {
 
   // top moving lid
-  if (boundary[i][j+1] == EXTERNAL) {
+  if (region[i][j+1] == EXTERNAL) {
     // Check if this is a corner point
-    if (boundary[i-1][j] != MOVING_LID || boundary[i+1][j] != MOVING_LID) {
+    if (region[i-1][j] != MOVING_LID || region[i+1][j] != MOVING_LID) {
       rs[i][j] = r[i][j] + 0.5*a2 * (-rv[i][j-2] + 4.*rv[i][j-1] - 3.*rv[i][j]);
     } else {
-      rs[i][j] = r[i][j] - 0.5*a1*u_lid * (r[i+1][j] - r[i-1][j]) + 0.5*a2 * (-rv[i][j-2] + 4.*rv[i][j-1] - 3.*rv[i][j]);
+      rs[i][j] = r[i][j] - 0.5*a1*boundary_v[i][j] * (r[i+1][j] - r[i-1][j]) + 0.5*a2 * (-rv[i][j-2] + 4.*rv[i][j-1] - 3.*rv[i][j]);
     }
 
-    rus[i][j] = u_lid * rs[i][j];
+    rus[i][j] = boundary_v[i][j] * rs[i][j];
     rvs[i][j] = 0.;
   }
 
   // bottom moving lid
-  else if (boundary[i][j-1] == EXTERNAL) {
+  else if (region[i][j-1] == EXTERNAL) {
     // Check if this is a corner point
-    if (boundary[i-1][j] != MOVING_LID || boundary[i+1][j] != MOVING_LID) {
+    if (region[i-1][j] != MOVING_LID || region[i+1][j] != MOVING_LID) {
       rs[i][j] = r[i][j] - 0.5*a2 * (-rv[i][j+2] + 4.*rv[i][j+1] - 3.*rv[i][j]);
     } else {
-      rs[i][j] = r[i][j] - 0.5*a1*u_lid * (r[i+1][j] - r[i-1][j]) - 0.5*a2 * (-rv[i][j+2] + 4.*rv[i][j+1] - 3.*rv[i][j]);
+      rs[i][j] = r[i][j] - 0.5*a1*boundary_v[i][j] * (r[i+1][j] - r[i-1][j]) - 0.5*a2 * (-rv[i][j+2] + 4.*rv[i][j+1] - 3.*rv[i][j]);
     }
 
-    rus[i][j] = u_lid * rs[i][j];
+    rus[i][j] = boundary_v[i][j] * rs[i][j];
     rvs[i][j] = 0.;
   }
 
@@ -190,26 +190,26 @@ void MacCormack::moving_wall_predictor(size_t i, size_t j) {
 void MacCormack::moving_wall_corrector(size_t i, size_t j) {
 
   // top moving lid
-  if (boundary[i][j+1] == EXTERNAL) {
-    if (boundary[i-1][j] != MOVING_LID || boundary[i+1][j] != MOVING_LID) {
+  if (region[i][j+1] == EXTERNAL) {
+    if (region[i-1][j] != MOVING_LID || region[i+1][j] != MOVING_LID) {
       r[i][j] = 0.5 * (r[i][j] + rs[i][j] + 0.5*a2 * (-rvs[i][j-2] + 4.*rvs[i][j-1] - 3.*rvs[i][j]));
     }  else {
-      r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a1*u_lid * (rs[i+1][j] - rs[i-1][j]) + 0.5*a2 * (-rvs[i][j-2] + 4.*rvs[i][j-1] - 3.*rvs[i][j]));
+      r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a1*boundary_v[i][j] * (rs[i+1][j] - rs[i-1][j]) + 0.5*a2 * (-rvs[i][j-2] + 4.*rvs[i][j-1] - 3.*rvs[i][j]));
 
     }
-    ru[i][j] = r[i][j] * u_lid;
+    ru[i][j] = r[i][j] * boundary_v[i][j];
     rv[i][j] = 0.;
   }
 
   // bottom moving lid
-  else if (boundary[i][j-1] == EXTERNAL) {
-    if (boundary[i-1][j] != MOVING_LID || boundary[i+1][j] != MOVING_LID) {
+  else if (region[i][j-1] == EXTERNAL) {
+    if (region[i-1][j] != MOVING_LID || region[i+1][j] != MOVING_LID) {
       r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a2 * (-rvs[i][j+2] + 4.*rvs[i][j+1] - 3.*rvs[i][j]));
     }  else {
-      r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a1*u_lid * (rs[i+1][j] - rs[i-1][j]) - 0.5*a2 * (-rvs[i][j+2] + 4.*rvs[i][j+1] - 3.*rvs[i][j]));
+      r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a1*boundary_v[i][j] * (rs[i+1][j] - rs[i-1][j]) - 0.5*a2 * (-rvs[i][j+2] + 4.*rvs[i][j+1] - 3.*rvs[i][j]));
 
     }
-    ru[i][j] = r[i][j] * u_lid;
+    ru[i][j] = r[i][j] * boundary_v[i][j];
     rv[i][j] = 0.;
   }
 
@@ -219,8 +219,8 @@ void MacCormack::moving_wall_corrector(size_t i, size_t j) {
 void MacCormack::inlet_predictor(size_t i, size_t j) {
 
   // inlet on left
-  if (boundary[i-1][j] == EXTERNAL) {
-    rus[i][j] = r[i][j] * u_lid;
+  if (region[i-1][j] == EXTERNAL) {
+    rus[i][j] = r[i][j] * boundary_v[i][j];
     rvs[i][j] = 0.;
     rs[i][j] = r[i][j] - 0.5*a1 * (-ru[i+2][j] + 4.*ru[i+1][j] - 3.*ru[i][j]);
   }
@@ -230,8 +230,8 @@ void MacCormack::inlet_predictor(size_t i, size_t j) {
 void MacCormack::inlet_corrector(size_t i, size_t j) {
 
   // inlet on left
-  if (boundary[i-1][j] == EXTERNAL) {
-    ru[i][j] = rs[i][j] * u_lid;
+  if (region[i-1][j] == EXTERNAL) {
+    ru[i][j] = rs[i][j] * boundary_v[i][j];
     rv[i][j] = 0.;
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a1 * (-rus[i+2][j] + 4.*rus[i+1][j] - 3.*rus[i][j]));
   }
@@ -241,7 +241,7 @@ void MacCormack::inlet_corrector(size_t i, size_t j) {
 void MacCormack::outlet_predictor(size_t i, size_t j) {
 
   // outlet on right
-  if (boundary[i+1][j] == EXTERNAL) {
+  if (region[i+1][j] == EXTERNAL) {
     rus[i][j] = 2.*ru[i-1][j] - ru[i-2][j];
     rvs[i][j] = 2.*rv[i-1][j] - rv[i-2][j];
     rs[i][j] = 2.*r[i-1][j] - r[i-2][j];
@@ -252,7 +252,7 @@ void MacCormack::outlet_predictor(size_t i, size_t j) {
 void MacCormack::outlet_corrector(size_t i, size_t j) {
 
   // outlet on right
-  if (boundary[i+1][j] == EXTERNAL) {
+  if (region[i+1][j] == EXTERNAL) {
     ru[i][j] = 2.*rus[i-1][j] - rus[i-2][j];
     rv[i][j] = 2.*rvs[i-1][j] - rvs[i-2][j];
     r[i][j] = 2.*rs[i-1][j] - rs[i-2][j];
@@ -280,15 +280,15 @@ void MacCormack::run_solver_step() {
   for (i=0; i<(grid_size_x); ++i) {
     for (j=0; j<(grid_size_y); ++j) {
 
-      if (boundary[i][j] == FREE_FLOW) {
+      if (region[i][j] == FREE_FLOW) {
         free_flow_predictor(i,j);
-      } else if (boundary[i][j] == STATIONARY) {
+      } else if (region[i][j] == STATIONARY) {
         stationary_wall_predictor(i,j);
-      } else if (boundary[i][j] == MOVING_LID) {
+      } else if (region[i][j] == MOVING_LID) {
         moving_wall_predictor(i,j);
-      } else if (boundary[i][j] == INLET) {
+      } else if (region[i][j] == INLET) {
         inlet_predictor(i,j);
-      } else if (boundary[i][j] == OUTLET) {
+      } else if (region[i][j] == OUTLET) {
         outlet_predictor(i,j);
       } else {
         continue;
@@ -310,15 +310,15 @@ void MacCormack::run_solver_step() {
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(i,j)
   for (i=0; i<grid_size_x; ++i) {
     for (j=0; j<grid_size_y; ++j) {
-      if (boundary[i][j] == FREE_FLOW) {
+      if (region[i][j] == FREE_FLOW) {
         free_flow_corrector(i,j);
-      } else if (boundary[i][j] == STATIONARY) {
+      } else if (region[i][j] == STATIONARY) {
         stationary_wall_corrector(i,j);
-      } else if (boundary[i][j] == MOVING_LID) {
+      } else if (region[i][j] == MOVING_LID) {
         moving_wall_corrector(i,j);
-      } else if (boundary[i][j] == INLET) {
+      } else if (region[i][j] == INLET) {
         inlet_corrector(i,j);
-      } else if (boundary[i][j] == OUTLET) {
+      } else if (region[i][j] == OUTLET) {
         outlet_corrector(i,j);
       } else {
         continue;

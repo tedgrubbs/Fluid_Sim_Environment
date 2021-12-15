@@ -109,9 +109,9 @@ class Simulation {
     double ** v;
     double ** rv;
     double ** speed;
-    int ** boundary;
+    int ** region;
+    double ** boundary_v; // boundary condition velocity
 
-    double u_lid;
     double force;
     int MAX_THREADS;
 
