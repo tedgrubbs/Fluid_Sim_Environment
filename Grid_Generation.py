@@ -15,8 +15,8 @@ class Region(IntEnum):
 
 # Use this to quickly redefine grid and config variables
 
-grid_size_x = 64+2
-grid_size_y = 64+2
+grid_size_x = 65+2
+grid_size_y = 65+2
 rho = np.zeros((grid_size_x,grid_size_y))
 u = np.zeros((grid_size_x,grid_size_y))
 v = np.zeros((grid_size_x,grid_size_y))
@@ -27,7 +27,7 @@ for i in range(grid_size_x):
         indices[i,j] = [i,j]
 
 rho[:,:] = 1.
-u[:,:] = 1.
+u[:,-2] = 1.
 
 # top wall
 boundary[:,-1] = Region.EXTERNAL
@@ -65,10 +65,16 @@ rho[0, :] = 0.
 # boundary[1:-1,1] = 2
 
 # top moving lid with in and outlet
-boundary[-2, 1:-1] = Region.OUTLET
-boundary[1, 1:-1] = Region.INLET
+# boundary[-2, 1:-1] = Region.OUTLET
+# boundary[1, 1:-1] = Region.INLET
+# boundary[1:-2,1] = Region.STATIONARY
+# boundary[1:-2,-2] = Region.MOVING_LID
+
+# top moving lid with in and outlet. This configuration reproduce Borg's result when using only forward differences with predictor step
+boundary[-2, 1:-1] = Region.STATIONARY
+boundary[1, 1:-1] = Region.STATIONARY
 boundary[1:-2,1] = Region.STATIONARY
-boundary[1:-2,-2] = Region.MOVING_LID
+boundary[2:-2,-2] = Region.MOVING_LID
 
 # left and right moving lid
 # boundary[1, 1:-1] = 2
