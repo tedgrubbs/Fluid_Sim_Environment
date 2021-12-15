@@ -100,8 +100,8 @@ void Simulation::read_config() {
   mu = stod(config["viscosity"]);
   c = stod(config["c"]);
 
-  mach = 0.1;
-  Re = 400.;
+  mach = stod(config["Mach"]);
+  Re = stod(config["Reynolds"]);
   u_lid = 1.0;
 
   framerate = stoi(config["frame_rate"]);
@@ -117,7 +117,7 @@ void Simulation::read_config() {
     On my desktop which I have found that using 4 threads is the fastest option. Most likely
     because there are 4 real cores on the CPU.
   */
-  MAX_THREADS = 4;//omp_get_max_threads();
+  MAX_THREADS = stoi(config["thread_count"]);//omp_get_max_threads();
   render_grid_size_x = stoi(config["render_grid_size_x"]);
   render_grid_size_y = stoi(config["render_grid_size_y"]);
   max_run_time = stoi(config["max_run_time"]);

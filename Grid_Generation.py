@@ -147,6 +147,9 @@ config['render_grid_size_x'] = 512
 config['render_grid_size_y'] = 512
 config["tolerance"] = 0.00
 config["max_run_time"] = 100000
+config['thread_count'] = 4
+config['Reynolds'] = 400.
+config['Mach'] = 0.1
 
 with open('config.json','w') as fp:
     json.dump(config, fp, indent='\t')
