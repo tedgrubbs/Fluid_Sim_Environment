@@ -3,7 +3,7 @@
 
 MacCormack::MacCormack() : Simulation() {
 
-  dt = 0.1 * dx / (1./mach + fabs(u_lid));
+  dt = 0.5 * dx / (1./mach + fabs(u_lid));
   cout << "MacCormack timestep defined by stability criteria: " << dt << endl;
 
   rs = create2dArray<double>(grid_size_x, grid_size_y);
@@ -194,7 +194,7 @@ void MacCormack::moving_wall_corrector(size_t i, size_t j) {
     if (boundary[i-1][j] != MOVING_LID || boundary[i+1][j] != MOVING_LID) {
       r[i][j] = 0.5 * (r[i][j] + rs[i][j] + 0.5*a2 * (-rvs[i][j-2] + 4.*rvs[i][j-1] - 3.*rvs[i][j]));
     }  else {
-      r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a1*u_lid * (r[i+1][j] - r[i-1][j]) + 0.5*a2 * (-rvs[i][j-2] + 4.*rvs[i][j-1] - 3.*rvs[i][j]));
+      r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a1*u_lid * (rs[i+1][j] - rs[i-1][j]) + 0.5*a2 * (-rvs[i][j-2] + 4.*rvs[i][j-1] - 3.*rvs[i][j]));
 
     }
     ru[i][j] = r[i][j] * u_lid;
@@ -206,7 +206,7 @@ void MacCormack::moving_wall_corrector(size_t i, size_t j) {
     if (boundary[i-1][j] != MOVING_LID || boundary[i+1][j] != MOVING_LID) {
       r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a2 * (-rvs[i][j+2] + 4.*rvs[i][j+1] - 3.*rvs[i][j]));
     }  else {
-      r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a1*u_lid * (r[i+1][j] - r[i-1][j]) - 0.5*a2 * (-rvs[i][j+2] + 4.*rvs[i][j+1] - 3.*rvs[i][j]));
+      r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a1*u_lid * (rs[i+1][j] - rs[i-1][j]) - 0.5*a2 * (-rvs[i][j+2] + 4.*rvs[i][j+1] - 3.*rvs[i][j]));
 
     }
     ru[i][j] = r[i][j] * u_lid;
