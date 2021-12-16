@@ -244,6 +244,12 @@ void MacCormack::inlet_corrector(size_t i, size_t j) {
 
 }
 
+/*
+  According to some forum posts I should not be using pure outflow BCs when modeling any compressible flows or flows with varying density.
+  With high reynold's number, this is a certainty and will cause the simulation to break.
+  Stability is restored by maintaining a constant density at the outlet. I think this is a "pressure BC".
+  Can also use velocity BC here which would make it's logic the same as the inlet. 
+*/
 void MacCormack::outlet_predictor(size_t i, size_t j) {
 
   // outlet on right
