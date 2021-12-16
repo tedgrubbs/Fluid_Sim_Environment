@@ -96,7 +96,8 @@ class Simulation {
       STATIONARY=1,
       MOVING_LID=2,
       INLET=3,
-      OUTLET=4
+      OUTLET=4,
+      STATIONARY_MOM=5
     };
 
     unsigned int grid_size_x, grid_size_y;
@@ -130,7 +131,7 @@ class MacCormack : public Simulation {
     double ** vs;
     double ** rvs;
 
-    double a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11;
+    double a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11, b1,b2,b3,b4,b5;
 
     bool forward_diff_first;
 
@@ -150,6 +151,10 @@ class MacCormack : public Simulation {
     void inlet_corrector(size_t x, size_t y);
     void outlet_predictor(size_t x, size_t y);
     void outlet_corrector(size_t x, size_t y);
+
+    // stationary walls function for density equations derived from momentum navier stokes
+    void stationary_wall_mom_predictor(size_t x, size_t y);
+    void stationary_wall_mom_corrector(size_t x, size_t y);
 
   public:
     MacCormack();

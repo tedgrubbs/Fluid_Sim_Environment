@@ -12,6 +12,7 @@ class Region(IntEnum):
     MOVING_LID = 2
     INLET = 3
     OUTLET = 4
+    STATIONARY_MOMENTUM_BASED = 5
 
 # Use this to quickly redefine grid and config variables
 

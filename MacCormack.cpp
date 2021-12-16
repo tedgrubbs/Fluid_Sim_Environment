@@ -24,6 +24,12 @@ MacCormack::MacCormack() : Simulation() {
   a10 = 2.*(a5+a6);
   a11 = 2.*(a7+a8);
 
+  b1 = 1./3.;
+  b2 = 8.*mach*mach / (9.*dx*Re);
+  b3 = mach*mach / (18.*dy*Re);
+  b4 = 8.*mach*mach / (9.*dy*Re);;
+  b5 = mach*mach / (18.*dx*Re);;
+
   bool forward_diff_first;
 
 }
@@ -260,6 +266,144 @@ void MacCormack::outlet_corrector(size_t i, size_t j) {
 
 }
 
+void MacCormack::stationary_wall_mom_predictor(size_t i, size_t j) {
+
+  rus[i][j] = 0.;
+  rvs[i][j] = 0.;
+
+  // if at a corner just default to normal stationary wall condition
+
+  // left-facing wall (similar to the right wall)
+  if (region[i+1][j] == EXTERNAL) {
+    if (region[i][j+1] != STATIONARY_MOM || region[i][j-1] != STATIONARY_MOM) {
+      rs[i][j] = r[i][j] + 0.5*a1 * (-ru[i-2][j] + 4.*ru[i-1][j] - 3.*ru[i][j]);
+    } else {
+      rs[i][j] = b1 * (4.*r[i-1][j] - r[i-2][j])
+      + b2 * (-5.*u[i-1][j] + 4.*u[i-2][j] - u[i-3][j])
+      - b3 * (
+        -(v[i-2][j+1] - v[i-2][j-1])
+        + 4.*(v[i-1][j+1] - v[i-1][j-1])
+        -3.*(v[i][j+1] - v[i][j-1])
+      );
+    }
+  }
+
+  // right-facing wall (similar to the left wall)
+  else if(region[i-1][j] == EXTERNAL) {
+    if (region[i][j+1] != STATIONARY_MOM || region[i][j-1] != STATIONARY_MOM) {
+      rs[i][j] = r[i][j] - 0.5*a1 * (-ru[i+2][j] + 4.*ru[i+1][j] - 3.*ru[i][j]);
+    } else {
+      rs[i][j] = b1 * (4.*r[i+1][j] - r[i+2][j])
+      - b2 * (-5.*u[i+1][j] + 4.*u[i+2][j] - u[i+3][j])
+      - b3 * (
+        -(v[i+2][j+1] - v[i+2][j-1])
+        + 4.*(v[i+1][j+1] - v[i+1][j-1])
+        -3.*(v[i][j+1] - v[i][j-1])
+      );
+    }
+  }
+
+  // upward-facing wall (similar to bottom wall)
+  else if (region[i][j-1] == EXTERNAL)  {
+    if (region[i-1][j] != STATIONARY_MOM || region[i+1][j] != STATIONARY_MOM) {
+      rs[i][j] = r[i][j] - 0.5*a2 * (-rv[i][j+2] + 4.*rv[i][j+1] - 3.*rv[i][j]);
+    } else {
+      rs[i][j] = b1 * (4.*r[i][j+1] - r[i][j+2])
+      - b4 * (-5.*v[i][j+1] + 4.*v[i][j+2] - v[i][j+3])
+      - b5 * (
+        -(u[i+1][j+2] - u[i-1][j+2])
+        + 4.*(u[i+1][j+1] - u[i-1][j+1])
+        -3.*(u[i+1][j] - u[i-1][j])
+      );
+    }
+  }
+
+  // downward facing wall (similar to top wall)
+  else if (region[i][j+1] == EXTERNAL) {
+    if (region[i-1][j] != STATIONARY_MOM || region[i+1][j] != STATIONARY_MOM) {
+      rs[i][j] = r[i][j] + 0.5*a2 * (-rv[i][j-2] + 4.*rv[i][j-1] - 3.*rv[i][j]);
+    } else {
+      rs[i][j] = b1 * (4.*r[i][j-1] - r[i][j-2])
+      + b4 * (-5.*v[i][j-1] + 4.*v[i][j-2] - v[i][j-3])
+      - b5 * (
+        -(u[i+1][j-2] - u[i-1][j-2])
+        + 4.*(u[i+1][j-1] - u[i-1][j-1])
+        -3.*(u[i+1][j] - u[i-1][j])
+      );
+    }
+  }
+
+}
+
+void MacCormack::stationary_wall_mom_corrector(size_t i, size_t j) {
+
+  ru[i][j] = 0.;
+  rv[i][j] = 0.;
+
+  // left-facing wall
+  if (region[i+1][j] == EXTERNAL) {
+    if (region[i][j+1] != STATIONARY_MOM || region[i][j-1] != STATIONARY_MOM) {
+      r[i][j] = 0.5 * (r[i][j] + rs[i][j] + 0.5*a1 * (-rus[i-2][j] + 4.*rus[i-1][j] - 3.*rus[i][j]));
+    } else {
+      r[i][j] = b1 * (4.*rs[i-1][j] - rs[i-2][j])
+      + b2 * (-5.*us[i-1][j] + 4.*us[i-2][j] - us[i-3][j])
+      - b3 * (
+        -(vs[i-2][j+1] - vs[i-2][j-1])
+        + 4.*(vs[i-1][j+1] - vs[i-1][j-1])
+        -3.*(vs[i][j+1] - vs[i][j-1])
+      );
+    }
+
+  }
+
+  // right-facing wall
+  else if(region[i-1][j] == EXTERNAL) {
+    if (region[i][j+1] != STATIONARY_MOM || region[i][j-1] != STATIONARY_MOM) {
+      r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a1 * (-rus[i+2][j] + 4.*rus[i+1][j] - 3.*rus[i][j]));
+    } else {
+      r[i][j] = b1 * (4.*rs[i+1][j] - rs[i+2][j])
+      - b2 * (-5.*us[i+1][j] + 4.*us[i+2][j] - us[i+3][j])
+      - b3 * (
+        -(vs[i+2][j+1] - vs[i+2][j-1])
+        + 4.*(vs[i+1][j+1] - vs[i+1][j-1])
+        -3.*(vs[i][j+1] - vs[i][j-1])
+      );
+    }
+
+  }
+
+  // upward-facing wall (similar to bottom wall)
+  else if (region[i][j-1] == EXTERNAL)  {
+    if (region[i-1][j] != STATIONARY_MOM || region[i+1][j] != STATIONARY_MOM) {
+      r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a2 * (-rvs[i][j+2] + 4.*rvs[i][j+1] - 3.*rvs[i][j]));
+    } else {
+      r[i][j] = b1 * (4.*rs[i][j+1] - rs[i][j+2])
+      - b4 * (-5.*vs[i][j+1] + 4.*vs[i][j+2] - vs[i][j+3])
+      - b5 * (
+        -(us[i+1][j+2] - us[i-1][j+2])
+        + 4.*(us[i+1][j+1] - us[i-1][j+1])
+        -3.*(us[i+1][j] - us[i-1][j])
+      );
+    }
+  }
+
+  // downward facing wall (similar to top wall)
+  else if (region[i][j+1] == EXTERNAL) {
+    if (region[i-1][j] != STATIONARY_MOM || region[i+1][j] != STATIONARY_MOM) {
+      r[i][j] = 0.5 * (r[i][j] + rs[i][j] + 0.5*a2 * (-rvs[i][j-2] + 4.*rvs[i][j-1] - 3.*rvs[i][j]));
+    } else {
+      r[i][j] = b1 * (4.*rs[i][j-1] - rs[i][j-2])
+      + b4 * (-5.*vs[i][j-1] + 4.*vs[i][j-2] - vs[i][j-3])
+      - b5 * (
+        -(us[i+1][j-2] - us[i-1][j-2])
+        + 4.*(us[i+1][j-1] - us[i-1][j-1])
+        -3.*(us[i+1][j] - us[i-1][j])
+      );
+    }
+  }
+
+}
+
 void MacCormack::run_solver_step() {
 
   /*
@@ -290,6 +434,8 @@ void MacCormack::run_solver_step() {
         inlet_predictor(i,j);
       } else if (region[i][j] == OUTLET) {
         outlet_predictor(i,j);
+      } else if (region[i][j] == STATIONARY_MOM) {
+        stationary_wall_mom_predictor(i,j);
       } else {
         continue;
       }
@@ -320,6 +466,8 @@ void MacCormack::run_solver_step() {
         inlet_corrector(i,j);
       } else if (region[i][j] == OUTLET) {
         outlet_corrector(i,j);
+      } else if (region[i][j] == STATIONARY_MOM) {
+        stationary_wall_mom_corrector(i,j);
       } else {
         continue;
       }
