@@ -3,7 +3,7 @@
 
 MacCormack::MacCormack() : Simulation() {
 
-  dt = 0.5 * dx / (1./mach + fabs(1.0));
+  dt = 0.1 * dx / (1./mach + fabs(1.0));
   cout << "MacCormack timestep defined by stability criteria: " << dt << endl;
 
   rs = create2dArray<double>(grid_size_x, grid_size_y);
@@ -275,7 +275,7 @@ void MacCormack::stationary_wall_mom_predictor(size_t i, size_t j) {
 
   // left-facing wall (similar to the right wall)
   if (region[i+1][j] == EXTERNAL) {
-    if (region[i][j+1] != STATIONARY_MOM || region[i][j-1] != STATIONARY_MOM) {
+    if (region[i][j+1] == EXTERNAL || region[i][j-1] == EXTERNAL) {
       rs[i][j] = r[i][j] + 0.5*a1 * (-ru[i-2][j] + 4.*ru[i-1][j] - 3.*ru[i][j]);
     } else {
       rs[i][j] = b1 * (4.*r[i-1][j] - r[i-2][j])
@@ -290,7 +290,7 @@ void MacCormack::stationary_wall_mom_predictor(size_t i, size_t j) {
 
   // right-facing wall (similar to the left wall)
   else if(region[i-1][j] == EXTERNAL) {
-    if (region[i][j+1] != STATIONARY_MOM || region[i][j-1] != STATIONARY_MOM) {
+    if (region[i][j+1] == EXTERNAL || region[i][j-1] == EXTERNAL) {
       rs[i][j] = r[i][j] - 0.5*a1 * (-ru[i+2][j] + 4.*ru[i+1][j] - 3.*ru[i][j]);
     } else {
       rs[i][j] = b1 * (4.*r[i+1][j] - r[i+2][j])
@@ -305,7 +305,7 @@ void MacCormack::stationary_wall_mom_predictor(size_t i, size_t j) {
 
   // upward-facing wall (similar to bottom wall)
   else if (region[i][j-1] == EXTERNAL)  {
-    if (region[i-1][j] != STATIONARY_MOM || region[i+1][j] != STATIONARY_MOM) {
+    if (region[i-1][j] == EXTERNAL || region[i+1][j] == EXTERNAL) {
       rs[i][j] = r[i][j] - 0.5*a2 * (-rv[i][j+2] + 4.*rv[i][j+1] - 3.*rv[i][j]);
     } else {
       rs[i][j] = b1 * (4.*r[i][j+1] - r[i][j+2])
@@ -320,7 +320,7 @@ void MacCormack::stationary_wall_mom_predictor(size_t i, size_t j) {
 
   // downward facing wall (similar to top wall)
   else if (region[i][j+1] == EXTERNAL) {
-    if (region[i-1][j] != STATIONARY_MOM || region[i+1][j] != STATIONARY_MOM) {
+    if (region[i-1][j] == EXTERNAL || region[i+1][j] == EXTERNAL) {
       rs[i][j] = r[i][j] + 0.5*a2 * (-rv[i][j-2] + 4.*rv[i][j-1] - 3.*rv[i][j]);
     } else {
       rs[i][j] = b1 * (4.*r[i][j-1] - r[i][j-2])
@@ -342,7 +342,7 @@ void MacCormack::stationary_wall_mom_corrector(size_t i, size_t j) {
 
   // left-facing wall
   if (region[i+1][j] == EXTERNAL) {
-    if (region[i][j+1] != STATIONARY_MOM || region[i][j-1] != STATIONARY_MOM) {
+    if (region[i][j+1] == EXTERNAL || region[i][j-1] == EXTERNAL) {
       r[i][j] = 0.5 * (r[i][j] + rs[i][j] + 0.5*a1 * (-rus[i-2][j] + 4.*rus[i-1][j] - 3.*rus[i][j]));
     } else {
       r[i][j] = b1 * (4.*rs[i-1][j] - rs[i-2][j])
@@ -358,7 +358,7 @@ void MacCormack::stationary_wall_mom_corrector(size_t i, size_t j) {
 
   // right-facing wall
   else if(region[i-1][j] == EXTERNAL) {
-    if (region[i][j+1] != STATIONARY_MOM || region[i][j-1] != STATIONARY_MOM) {
+    if (region[i][j+1] == EXTERNAL || region[i][j-1] == EXTERNAL) {
       r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a1 * (-rus[i+2][j] + 4.*rus[i+1][j] - 3.*rus[i][j]));
     } else {
       r[i][j] = b1 * (4.*rs[i+1][j] - rs[i+2][j])
@@ -374,7 +374,7 @@ void MacCormack::stationary_wall_mom_corrector(size_t i, size_t j) {
 
   // upward-facing wall (similar to bottom wall)
   else if (region[i][j-1] == EXTERNAL)  {
-    if (region[i-1][j] != STATIONARY_MOM || region[i+1][j] != STATIONARY_MOM) {
+    if (region[i-1][j] == EXTERNAL || region[i+1][j] == EXTERNAL) {
       r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a2 * (-rvs[i][j+2] + 4.*rvs[i][j+1] - 3.*rvs[i][j]));
     } else {
       r[i][j] = b1 * (4.*rs[i][j+1] - rs[i][j+2])
@@ -389,7 +389,7 @@ void MacCormack::stationary_wall_mom_corrector(size_t i, size_t j) {
 
   // downward facing wall (similar to top wall)
   else if (region[i][j+1] == EXTERNAL) {
-    if (region[i-1][j] != STATIONARY_MOM || region[i+1][j] != STATIONARY_MOM) {
+    if (region[i-1][j] == EXTERNAL || region[i+1][j] == EXTERNAL) {
       r[i][j] = 0.5 * (r[i][j] + rs[i][j] + 0.5*a2 * (-rvs[i][j-2] + 4.*rvs[i][j-1] - 3.*rvs[i][j]));
     } else {
       r[i][j] = b1 * (4.*rs[i][j-1] - rs[i][j-2])
