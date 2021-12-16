@@ -18,7 +18,7 @@ class Region(IntEnum):
 
 D = 20
 
-grid_size_x = 35*D+2
+grid_size_x = 15*D+2
 grid_size_y = 5*D+2
 rho = np.zeros((grid_size_x,grid_size_y))
 u = np.zeros((grid_size_x,grid_size_y))
@@ -31,7 +31,7 @@ for i in range(grid_size_x):
         indices[i,j] = [i,j]
 
 rho[:,:] = 1.
-u[:,:] = 1.0
+# u[:,:] = 1.0
 
 # creates border for sim environment
 # top wall
@@ -87,8 +87,7 @@ centerx = 5*D + D//2
 centery = grid_size_y // 2
 
 region[centerx-D//2 : centerx+D//2, centery-D//2 : centery+D//2] = Region.EXTERNAL
-rho[centerx-D//2 : centerx+D//2, centery-D//2 : centery+D//2] = 0.
-#
+
 region[centerx-D//2 , centery-D//2-1 : centery+D//2+1] = Region.STATIONARY_MOMENTUM_BASED
 region[centerx-D//2 : centerx+D//2+1, centery+D//2] = Region.STATIONARY_MOMENTUM_BASED
 region[centerx+D//2 ,centery-D//2-1 : centery+D//2] = Region.STATIONARY_MOMENTUM_BASED

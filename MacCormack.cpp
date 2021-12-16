@@ -3,7 +3,7 @@
 
 MacCormack::MacCormack() : Simulation() {
 
-  dt = 0.5 * dx / (1./mach);
+  dt = 0.1 * dx / (1./mach);
   cout << "MacCormack timestep defined by stability criteria: " << dt << endl;
 
   rs = create2dArray<double>(grid_size_x, grid_size_y);
