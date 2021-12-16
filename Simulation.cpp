@@ -301,6 +301,7 @@ void Simulation::render() {
   // loop indices
   int x,y;
   double absu, absv;
+  double max_rho=0.;
 
   // int particle_x_pos =  particle_x*grid_size_x;
   // int particle_y_pos =  particle_y*grid_size_y;
@@ -311,8 +312,14 @@ void Simulation::render() {
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(x,y,absu,absv)
   for (x=0; x<grid_size_x; ++x) {
     for (y=0; y<grid_size_y; ++y) {
+
       absu = fabs(u[x][y]);
       absv = fabs(v[x][y]);
+
+      if (r[x][y] > max_rho){
+        max_rho = r[x][y];
+      }
+
       if (absu > u_max && absu < MAX_RENDERABLE_SPEED) {
         u_max = absu;
       } else if (absu < u_min && absu > MIN_RENDERABLE_SPEED) {
@@ -325,6 +332,11 @@ void Simulation::render() {
         v_min = absv;
       }
     }
+  }
+  // cout << max_rho << endl;
+  if (max_rho > 1000) {
+    glfwSetWindowShouldClose(window, true);
+    return;
   }
 
   processInput(window);
