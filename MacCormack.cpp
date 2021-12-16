@@ -3,7 +3,7 @@
 
 MacCormack::MacCormack() : Simulation() {
 
-  dt = 0.1 * dx / (1./mach + fabs(1.0));
+  dt = 0.5 * dx / (1./mach);
   cout << "MacCormack timestep defined by stability criteria: " << dt << endl;
 
   rs = create2dArray<double>(grid_size_x, grid_size_y);
@@ -250,7 +250,7 @@ void MacCormack::outlet_predictor(size_t i, size_t j) {
   if (region[i+1][j] == EXTERNAL) {
     rus[i][j] = 2.*ru[i-1][j] - ru[i-2][j];
     rvs[i][j] = 2.*rv[i-1][j] - rv[i-2][j];
-    rs[i][j] = 2.*r[i-1][j] - r[i-2][j];
+    rs[i][j] = 1.;//2.*r[i-1][j] - r[i-2][j];
   }
 
 }
@@ -261,7 +261,7 @@ void MacCormack::outlet_corrector(size_t i, size_t j) {
   if (region[i+1][j] == EXTERNAL) {
     ru[i][j] = 2.*rus[i-1][j] - rus[i-2][j];
     rv[i][j] = 2.*rvs[i-1][j] - rvs[i-2][j];
-    r[i][j] = 2.*rs[i-1][j] - rs[i-2][j];
+    r[i][j] = 1.;//2.*rs[i-1][j] - rs[i-2][j];
   }
 
 }
@@ -331,6 +331,8 @@ void MacCormack::stationary_wall_mom_predictor(size_t i, size_t j) {
         -3.*(u[i+1][j] - u[i-1][j])
       );
     }
+  } else {
+    rs[i][j] = .25 * (r[i+1][j] + r[i-1][j] + r[i][j+1] + r[i][j-1]);
   }
 
 }
@@ -400,6 +402,8 @@ void MacCormack::stationary_wall_mom_corrector(size_t i, size_t j) {
         -3.*(us[i+1][j] - us[i-1][j])
       );
     }
+  } else {
+    r[i][j] = .25 * (rs[i+1][j] + rs[i-1][j] + rs[i][j+1] + rs[i][j-1]);
   }
 
 }
