@@ -83,17 +83,18 @@ rho[0, :] = 0.
 # boundary_v[2:-2,1] = 1.0
 
 # box in center
-centerx = 5*D + D//2
+centerx = 2*D + D//2
 centery = grid_size_y // 2
 
-# region[centerx-D//2 : centerx+D//2, centery-D//2 : centery+D//2] = Region.EXTERNAL
+region[centerx-D//2 : centerx+D//2, centery-D//2 : centery+D//2] = Region.EXTERNAL
 
-# region[centerx-D//2 , centery-D//2-1 : centery+D//2+1] = Region.STATIONARY_MOMENTUM_BASED
-# region[centerx-D//2 : centerx+D//2+1, centery+D//2] = Region.STATIONARY_MOMENTUM_BASED
-# region[centerx+D//2 ,centery-D//2-1 : centery+D//2] = Region.STATIONARY_MOMENTUM_BASED
-# region[centerx-D//2 : centerx+D//2, centery-D//2-1] = Region.STATIONARY_MOMENTUM_BASED
+region[centerx-D//2 , centery-D//2-1 : centery+D//2+1] = Region.STATIONARY_MOMENTUM_BASED
+region[centerx-D//2 : centerx+D//2+1, centery+D//2] = Region.STATIONARY_MOMENTUM_BASED
+region[centerx+D//2 ,centery-D//2-1 : centery+D//2] = Region.STATIONARY_MOMENTUM_BASED
+region[centerx-D//2 : centerx+D//2, centery-D//2-1] = Region.STATIONARY_MOMENTUM_BASED
 
 region[-2, 1:-1] = Region.OUTLET
+# boundary_v[-2, 1:-1] = 1.0
 
 region[1, 2:-2] = Region.INLET
 boundary_v[1, 2:-2] = 1.0
@@ -105,10 +106,10 @@ region[1:-2,-2] = Region.MOVING_LID
 boundary_v[1:-2,-2] = 1.0
 
 # side block
-region[centerx-D//2 : centerx+D//2, centery+D//2 : -1] = Region.EXTERNAL
-region[centerx-D//2 , centery+D//2 : -1] = Region.STATIONARY_MOMENTUM_BASED
-region[centerx-D//2 : centerx+D//2+1, centery+D//2] = Region.STATIONARY_MOMENTUM_BASED
-region[centerx+D//2 , centery+D//2 : -1] = Region.STATIONARY_MOMENTUM_BASED
+# region[centerx-D//2+1 : centerx+D//2, centery+D//2 : -1] = Region.EXTERNAL
+# region[centerx-D//2 , centery+D//2 : -2] = Region.STATIONARY_MOMENTUM_BASED
+# region[centerx-D//2 : centerx+D//2+1, centery+D//2] = Region.STATIONARY_MOMENTUM_BASED
+# region[centerx+D//2 , centery+D//2 : -2] = Region.STATIONARY_MOMENTUM_BASED
 # region[centerx-D//2 : centerx+D//2, centery-D//2-1] = Region.STATIONARY_MOMENTUM_BASED
 
 
@@ -150,7 +151,7 @@ config['c'] = 347.0
 config['force'] = 0.
 config['run_graphics'] = 1
 config['render_grid_size_x'] = 512*config['real_size_x']
-config['render_grid_size_y'] = 256
+config['render_grid_size_y'] = 512
 config["tolerance"] = 0.00
 config["max_run_time"] = 100000
 config['thread_count'] = 4

@@ -230,6 +230,13 @@ void MacCormack::inlet_predictor(size_t i, size_t j) {
     rvs[i][j] = 0.;
     rs[i][j] = r[i][j] - 0.5*a1 * (-ru[i+2][j] + 4.*ru[i+1][j] - 3.*ru[i][j]);
   }
+  
+  // inlet on right
+  else if (region[i+1][j] == EXTERNAL) {
+    rus[i][j] = r[i][j] * boundary_v[i][j];
+    rvs[i][j] = 0.;
+    rs[i][j] = r[i][j] + 0.5*a1 * (-ru[i-2][j] + 4.*ru[i-1][j] - 3.*ru[i][j]);
+  }
 
 }
 
@@ -240,6 +247,13 @@ void MacCormack::inlet_corrector(size_t i, size_t j) {
     ru[i][j] = rs[i][j] * boundary_v[i][j];
     rv[i][j] = 0.;
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a1 * (-rus[i+2][j] + 4.*rus[i+1][j] - 3.*rus[i][j]));
+  }
+
+  // inlet on right
+  else if (region[i+1][j] == EXTERNAL) {
+    rus[i][j] = r[i][j] * boundary_v[i][j];
+    rvs[i][j] = 0.;
+    rs[i][j] = 0.5 * (r[i][j] + rs[i][j] + 0.5*a1 * (-rus[i-2][j] + 4.*rus[i-1][j] - 3.*rus[i][j]));
   }
 
 }
@@ -256,7 +270,7 @@ void MacCormack::outlet_predictor(size_t i, size_t j) {
   if (region[i+1][j] == EXTERNAL) {
     rus[i][j] = 2.*ru[i-1][j] - ru[i-2][j];
     rvs[i][j] = 2.*rv[i-1][j] - rv[i-2][j];
-    rs[i][j] = 1.;//2.*r[i-1][j] - r[i-2][j];
+    rs[i][j] = 2.*r[i-1][j] - r[i-2][j];
   }
 
 }
@@ -267,7 +281,7 @@ void MacCormack::outlet_corrector(size_t i, size_t j) {
   if (region[i+1][j] == EXTERNAL) {
     ru[i][j] = 2.*rus[i-1][j] - rus[i-2][j];
     rv[i][j] = 2.*rvs[i-1][j] - rvs[i-2][j];
-    r[i][j] = 1.;//2.*rs[i-1][j] - rs[i-2][j];
+    r[i][j] = 2.*rs[i-1][j] - rs[i-2][j];
   }
 
 }

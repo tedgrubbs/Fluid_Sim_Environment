@@ -335,6 +335,7 @@ void Simulation::render() {
   }
   // cout << max_rho << endl;
   if (max_rho > 1000) {
+    cout << "Failed from density explosion!\n";
     glfwSetWindowShouldClose(window, true);
     return;
   }
