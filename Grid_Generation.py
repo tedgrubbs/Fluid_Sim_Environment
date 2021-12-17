@@ -16,10 +16,10 @@ class Region(IntEnum):
 
 # Use this to quickly redefine grid and config variables
 
-D = 20
+D = 40
 
-grid_size_x = 15*D+2
-grid_size_y = 5*D+2
+grid_size_x = 35*D+2
+grid_size_y = 3*D+2
 rho = np.zeros((grid_size_x,grid_size_y))
 u = np.zeros((grid_size_x,grid_size_y))
 v = np.zeros((grid_size_x,grid_size_y))
@@ -83,7 +83,7 @@ rho[0, :] = 0.
 # boundary_v[2:-2,1] = 1.0
 
 # box in center
-centerx = 2*D + D//2
+centerx = 15*D + D//2
 centery = grid_size_y // 2
 
 region[centerx-D//2 : centerx+D//2, centery-D//2 : centery+D//2] = Region.EXTERNAL
@@ -140,8 +140,9 @@ output.to_csv('grid_variables.csv',index=False)
 config = {}
 config['grid_size_x'] = grid_size_x
 config['grid_size_y'] = grid_size_y
-config['real_size_x'] = (grid_size_x-2) // (grid_size_y-2)
-config['real_size_y'] = 1.
+config['real_size_y'] = 3
+config['real_size_x'] = 35
+# config['real_size_y'] = 3.
 config['frame_rate'] = 0
 config['dt'] = 0.000175
 config['dx'] = 1./(grid_size_x-3)*config['real_size_x']
@@ -150,13 +151,13 @@ config['viscosity'] = 1.8e-5
 config['c'] = 347.0
 config['force'] = 0.
 config['run_graphics'] = 1
-config['render_grid_size_x'] = 512*config['real_size_x']
+config['render_grid_size_x'] = 512#*config['real_size_x']
 config['render_grid_size_y'] = 512
 config["tolerance"] = 0.00
 config["max_run_time"] = 100000
 config['thread_count'] = 4
-config['Reynolds'] = 1000.
-config['Mach'] = 0.1
+config['Reynolds'] = 100.
+config['Mach'] = 0.05
 
 with open('config.json','w') as fp:
     json.dump(config, fp, indent='\t')

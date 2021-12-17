@@ -439,11 +439,11 @@ void MacCormack::run_solver_step() {
     I have actually discovered that my alternating scheme is not good enough. It causes the simulation to break for the flow around a block
   */
 
-  // if (TIMESTEP % 2 == 0) {
-  //   forward_diff_first = true;
-  // } else {
-  //   forward_diff_first = false;
-  // }
+  if (TIMESTEP % 2 == 0) {
+    forward_diff_first = true;
+  } else {
+    forward_diff_first = false;
+  }
 
   // predictor step
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(i,j)
