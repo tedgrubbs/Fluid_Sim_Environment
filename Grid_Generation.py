@@ -31,7 +31,7 @@ for i in range(grid_size_x):
         indices[i,j] = [i,j]
 
 rho[:,:] = 1.
-# u[:,:] = 1.0
+u[:,:] = 1.0
 
 # creates border for sim environment
 # top wall
@@ -86,12 +86,12 @@ rho[0, :] = 0.
 centerx = 5*D + D//2
 centery = grid_size_y // 2
 
-region[centerx-D//2 : centerx+D//2, centery-D//2 : centery+D//2] = Region.EXTERNAL
+# region[centerx-D//2 : centerx+D//2, centery-D//2 : centery+D//2] = Region.EXTERNAL
 
-region[centerx-D//2 , centery-D//2-1 : centery+D//2+1] = Region.STATIONARY_MOMENTUM_BASED
-region[centerx-D//2 : centerx+D//2+1, centery+D//2] = Region.STATIONARY_MOMENTUM_BASED
-region[centerx+D//2 ,centery-D//2-1 : centery+D//2] = Region.STATIONARY_MOMENTUM_BASED
-region[centerx-D//2 : centerx+D//2, centery-D//2-1] = Region.STATIONARY_MOMENTUM_BASED
+# region[centerx-D//2 , centery-D//2-1 : centery+D//2+1] = Region.STATIONARY_MOMENTUM_BASED
+# region[centerx-D//2 : centerx+D//2+1, centery+D//2] = Region.STATIONARY_MOMENTUM_BASED
+# region[centerx+D//2 ,centery-D//2-1 : centery+D//2] = Region.STATIONARY_MOMENTUM_BASED
+# region[centerx-D//2 : centerx+D//2, centery-D//2-1] = Region.STATIONARY_MOMENTUM_BASED
 
 region[-2, 1:-1] = Region.OUTLET
 
@@ -104,15 +104,20 @@ boundary_v[1:-2,1] = 1.0
 region[1:-2,-2] = Region.MOVING_LID
 boundary_v[1:-2,-2] = 1.0
 
+# side block
+region[centerx-D//2 : centerx+D//2, centery+D//2 : -1] = Region.EXTERNAL
+region[centerx-D//2 , centery+D//2 : -1] = Region.STATIONARY_MOMENTUM_BASED
+region[centerx-D//2 : centerx+D//2+1, centery+D//2] = Region.STATIONARY_MOMENTUM_BASED
+region[centerx+D//2 , centery+D//2 : -1] = Region.STATIONARY_MOMENTUM_BASED
+# region[centerx-D//2 : centerx+D//2, centery-D//2-1] = Region.STATIONARY_MOMENTUM_BASED
+
+
 fig = plt.figure()
 ax = fig.add_subplot(111)
 
 ax.imshow(region.transpose())
 ax.invert_yaxis()
 plt.show()
-# Initializing density everywhere
-
-# u[:,-2] = 1.
 
 
 

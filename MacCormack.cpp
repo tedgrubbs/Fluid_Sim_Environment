@@ -3,7 +3,7 @@
 
 MacCormack::MacCormack() : Simulation() {
 
-  dt = 0.1 * dx / (1./mach);
+  dt = 0.4 * dx / (1./mach);
   cout << "MacCormack timestep defined by stability criteria: " << dt << endl;
 
   rs = create2dArray<double>(grid_size_x, grid_size_y);
@@ -30,7 +30,7 @@ MacCormack::MacCormack() : Simulation() {
   b4 = 8.*mach*mach / (9.*dy*Re);;
   b5 = mach*mach / (18.*dx*Re);;
 
-  bool forward_diff_first;
+  bool forward_diff_first = true;
 
 }
 
@@ -421,13 +421,15 @@ void MacCormack::run_solver_step() {
     result from using only backward differences. However the 2 are nearly the same when
     compared to using an alternating difference scheme. Supposedly an alternating scheme
     is more accurate but I currently have not been able to verify this.
+
+    I have actually discovered that my alternating scheme is not good enough. It causes the simulation to break for the flow around a block
   */
 
-  if (TIMESTEP % 2 == 0) {
-    forward_diff_first = true;
-  } else {
-    forward_diff_first = false;
-  }
+  // if (TIMESTEP % 2 == 0) {
+  //   forward_diff_first = true;
+  // } else {
+  //   forward_diff_first = false;
+  // }
 
   // predictor step
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(i,j)
