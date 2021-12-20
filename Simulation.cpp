@@ -1,36 +1,45 @@
 #include "Simulation.h"
 
 template <typename grid_type>
-grid_type ** create2dArray(unsigned int sizex, unsigned int sizey) {
+grid_type ** create2dArray(unsigned int sizex, unsigned int sizey) 
+{
   grid_type ** v;
   v = (grid_type **) calloc(sizex, sizeof(grid_type *));
-  for(int i=0; i<sizex; ++i) {
+
+  for(int i=0; i<sizex; ++i) 
+  {
     v[i] = (grid_type *) calloc(sizey, sizeof(grid_type));
   }
+
   return v;
 }
 
 template <typename grid_type>
-grid_type * create1dArray(unsigned int size) {
+grid_type * create1dArray(unsigned int size) 
+{
   grid_type * v;
   v = (grid_type *) calloc(size, sizeof(grid_type));
   return v;
 }
 
 template <typename grid_type>
-void delete_2d_Array(grid_type ** v, unsigned int sizex) {
-  for(int i=0; i<sizex; i++) {
+void delete_2d_Array(grid_type ** v, unsigned int sizex) 
+{
+  for(int i=0; i<sizex; i++) 
+  {
     free(v[i]);
   }
   free(v);
 }
 
 template <typename grid_type>
-void delete_1d_Array(grid_type * v) {
+void delete_1d_Array(grid_type * v) 
+{
   free(v);
 }
 
-Simulation::Simulation() {
+Simulation::Simulation() 
+{
 
   read_config();
   read_grid_and_init_struct();
@@ -45,23 +54,28 @@ Simulation::Simulation() {
   // printf("%d threads detected\n", MAX_THREADS);
   // printf("Maximum allowed timestep by Courant stability: %lf\n", dx/c);
 
-  if (run_graphics) {
+  if (run_graphics) 
+  {
     init_graphics();
   }
 
 
 }
 
-void Simulation::run() {
+void Simulation::run() 
+{
 
-  for (TIMESTEP=0; TIMESTEP<max_run_time; ++TIMESTEP) {
+  for (TIMESTEP=0; TIMESTEP<max_run_time; ++TIMESTEP)
+  {
+    // cout << TIMESTEP << endl;
     run_solver_step();
 
     // if ((TIMESTEP+1) % 100 == 0 && tolerance != 0.) {
     //   check_residual();
     // }
 
-    if (run_graphics) {
+    if (run_graphics) 
+    {
       render();
       if (glfwWindowShouldClose(window)) break;
     }
@@ -74,7 +88,8 @@ void Simulation::run() {
 
 }
 
-void Simulation::read_config() {
+void Simulation::read_config() 
+{
   map<string,string> config;
 
   ifstream json_file;
@@ -84,8 +99,10 @@ void Simulation::read_config() {
   string json_var;
   string json_val;
 
-  while (getline(json_file, line)) {
-    if (line.find("\"") != string::npos) {
+  while (getline(json_file, line)) 
+  {
+    if (line.find("\"") != string::npos) 
+    {
       json_var.assign(line.substr(line.find("\"") + 1, line.find(":") - line.find("\"") - 2));
       json_val.assign(line.substr(line.find(":") + 1, line.find(",") - line.find(":") - 1 ));
       config[json_var] = json_val;
@@ -125,7 +142,8 @@ void Simulation::read_config() {
 }
 
 
-void Simulation::read_grid_and_init_struct() {
+void Simulation::read_grid_and_init_struct() 
+{
 
   r = create2dArray<double>(grid_size_x, grid_size_y);
   u = create2dArray<double>(grid_size_x, grid_size_y);
@@ -142,7 +160,8 @@ void Simulation::read_grid_and_init_struct() {
   char line[4096];
   fgets(line, 4096, csv); // run once to get rid of header
 
-  while (fgets(line, 4096, csv)) {
+  while (fgets(line, 4096, csv)) 
+  {
 
     int temp_xi, temp_yi, temp_region;
     double temp_rho, temp_u, temp_v, temp_bv;
@@ -181,7 +200,8 @@ void Simulation::read_grid_and_init_struct() {
   fclose(csv);
 }
 
-int Simulation::init_graphics() {
+int Simulation::init_graphics() 
+{
   // GL initialization
 
   // double particle_x = 0.9;
@@ -197,7 +217,8 @@ int Simulation::init_graphics() {
   glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
 
   window = glfwCreateWindow(render_grid_size_x, render_grid_size_y, "BIG BOY", NULL, NULL);
-  if (window == NULL) {
+  if (window == NULL) 
+  {
     std::cout << "Failed to create GLFW window" << std::endl;
     glfwTerminate();
     return -1;
@@ -208,7 +229,8 @@ int Simulation::init_graphics() {
 
   // glad: load all OpenGL function pointers
   // ---------------------------------------
-  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) 
+  {
     std::cout << "Failed to initialize GLAD" << std::endl;
     return -1;
   }
@@ -234,7 +256,8 @@ int Simulation::init_graphics() {
   glCompileShader(fragmentShader);
   // check for shader compile errors
   glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-  if (!success) {
+  if (!success) 
+  {
     glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
     std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
   }
@@ -245,7 +268,8 @@ int Simulation::init_graphics() {
   glLinkProgram(shaderProgram);
   // check for linking errors
   glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-  if (!success) {
+  if (!success) 
+  {
     glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
     std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
   }
@@ -257,11 +281,14 @@ int Simulation::init_graphics() {
   vertex_data = create1dArray<float>(VERTEX_COUNT);
 
   // only need to define x and y coordinates bc calloc
-  for (int x=0; x<grid_size_x; ++x) {
-    for (int y=0; y<grid_size_y; ++y) {
+  for (int x=0; x<grid_size_x; ++x) 
+  {
+    for (int y=0; y<grid_size_y; ++y) 
+    {
       vertex_data[(x*grid_size_y+y)*6 + 0] = ((float) x / (float) (grid_size_x-1)) * (1.f - -1.f) + -1.f;
       vertex_data[(x*grid_size_y+y)*6 + 1] = ((float) y / (float) (grid_size_y-1)) * (1.f - -1.f) + -1.f;
-      if (region[x][y] == EXTERNAL) {
+      if (region[x][y] == EXTERNAL) 
+      {
         vertex_data[(x*grid_size_y+y)*6 + 3] = 84./255.;
         vertex_data[(x*grid_size_y+y)*6 + 4] = 84./255.;
         vertex_data[(x*grid_size_y+y)*6 + 5] = 84./255.;
@@ -286,8 +313,10 @@ int Simulation::init_graphics() {
   return 0;
 }
 
-void Simulation::render() {
-  if (glfwWindowShouldClose(window)) {
+void Simulation::render() 
+{
+  if (glfwWindowShouldClose(window)) 
+  {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glfwTerminate();
@@ -310,31 +339,41 @@ void Simulation::render() {
   // particle_y = particle_y + dt*v[particle_x_pos][particle_y_pos];
 
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(x,y,absu,absv)
-  for (x=0; x<grid_size_x; ++x) {
-    for (y=0; y<grid_size_y; ++y) {
+  for (x=0; x<grid_size_x; ++x) 
+  {
+    for (y=0; y<grid_size_y; ++y)
+    {
 
       absu = fabs(u[x][y]);
       absv = fabs(v[x][y]);
 
-      if (r[x][y] > max_rho){
+      if (r[x][y] > max_rho)
+      {
         max_rho = r[x][y];
       }
 
-      if (absu > u_max && absu < MAX_RENDERABLE_SPEED) {
+      if (absu > u_max && absu < MAX_RENDERABLE_SPEED) 
+      {
         u_max = absu;
-      } else if (absu < u_min && absu > MIN_RENDERABLE_SPEED) {
+      } 
+      else if (absu < u_min && absu > MIN_RENDERABLE_SPEED) 
+      {
         u_min = absu;
       }
 
-      if (absv > v_max && absv < MAX_RENDERABLE_SPEED) {
+      if (absv > v_max && absv < MAX_RENDERABLE_SPEED) 
+      {
         v_max = absv;
-      } else if (absv < v_min && absv > MIN_RENDERABLE_SPEED) {
+      } 
+      else if (absv < v_min && absv > MIN_RENDERABLE_SPEED) 
+      {
         v_min = absv;
       }
     }
   }
   // cout << max_rho << endl;
-  if (max_rho > 1000) {
+  if (max_rho > 1000) 
+  {
     cout << "Failed from density explosion!\n";
     glfwSetWindowShouldClose(window, true);
     return;
@@ -350,10 +389,13 @@ void Simulation::render() {
   float color_val_y;
 
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(color_val_x,color_val_y) private(x,y,absu,absv)
-  for (x=0; x<grid_size_x; ++x) {
-    for (y=0; y<grid_size_y; ++y) {
+  for (x=0; x<grid_size_x; ++x) 
+  {
+    for (y=0; y<grid_size_y; ++y) 
+    {
 
-      if (region[x][y] == EXTERNAL) {
+      if (region[x][y] == EXTERNAL) 
+      {
         continue;
       }
       absu = fabs(u[x][y]);
@@ -362,16 +404,20 @@ void Simulation::render() {
       color_val_x = (absu - u_min) / (u_max - u_min);
       color_val_y = (absv - v_min) / (v_max - v_min);
 
-      if (absu < MIN_RENDERABLE_SPEED) {
+      if (absu < MIN_RENDERABLE_SPEED) 
+      {
         color_val_x = 0.;
       }
-      if (absv < MIN_RENDERABLE_SPEED) {
+      if (absv < MIN_RENDERABLE_SPEED) 
+      {
         color_val_y = 0.;
       }
-      if (absu > MAX_RENDERABLE_SPEED) {
+      if (absu > MAX_RENDERABLE_SPEED) 
+      {
         color_val_x = 1.;
       }
-      if (absv > MAX_RENDERABLE_SPEED) {
+      if (absv > MAX_RENDERABLE_SPEED) 
+      {
         color_val_y = 1.;
       }
 
@@ -399,10 +445,13 @@ void Simulation::render() {
 
 
 
-void Simulation::check_residual() {
+void Simulation::check_residual() 
+{
   double res_sum = 0.;
-  for (int i=0; i<grid_size_x; ++i) {
-    for (int j=0; j<grid_size_y; ++j) {
+  for (int i=0; i<grid_size_x; ++i) 
+  {
+    for (int j=0; j<grid_size_y; ++j) 
+    {
       res_sum += fabs(speed[i][j] - residual[i][j]);
       residual[i][j] = speed[i][j];
     }
@@ -410,30 +459,38 @@ void Simulation::check_residual() {
 
   std::cout << "Residual at time " << TIMESTEP << " " << res_sum << std::endl;
 
-  if (res_sum < tolerance) {
+  if (res_sum < tolerance) 
+  {
     save_speed_to_file();
     std::cout << "Convergence found. Exiting.\n";
     exit(0);
   }
 }
 
-void Simulation::save_speed_to_file() {
+void Simulation::save_speed_to_file() 
+{
   FILE * rho_fp;
   FILE * u_fp;
   FILE * v_fp;
   rho_fp = fopen("Data_Output/rho_file.dat","w");
   u_fp = fopen("Data_Output/U_file.dat","w");
   v_fp = fopen("Data_Output/V_file.dat","w");
-  for (unsigned int y=0; y<grid_size_y; ++y) {
-    for (unsigned int x=0; x<grid_size_x; ++x) {
+  for (unsigned int y=0; y<grid_size_y; ++y) 
+  {
+    for (unsigned int x=0; x<grid_size_x; ++x) 
+    {
       fprintf(rho_fp, "%.10lf", r[x][y]);
       fprintf(u_fp, "%0.3E", u[x][y]);
       fprintf(v_fp, "%0.3E", v[x][y]);
-      if (x == (grid_size_x-1) ) {
+
+      if (x == (grid_size_x-1)) 
+      {
         fprintf(u_fp, "\n" );
         fprintf(v_fp, "\n" );
         fprintf(rho_fp, "\n" );
-      } else {
+      } 
+      else 
+      {
         fprintf(u_fp, " " );
         fprintf(v_fp, " " );
         fprintf(rho_fp, " " );
@@ -443,28 +500,29 @@ void Simulation::save_speed_to_file() {
   fclose(rho_fp);fclose(u_fp);fclose(v_fp);
 }
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) 
+{
   // make sure the viewport matches the new window dimensions; note that width and
   // height will be significantly larger than specified on retina displays.
   glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow *window) {
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-      glfwSetWindowShouldClose(window, true);
+void processInput(GLFWwindow *window) 
+{
+  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) 
+  {
+    glfwSetWindowShouldClose(window, true);
   }
 }
 
-string remove_quotes(string s) {
+string remove_quotes(string s) 
+{
   string new_s(s);
-  if (new_s.find("\"") != string::npos) {
+  if (new_s.find("\"") != string::npos) 
+  {
     new_s.assign(new_s.substr(new_s.find("\"") + 1, string::npos));
     new_s.assign(new_s.substr(0, new_s.find("\"")));
   }
   return new_s;
 }
 
-// scaler_index
-// inline size_t s_i(size_t x, size_t y) {
-//   return (x*grid_size_y + y);
-// }

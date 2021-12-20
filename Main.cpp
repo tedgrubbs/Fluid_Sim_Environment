@@ -1,6 +1,7 @@
 #include "Simulation.h"
 
-int main(int argc, char const *argv[]) {
+int main(int argc, char const *argv[]) 
+{
   std::chrono::high_resolution_clock::time_point begin,end;
   std::chrono::microseconds duration;
   begin = std::chrono::high_resolution_clock::now();

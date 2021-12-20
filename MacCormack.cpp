@@ -1,7 +1,8 @@
 #include "Simulation.h"
 
 
-MacCormack::MacCormack() : Simulation() {
+MacCormack::MacCormack() : Simulation() 
+{
 
   dt = 0.4 * dx / (1./mach);
   cout << "MacCormack timestep defined by stability criteria: " << dt << endl;
@@ -34,15 +35,19 @@ MacCormack::MacCormack() : Simulation() {
 
 }
 
-void MacCormack::free_flow_predictor(size_t i, size_t j) {
+void MacCormack::free_flow_predictor(size_t i, size_t j) 
+{
 
   int rightx,leftx,righty,lefty;
-  if (forward_diff_first) {
+  if (forward_diff_first) 
+  {
     rightx = i+1;
     leftx = i;
     righty = j+1;
     lefty = j;
-  } else {
+  } 
+  else 
+  {
     rightx = i;
     leftx = i-1;
     righty = j;
@@ -68,15 +73,19 @@ void MacCormack::free_flow_predictor(size_t i, size_t j) {
     + a9 * (u[i+1][j+1] + u[i-1][j-1] - u[i+1][j-1] - u[i-1][j+1]);
 }
 
-void MacCormack::free_flow_corrector(size_t i, size_t j) {
+void MacCormack::free_flow_corrector(size_t i, size_t j) 
+{
 
   int rightx,leftx,righty,lefty;
-  if (forward_diff_first) {
+  if (forward_diff_first) 
+  {
     rightx = i;
     leftx = i-1;
     righty = j;
     lefty = j-1;
-  } else {
+  } 
+  else 
+  {
     rightx = i+1;
     leftx = i;
     righty = j+1;
@@ -108,67 +117,82 @@ void MacCormack::free_flow_corrector(size_t i, size_t j) {
 
 }
 
-void MacCormack::stationary_wall_predictor(size_t i, size_t j) {
+void MacCormack::stationary_wall_predictor(size_t i, size_t j)
+{
 
   rus[i][j] = 0.;
   rvs[i][j] = 0.;
 
   // stationary left wall
-  if (region[i-1][j] == EXTERNAL)  {
+  if (region[i-1][j] == EXTERNAL)  
+  {
     rs[i][j] = r[i][j] - 0.5*a1 * (-ru[i+2][j] + 4.*ru[i+1][j] - 3.*ru[i][j]);
   }
 
   // stationary right wall
-  else if (region[i+1][j] == EXTERNAL) {
+  else if (region[i+1][j] == EXTERNAL) 
+  {
     rs[i][j] = r[i][j] + 0.5*a1 * (-ru[i-2][j] + 4.*ru[i-1][j] - 3.*ru[i][j]);
   }
 
   // stationary bottom wall
-  else if (region[i][j-1] == EXTERNAL) {
+  else if (region[i][j-1] == EXTERNAL) 
+  {
     rs[i][j] = r[i][j] - 0.5*a2 * (-rv[i][j+2] + 4.*rv[i][j+1] - 3.*rv[i][j]);
   }
 
   // stationary top wall
-  else if (region[i][j+1] == EXTERNAL) {
+  else if (region[i][j+1] == EXTERNAL) 
+  {
     rs[i][j] = r[i][j] + 0.5*a2 * (-rv[i][j-2] + 4.*rv[i][j-1] - 3.*rv[i][j]);
   }
 }
 
-void MacCormack::stationary_wall_corrector(size_t i, size_t j) {
+void MacCormack::stationary_wall_corrector(size_t i, size_t j) 
+{
 
   ru[i][j] = 0.;
   rv[i][j] = 0.;
 
   // stationary left wall
-  if (region[i-1][j] == EXTERNAL)  {
+  if (region[i-1][j] == EXTERNAL)  
+  {
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a1 * (-rus[i+2][j] + 4.*rus[i+1][j] - 3.*rus[i][j]));
   }
 
   // stationary right wall
-  else if (region[i+1][j] == EXTERNAL) {
+  else if (region[i+1][j] == EXTERNAL) 
+  {
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] + 0.5*a1 * (-rus[i-2][j] + 4.*rus[i-1][j] - 3.*rus[i][j]));
   }
 
   // stationary bottom wall
-  else if (region[i][j-1] == EXTERNAL) {
+  else if (region[i][j-1] == EXTERNAL) 
+  {
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a2 * (-rvs[i][j+2] + 4.*rvs[i][j+1] - 3.*rvs[i][j]));
   }
 
   // stationary top wall
-  else if (region[i][j+1] == EXTERNAL) {
+  else if (region[i][j+1] == EXTERNAL) 
+  {
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] + 0.5*a2 * (-rvs[i][j-2] + 4.*rvs[i][j-1] - 3.*rvs[i][j]));
   }
 
 }
 
-void MacCormack::moving_wall_predictor(size_t i, size_t j) {
+void MacCormack::moving_wall_predictor(size_t i, size_t j) 
+{
 
   // top moving lid
-  if (region[i][j+1] == EXTERNAL) {
+  if (region[i][j+1] == EXTERNAL) 
+  {
     // Check if this is a corner point
-    if (region[i-1][j] != MOVING_LID || region[i+1][j] != MOVING_LID) {
+    if (region[i-1][j] != MOVING_LID || region[i+1][j] != MOVING_LID) 
+    {
       rs[i][j] = r[i][j] + 0.5*a2 * (-rv[i][j-2] + 4.*rv[i][j-1] - 3.*rv[i][j]);
-    } else {
+    } 
+    else 
+    {
       rs[i][j] = r[i][j] - 0.5*a1*boundary_v[i][j] * (r[i+1][j] - r[i-1][j]) + 0.5*a2 * (-rv[i][j-2] + 4.*rv[i][j-1] - 3.*rv[i][j]);
     }
 
@@ -177,11 +201,15 @@ void MacCormack::moving_wall_predictor(size_t i, size_t j) {
   }
 
   // bottom moving lid
-  else if (region[i][j-1] == EXTERNAL) {
+  else if (region[i][j-1] == EXTERNAL) 
+  {
     // Check if this is a corner point
-    if (region[i-1][j] != MOVING_LID || region[i+1][j] != MOVING_LID) {
+    if (region[i-1][j] != MOVING_LID || region[i+1][j] != MOVING_LID) 
+    {
       rs[i][j] = r[i][j] - 0.5*a2 * (-rv[i][j+2] + 4.*rv[i][j+1] - 3.*rv[i][j]);
-    } else {
+    } 
+    else 
+    {
       rs[i][j] = r[i][j] - 0.5*a1*boundary_v[i][j] * (r[i+1][j] - r[i-1][j]) - 0.5*a2 * (-rv[i][j+2] + 4.*rv[i][j+1] - 3.*rv[i][j]);
     }
 
@@ -193,27 +221,34 @@ void MacCormack::moving_wall_predictor(size_t i, size_t j) {
 
 }
 
-void MacCormack::moving_wall_corrector(size_t i, size_t j) {
+void MacCormack::moving_wall_corrector(size_t i, size_t j) 
+{
 
   // top moving lid
-  if (region[i][j+1] == EXTERNAL) {
-    if (region[i-1][j] != MOVING_LID || region[i+1][j] != MOVING_LID) {
+  if (region[i][j+1] == EXTERNAL) 
+  {
+    if (region[i-1][j] != MOVING_LID || region[i+1][j] != MOVING_LID) 
+    {
       r[i][j] = 0.5 * (r[i][j] + rs[i][j] + 0.5*a2 * (-rvs[i][j-2] + 4.*rvs[i][j-1] - 3.*rvs[i][j]));
-    }  else {
+    }  
+    else 
+    {
       r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a1*boundary_v[i][j] * (rs[i+1][j] - rs[i-1][j]) + 0.5*a2 * (-rvs[i][j-2] + 4.*rvs[i][j-1] - 3.*rvs[i][j]));
-
     }
     ru[i][j] = r[i][j] * boundary_v[i][j];
     rv[i][j] = 0.;
   }
 
   // bottom moving lid
-  else if (region[i][j-1] == EXTERNAL) {
-    if (region[i-1][j] != MOVING_LID || region[i+1][j] != MOVING_LID) {
+  else if (region[i][j-1] == EXTERNAL) 
+  {
+    if (region[i-1][j] != MOVING_LID || region[i+1][j] != MOVING_LID) 
+    {
       r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a2 * (-rvs[i][j+2] + 4.*rvs[i][j+1] - 3.*rvs[i][j]));
-    }  else {
+    }  
+    else 
+    {
       r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a1*boundary_v[i][j] * (rs[i+1][j] - rs[i-1][j]) - 0.5*a2 * (-rvs[i][j+2] + 4.*rvs[i][j+1] - 3.*rvs[i][j]));
-
     }
     ru[i][j] = r[i][j] * boundary_v[i][j];
     rv[i][j] = 0.;
@@ -222,17 +257,20 @@ void MacCormack::moving_wall_corrector(size_t i, size_t j) {
 
 }
 
-void MacCormack::inlet_predictor(size_t i, size_t j) {
+void MacCormack::inlet_predictor(size_t i, size_t j) 
+{
 
   // inlet on left
-  if (region[i-1][j] == EXTERNAL) {
+  if (region[i-1][j] == EXTERNAL) 
+  {
     rus[i][j] = r[i][j] * boundary_v[i][j];
     rvs[i][j] = 0.;
     rs[i][j] = r[i][j] - 0.5*a1 * (-ru[i+2][j] + 4.*ru[i+1][j] - 3.*ru[i][j]);
   }
   
   // inlet on right
-  else if (region[i+1][j] == EXTERNAL) {
+  else if (region[i+1][j] == EXTERNAL) 
+  {
     rus[i][j] = r[i][j] * boundary_v[i][j];
     rvs[i][j] = 0.;
     rs[i][j] = r[i][j] + 0.5*a1 * (-ru[i-2][j] + 4.*ru[i-1][j] - 3.*ru[i][j]);
@@ -240,17 +278,20 @@ void MacCormack::inlet_predictor(size_t i, size_t j) {
 
 }
 
-void MacCormack::inlet_corrector(size_t i, size_t j) {
+void MacCormack::inlet_corrector(size_t i, size_t j) 
+{
 
   // inlet on left
-  if (region[i-1][j] == EXTERNAL) {
+  if (region[i-1][j] == EXTERNAL) 
+  {
     ru[i][j] = rs[i][j] * boundary_v[i][j];
     rv[i][j] = 0.;
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a1 * (-rus[i+2][j] + 4.*rus[i+1][j] - 3.*rus[i][j]));
   }
 
   // inlet on right
-  else if (region[i+1][j] == EXTERNAL) {
+  else if (region[i+1][j] == EXTERNAL) 
+  {
     rus[i][j] = r[i][j] * boundary_v[i][j];
     rvs[i][j] = 0.;
     rs[i][j] = 0.5 * (r[i][j] + rs[i][j] + 0.5*a1 * (-rus[i-2][j] + 4.*rus[i-1][j] - 3.*rus[i][j]));
@@ -264,10 +305,12 @@ void MacCormack::inlet_corrector(size_t i, size_t j) {
   Stability is restored by maintaining a constant density at the outlet. I think this is a "pressure BC".
   Can also use velocity BC here which would make it's logic the same as the inlet. 
 */
-void MacCormack::outlet_predictor(size_t i, size_t j) {
+void MacCormack::outlet_predictor(size_t i, size_t j) 
+{
 
   // outlet on right
-  if (region[i+1][j] == EXTERNAL) {
+  if (region[i+1][j] == EXTERNAL) 
+  {
     rus[i][j] = 2.*ru[i-1][j] - ru[i-2][j];
     rvs[i][j] = 2.*rv[i-1][j] - rv[i-2][j];
     rs[i][j] = 2.*r[i-1][j] - r[i-2][j];
@@ -275,10 +318,12 @@ void MacCormack::outlet_predictor(size_t i, size_t j) {
 
 }
 
-void MacCormack::outlet_corrector(size_t i, size_t j) {
+void MacCormack::outlet_corrector(size_t i, size_t j) 
+{
 
   // outlet on right
-  if (region[i+1][j] == EXTERNAL) {
+  if (region[i+1][j] == EXTERNAL) 
+  {
     ru[i][j] = 2.*rus[i-1][j] - rus[i-2][j];
     rv[i][j] = 2.*rvs[i-1][j] - rvs[i-2][j];
     r[i][j] = 2.*rs[i-1][j] - rs[i-2][j];
@@ -286,7 +331,8 @@ void MacCormack::outlet_corrector(size_t i, size_t j) {
 
 }
 
-void MacCormack::stationary_wall_mom_predictor(size_t i, size_t j) {
+void MacCormack::stationary_wall_mom_predictor(size_t i, size_t j) 
+{
 
   rus[i][j] = 0.;
   rvs[i][j] = 0.;
@@ -294,10 +340,14 @@ void MacCormack::stationary_wall_mom_predictor(size_t i, size_t j) {
   // if at a corner just default to normal stationary wall condition
 
   // left-facing wall (similar to the right wall)
-  if (region[i+1][j] == EXTERNAL) {
-    if (region[i][j+1] == EXTERNAL || region[i][j-1] == EXTERNAL) {
+  if (region[i+1][j] == EXTERNAL) 
+  {
+    if (region[i][j+1] == EXTERNAL || region[i][j-1] == EXTERNAL) 
+    {
       rs[i][j] = r[i][j] + 0.5*a1 * (-ru[i-2][j] + 4.*ru[i-1][j] - 3.*ru[i][j]);
-    } else {
+    } 
+    else 
+    {
       rs[i][j] = b1 * (4.*r[i-1][j] - r[i-2][j])
       + b2 * (-5.*u[i-1][j] + 4.*u[i-2][j] - u[i-3][j])
       - b3 * (
@@ -309,10 +359,14 @@ void MacCormack::stationary_wall_mom_predictor(size_t i, size_t j) {
   }
 
   // right-facing wall (similar to the left wall)
-  else if(region[i-1][j] == EXTERNAL) {
-    if (region[i][j+1] == EXTERNAL || region[i][j-1] == EXTERNAL) {
+  else if(region[i-1][j] == EXTERNAL) 
+  {
+    if (region[i][j+1] == EXTERNAL || region[i][j-1] == EXTERNAL) 
+    {
       rs[i][j] = r[i][j] - 0.5*a1 * (-ru[i+2][j] + 4.*ru[i+1][j] - 3.*ru[i][j]);
-    } else {
+    } 
+    else 
+    {
       rs[i][j] = b1 * (4.*r[i+1][j] - r[i+2][j])
       - b2 * (-5.*u[i+1][j] + 4.*u[i+2][j] - u[i+3][j])
       - b3 * (
@@ -324,10 +378,14 @@ void MacCormack::stationary_wall_mom_predictor(size_t i, size_t j) {
   }
 
   // upward-facing wall (similar to bottom wall)
-  else if (region[i][j-1] == EXTERNAL)  {
-    if (region[i-1][j] == EXTERNAL || region[i+1][j] == EXTERNAL) {
+  else if (region[i][j-1] == EXTERNAL)  
+  {
+    if (region[i-1][j] == EXTERNAL || region[i+1][j] == EXTERNAL) 
+    {
       rs[i][j] = r[i][j] - 0.5*a2 * (-rv[i][j+2] + 4.*rv[i][j+1] - 3.*rv[i][j]);
-    } else {
+    } 
+    else 
+    {
       rs[i][j] = b1 * (4.*r[i][j+1] - r[i][j+2])
       - b4 * (-5.*v[i][j+1] + 4.*v[i][j+2] - v[i][j+3])
       - b5 * (
@@ -339,10 +397,14 @@ void MacCormack::stationary_wall_mom_predictor(size_t i, size_t j) {
   }
 
   // downward facing wall (similar to top wall)
-  else if (region[i][j+1] == EXTERNAL) {
-    if (region[i-1][j] == EXTERNAL || region[i+1][j] == EXTERNAL) {
+  else if (region[i][j+1] == EXTERNAL) 
+  {
+    if (region[i-1][j] == EXTERNAL || region[i+1][j] == EXTERNAL) 
+    {
       rs[i][j] = r[i][j] + 0.5*a2 * (-rv[i][j-2] + 4.*rv[i][j-1] - 3.*rv[i][j]);
-    } else {
+    } 
+    else 
+    {
       rs[i][j] = b1 * (4.*r[i][j-1] - r[i][j-2])
       + b4 * (-5.*v[i][j-1] + 4.*v[i][j-2] - v[i][j-3])
       - b5 * (
@@ -351,22 +413,29 @@ void MacCormack::stationary_wall_mom_predictor(size_t i, size_t j) {
         -3.*(u[i+1][j] - u[i-1][j])
       );
     }
-  } else {
+  } 
+  else 
+  {
     rs[i][j] = .25 * (r[i+1][j] + r[i-1][j] + r[i][j+1] + r[i][j-1]);
   }
 
 }
 
-void MacCormack::stationary_wall_mom_corrector(size_t i, size_t j) {
+void MacCormack::stationary_wall_mom_corrector(size_t i, size_t j) 
+{
 
   ru[i][j] = 0.;
   rv[i][j] = 0.;
 
   // left-facing wall
-  if (region[i+1][j] == EXTERNAL) {
-    if (region[i][j+1] == EXTERNAL || region[i][j-1] == EXTERNAL) {
+  if (region[i+1][j] == EXTERNAL) 
+  {
+    if (region[i][j+1] == EXTERNAL || region[i][j-1] == EXTERNAL) 
+    {
       r[i][j] = 0.5 * (r[i][j] + rs[i][j] + 0.5*a1 * (-rus[i-2][j] + 4.*rus[i-1][j] - 3.*rus[i][j]));
-    } else {
+    } 
+    else 
+    {
       r[i][j] = b1 * (4.*rs[i-1][j] - rs[i-2][j])
       + b2 * (-5.*us[i-1][j] + 4.*us[i-2][j] - us[i-3][j])
       - b3 * (
@@ -379,10 +448,14 @@ void MacCormack::stationary_wall_mom_corrector(size_t i, size_t j) {
   }
 
   // right-facing wall
-  else if(region[i-1][j] == EXTERNAL) {
-    if (region[i][j+1] == EXTERNAL || region[i][j-1] == EXTERNAL) {
+  else if(region[i-1][j] == EXTERNAL) 
+  {
+    if (region[i][j+1] == EXTERNAL || region[i][j-1] == EXTERNAL) 
+    {
       r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a1 * (-rus[i+2][j] + 4.*rus[i+1][j] - 3.*rus[i][j]));
-    } else {
+    } 
+    else 
+    {
       r[i][j] = b1 * (4.*rs[i+1][j] - rs[i+2][j])
       - b2 * (-5.*us[i+1][j] + 4.*us[i+2][j] - us[i+3][j])
       - b3 * (
@@ -395,10 +468,14 @@ void MacCormack::stationary_wall_mom_corrector(size_t i, size_t j) {
   }
 
   // upward-facing wall (similar to bottom wall)
-  else if (region[i][j-1] == EXTERNAL)  {
-    if (region[i-1][j] == EXTERNAL || region[i+1][j] == EXTERNAL) {
+  else if (region[i][j-1] == EXTERNAL)  
+  {
+    if (region[i-1][j] == EXTERNAL || region[i+1][j] == EXTERNAL) 
+    {
       r[i][j] = 0.5 * (r[i][j] + rs[i][j] - 0.5*a2 * (-rvs[i][j+2] + 4.*rvs[i][j+1] - 3.*rvs[i][j]));
-    } else {
+    } 
+    else 
+    {
       r[i][j] = b1 * (4.*rs[i][j+1] - rs[i][j+2])
       - b4 * (-5.*vs[i][j+1] + 4.*vs[i][j+2] - vs[i][j+3])
       - b5 * (
@@ -410,10 +487,14 @@ void MacCormack::stationary_wall_mom_corrector(size_t i, size_t j) {
   }
 
   // downward facing wall (similar to top wall)
-  else if (region[i][j+1] == EXTERNAL) {
-    if (region[i-1][j] == EXTERNAL || region[i+1][j] == EXTERNAL) {
+  else if (region[i][j+1] == EXTERNAL) 
+  {
+    if (region[i-1][j] == EXTERNAL || region[i+1][j] == EXTERNAL) 
+    {
       r[i][j] = 0.5 * (r[i][j] + rs[i][j] + 0.5*a2 * (-rvs[i][j-2] + 4.*rvs[i][j-1] - 3.*rvs[i][j]));
-    } else {
+    } 
+    else 
+    {
       r[i][j] = b1 * (4.*rs[i][j-1] - rs[i][j-2])
       + b4 * (-5.*vs[i][j-1] + 4.*vs[i][j-2] - vs[i][j-3])
       - b5 * (
@@ -422,13 +503,16 @@ void MacCormack::stationary_wall_mom_corrector(size_t i, size_t j) {
         -3.*(us[i+1][j] - us[i-1][j])
       );
     }
-  } else {
+  } 
+  else 
+  {
     r[i][j] = .25 * (rs[i+1][j] + rs[i-1][j] + rs[i][j+1] + rs[i][j-1]);
   }
 
 }
 
-void MacCormack::run_solver_step() {
+void MacCormack::run_solver_step() 
+{
 
   /*
     Using forward differences for all predictor steps produces a slightly different
@@ -439,30 +523,48 @@ void MacCormack::run_solver_step() {
     I have actually discovered that my alternating scheme is not good enough. It causes the simulation to break for the flow around a block
   */
 
-  if (TIMESTEP % 2 == 0) {
+  if (TIMESTEP % 2 == 0) 
+  {
     forward_diff_first = true;
-  } else {
+  } 
+  else 
+  {
     forward_diff_first = false;
   }
 
   // predictor step
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(i,j)
-  for (i=0; i<(grid_size_x); ++i) {
-    for (j=0; j<(grid_size_y); ++j) {
+  for (i=0; i<(grid_size_x); ++i) 
+  {
+    for (j=0; j<(grid_size_y); ++j) 
+    {
 
-      if (region[i][j] == FREE_FLOW) {
+      if (region[i][j] == FREE_FLOW) 
+      {
         free_flow_predictor(i,j);
-      } else if (region[i][j] == STATIONARY) {
+      } 
+      else if (region[i][j] == STATIONARY) 
+      {
         stationary_wall_predictor(i,j);
-      } else if (region[i][j] == MOVING_LID) {
+      } 
+      else if (region[i][j] == MOVING_LID) 
+      {
         moving_wall_predictor(i,j);
-      } else if (region[i][j] == INLET) {
+      } 
+      else if (region[i][j] == INLET) 
+      {
         inlet_predictor(i,j);
-      } else if (region[i][j] == OUTLET) {
+      } 
+      else if (region[i][j] == OUTLET) 
+      {
         outlet_predictor(i,j);
-      } else if (region[i][j] == STATIONARY_MOM) {
+      } 
+      else if (region[i][j] == STATIONARY_MOM) 
+      {
         stationary_wall_mom_predictor(i,j);
-      } else {
+      } 
+      else 
+      {
         continue;
       }
 
@@ -471,30 +573,47 @@ void MacCormack::run_solver_step() {
 
   // calculating starred velocities
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(i,j)
-  for ( i=0; i<grid_size_x; ++i) {
-    for ( j=0; j<grid_size_y; ++j) {
+  for ( i=0; i<grid_size_x; ++i) 
+  {
+    for ( j=0; j<grid_size_y; ++j) 
+    {
       us[i][j] = rus[i][j] / rs[i][j];
       vs[i][j] = rvs[i][j] / rs[i][j];
     }
   }
 
-  // Corrector step. Note the "+3" which shifts you to the corrector functions in the func_ptr
+  // Corrector step.
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(i,j)
-  for (i=0; i<grid_size_x; ++i) {
-    for (j=0; j<grid_size_y; ++j) {
-      if (region[i][j] == FREE_FLOW) {
+  for (i=0; i<grid_size_x; ++i) 
+  {
+    for (j=0; j<grid_size_y; ++j) 
+    {
+      if (region[i][j] == FREE_FLOW) 
+      {
         free_flow_corrector(i,j);
-      } else if (region[i][j] == STATIONARY) {
+      } 
+      else if (region[i][j] == STATIONARY) 
+      {
         stationary_wall_corrector(i,j);
-      } else if (region[i][j] == MOVING_LID) {
+      } 
+      else if (region[i][j] == MOVING_LID) 
+      {
         moving_wall_corrector(i,j);
-      } else if (region[i][j] == INLET) {
+      } 
+      else if (region[i][j] == INLET) 
+      {
         inlet_corrector(i,j);
-      } else if (region[i][j] == OUTLET) {
+      } 
+      else if (region[i][j] == OUTLET) 
+      {
         outlet_corrector(i,j);
-      } else if (region[i][j] == STATIONARY_MOM) {
+      } 
+      else if (region[i][j] == STATIONARY_MOM) 
+      {
         stationary_wall_mom_corrector(i,j);
-      } else {
+      } 
+      else 
+      {
         continue;
       }
     }
@@ -502,8 +621,10 @@ void MacCormack::run_solver_step() {
 
   // Calculating new velocties
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(i,j)
-  for ( i=0; i<grid_size_x; ++i) {
-    for ( j=0; j<grid_size_y; ++j) {
+  for ( i=0; i<grid_size_x; ++i) 
+  {
+    for ( j=0; j<grid_size_y; ++j) 
+    {
       u[i][j] = ru[i][j] / r[i][j];
       v[i][j] = rv[i][j] / r[i][j];
     }

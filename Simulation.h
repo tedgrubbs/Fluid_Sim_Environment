@@ -36,7 +36,8 @@ void leave_glut(unsigned char key, int xx, int yy);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 
-class Simulation {
+class Simulation 
+{
   private:
     double rho_max;
     double u_max;
@@ -90,7 +91,8 @@ class Simulation {
   protected:
     size_t TIMESTEP;
 
-    enum REGIONS {
+    enum REGIONS 
+    {
       EXTERNAL=-1,
       FREE_FLOW=0,
       STATIONARY=1,
@@ -121,7 +123,8 @@ class Simulation {
     void run();
 };
 
-class MacCormack : public Simulation {
+class MacCormack : public Simulation 
+{
   private:
     virtual void run_solver_step();
 
