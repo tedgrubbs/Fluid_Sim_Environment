@@ -520,7 +520,7 @@ void MacCormack::run_solver_step()
     compared to using an alternating difference scheme. Supposedly an alternating scheme
     is more accurate but I currently have not been able to verify this.
 
-    I have actually discovered that my alternating scheme is not good enough. It causes the simulation to break for the flow around a block
+    The alternating differences seems to be required for a stable incompressible flow around a square as described in Kundu. 
   */
 
   if (TIMESTEP % 2 == 0) 
@@ -563,10 +563,7 @@ void MacCormack::run_solver_step()
       {
         stationary_wall_mom_predictor(i,j);
       } 
-      else 
-      {
-        continue;
-      }
+     
 
     }
   }
@@ -612,10 +609,7 @@ void MacCormack::run_solver_step()
       {
         stationary_wall_mom_corrector(i,j);
       } 
-      else 
-      {
-        continue;
-      }
+
     }
   }
 

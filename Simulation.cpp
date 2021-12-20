@@ -408,15 +408,16 @@ void Simulation::render()
       {
         color_val_x = 0.;
       }
+      else if (absu > MAX_RENDERABLE_SPEED) 
+      {
+        color_val_x = 1.;
+      }
+
       if (absv < MIN_RENDERABLE_SPEED) 
       {
         color_val_y = 0.;
       }
-      if (absu > MAX_RENDERABLE_SPEED) 
-      {
-        color_val_x = 1.;
-      }
-      if (absv > MAX_RENDERABLE_SPEED) 
+      else if (absv > MAX_RENDERABLE_SPEED) 
       {
         color_val_y = 1.;
       }
