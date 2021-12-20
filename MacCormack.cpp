@@ -3,8 +3,17 @@
 
 MacCormack::MacCormack() : Simulation() 
 {
+  double min_dim;
+  if (dx < dy) 
+  {
+    min_dim = dx;
+  }
+  else 
+  {
+    min_dim = dy;
+  }
 
-  dt = 0.4 * dx / (1./mach);
+  dt = 0.4 * min_dim / (1./mach);
   cout << "MacCormack timestep defined by stability criteria: " << dt << endl;
 
   rs = create2dArray<double>(grid_size_x, grid_size_y);
