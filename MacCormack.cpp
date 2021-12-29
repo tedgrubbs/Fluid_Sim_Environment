@@ -12,8 +12,8 @@ MacCormack::MacCormack() : Simulation()
   {
     min_dim = dy;
   }
-
-  dt = 0.4 * min_dim / (1./mach);
+  // adding 1. here to the max speed to reproduce Borg's result
+  dt = 0.5 * min_dim / (1./mach + 1.0);
   cout << "MacCormack timestep defined by stability criteria: " << dt << endl;
 
   rs = create2dArray<double>(grid_size_x, grid_size_y);
@@ -544,6 +544,8 @@ void MacCormack::run_solver_step()
     result from using only backward differences. However the 2 are nearly the same when
     compared to using an alternating difference scheme. Supposedly an alternating scheme
     is more accurate but I currently have not been able to verify this.
+
+    forward_diff_first should always be true in order to fully replicate Borg's result
 
     The alternating differences seems to be required for a stable incompressible flow around a square as described in Kundu.
   */

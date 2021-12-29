@@ -16,10 +16,13 @@ class Region(IntEnum):
 
 # Use this to quickly redefine grid and config variables
 
-D = 40
+D = 65
 
-grid_size_x = 35*D+2
-grid_size_y = 3*D+2
+# grid_size_x = 35*D+2
+# grid_size_y = 3*D+2
+grid_size_x = D+2
+grid_size_y = D+2
+
 rho = np.zeros((grid_size_x,grid_size_y))
 u = np.zeros((grid_size_x,grid_size_y))
 v = np.zeros((grid_size_x,grid_size_y))
@@ -31,7 +34,7 @@ for i in range(grid_size_x):
         indices[i,j] = [i,j]
 
 rho[:,:] = 1.
-u[:,:] = 1.0
+# u[:,:] = 1.0
 
 # creates border for sim environment
 # top wall
@@ -51,59 +54,35 @@ rho[-1, :] = 0.
 region[0, :] = Region.EXTERNAL
 rho[0, :] = 0.
 
-# left moving lid
-# region[1, 1:-1] = 2
-# region[2:-1,1] = 1
-# region[2:-1,-2] = 1
-# region[-2, 1:-1] = 1
-
-# right moving lid
-# region[-2, 1:-1] = 2
-# region[1:-2,1] = 1
-# region[1:-2,-2] = 1
-# region[1, 1:-1] = 1
-
-# bottom moving lid
-# region[-2, 1:-1] = 1
-# region[1:-2,-2] = 1
-# region[1, 1:-1] = 1
-# region[1:-1,1] = 2
-
-# top moving lid with in and outlet
-# region[-2, 1:-1] = Region.OUTLET
-# region[1, 1:-1] = Region.INLET
-# region[1:-2,1] = Region.STATIONARY
-# region[1:-2,-2] = Region.MOVING_LID
-
-# top moving lid with in and outlet. This configuration reproduce Borg's result when using only forward differences with predictor step
-# region[-2, 1:-2] = Region.STATIONARY_MOMENTUM_BASED
-# region[1, 1:-2] = Region.STATIONARY_MOMENTUM_BASED
-# region[2:-2,1] = Region.MOVING_LID
-# region[1:-1,-2] = Region.STATIONARY_MOMENTUM_BASED
-# boundary_v[2:-2,1] = 1.0
+#  This configuration reproduce Borg's result when using only forward differences with predictor step
+region[-2, 1:-1] = Region.STATIONARY
+region[1, 1:-1] = Region.STATIONARY
+region[2:-2,-2] = Region.MOVING_LID
+region[1:-1,1] = Region.STATIONARY
+boundary_v[1:-1,-2] = 1.0
 
 # box in center
-centerx = 15*D + D//2
-centery = grid_size_y // 2
-
-region[centerx-D//2 : centerx+D//2, centery-D//2 : centery+D//2] = Region.EXTERNAL
-
-region[centerx-D//2 , centery-D//2-1 : centery+D//2+1] = Region.STATIONARY_MOMENTUM_BASED
-region[centerx-D//2 : centerx+D//2+1, centery+D//2] = Region.STATIONARY_MOMENTUM_BASED
-region[centerx+D//2 ,centery-D//2-1 : centery+D//2] = Region.STATIONARY_MOMENTUM_BASED
-region[centerx-D//2 : centerx+D//2, centery-D//2-1] = Region.STATIONARY_MOMENTUM_BASED
-
-region[-2, 2:-2] = Region.OUTLET
-boundary_v[-2, 2:-2] = 1.0
-
-region[1, 2:-2] = Region.INLET
-boundary_v[1, 2:-2] = 1.0
-
-region[1:-1,1] = Region.MOVING_LID
-boundary_v[1:-1,1] = 1.0
-
-region[1:-1,-2] = Region.MOVING_LID
-boundary_v[1:-1,-2] = 1.0
+# centerx = 15*D + D//2
+# centery = grid_size_y // 2
+#
+# region[centerx-D//2 : centerx+D//2, centery-D//2 : centery+D//2] = Region.EXTERNAL
+#
+# region[centerx-D//2 , centery-D//2-1 : centery+D//2+1] = Region.STATIONARY_MOMENTUM_BASED
+# region[centerx-D//2 : centerx+D//2+1, centery+D//2] = Region.STATIONARY_MOMENTUM_BASED
+# region[centerx+D//2 ,centery-D//2-1 : centery+D//2] = Region.STATIONARY_MOMENTUM_BASED
+# region[centerx-D//2 : centerx+D//2, centery-D//2-1] = Region.STATIONARY_MOMENTUM_BASED
+#
+# region[-2, 2:-2] = Region.OUTLET
+# boundary_v[-2, 2:-2] = 1.0
+#
+# region[1, 2:-2] = Region.INLET
+# boundary_v[1, 2:-2] = 1.0
+#
+# region[1:-1,1] = Region.MOVING_LID
+# boundary_v[1:-1,1] = 1.0
+#
+# region[1:-1,-2] = Region.MOVING_LID
+# boundary_v[1:-1,-2] = 1.0
 
 # side block
 # region[centerx-D//2+1 : centerx+D//2, centery+D//2 : -1] = Region.EXTERNAL
@@ -140,8 +119,8 @@ output.to_csv('grid_variables.csv',index=False)
 config = {}
 config['grid_size_x'] = grid_size_x
 config['grid_size_y'] = grid_size_y
-config['real_size_y'] = 3
-config['real_size_x'] = 35
+config['real_size_y'] = 1
+config['real_size_x'] = 1
 # config['real_size_y'] = 3.
 config['frame_rate'] = 0
 config['dt'] = 0.000175
@@ -156,8 +135,8 @@ config['render_grid_size_y'] = 512
 config["tolerance"] = 0.00
 config["max_run_time"] = 100000
 config['thread_count'] = 4
-config['Reynolds'] = 100.
-config['Mach'] = 0.05
+config['Reynolds'] = 400.
+config['Mach'] = 0.1
 
 with open('config.json','w') as fp:
     json.dump(config, fp, indent='\t')
