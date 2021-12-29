@@ -93,17 +93,17 @@ region[centerx-D//2 : centerx+D//2+1, centery+D//2] = Region.STATIONARY_MOMENTUM
 region[centerx+D//2 ,centery-D//2-1 : centery+D//2] = Region.STATIONARY_MOMENTUM_BASED
 region[centerx-D//2 : centerx+D//2, centery-D//2-1] = Region.STATIONARY_MOMENTUM_BASED
 
-region[-2, 1:-1] = Region.OUTLET
-# boundary_v[-2, 1:-1] = 1.0
+region[-2, 2:-2] = Region.OUTLET
+boundary_v[-2, 2:-2] = 1.0
 
 region[1, 2:-2] = Region.INLET
 boundary_v[1, 2:-2] = 1.0
 
-region[1:-2,1] = Region.MOVING_LID
-boundary_v[1:-2,1] = 1.0
+region[1:-1,1] = Region.MOVING_LID
+boundary_v[1:-1,1] = 1.0
 
-region[1:-2,-2] = Region.MOVING_LID
-boundary_v[1:-2,-2] = 1.0
+region[1:-1,-2] = Region.MOVING_LID
+boundary_v[1:-1,-2] = 1.0
 
 # side block
 # region[centerx-D//2+1 : centerx+D//2, centery+D//2 : -1] = Region.EXTERNAL
