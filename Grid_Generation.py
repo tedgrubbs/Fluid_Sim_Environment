@@ -16,7 +16,7 @@ class Region(IntEnum):
 
 # Use this to quickly redefine grid and config variables
 
-D = 65
+D = 129
 
 # grid_size_x = 35*D+2
 # grid_size_y = 3*D+2
@@ -54,12 +54,13 @@ rho[-1, :] = 0.
 region[0, :] = Region.EXTERNAL
 rho[0, :] = 0.
 
-#  This configuration reproduce Borg's result when using only forward differences with predictor step
-region[-2, 1:-1] = Region.STATIONARY
-region[1, 1:-1] = Region.STATIONARY
-region[2:-2,-2] = Region.MOVING_LID
-region[1:-1,1] = Region.STATIONARY
+#  This configuration reproduce Borg's result when using only forward differences with predictor step and using basic STATIONARY region type
+region[-2, 1:-1] = Region.STATIONARY_MOMENTUM_BASED
+region[1, 1:-1] = Region.STATIONARY_MOMENTUM_BASED
+region[1:-1,-2] = Region.MOVING_LID
+region[1:-1,1] = Region.STATIONARY_MOMENTUM_BASED
 boundary_v[1:-1,-2] = 1.0
+u[1:-1,-2] = 1.0
 
 # box in center
 # centerx = 15*D + D//2
