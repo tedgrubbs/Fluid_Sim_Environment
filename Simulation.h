@@ -59,6 +59,7 @@ class Simulation
     void render();
     unsigned int VBO, VAO;
     unsigned int VERTEX_COUNT;
+    unsigned int POINT_SIZE;
     float * vertex_data;
     GLFWwindow * window;
     const char * vertexShaderSource ="#version 330 core\n"

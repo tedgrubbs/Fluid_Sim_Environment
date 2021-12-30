@@ -307,6 +307,14 @@ int Simulation::init_graphics()
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // color attribute
   glEnableVertexAttribArray(1);
 
+  float p_size_y = ceil((float)render_grid_size_y / (float)grid_size_y);
+  float p_size_x= ceil((float)render_grid_size_x / (float)grid_size_x);
+  if (p_size_x > p_size_y) {
+    POINT_SIZE = p_size_x;
+  } else {
+    POINT_SIZE = p_size_y;
+  }
+
   glUseProgram(shaderProgram);
   glfwSwapInterval(framerate);
 
@@ -436,7 +444,7 @@ void Simulation::render()
   memcpy(ptr, vertex_data, sizeof(float)*VERTEX_COUNT);
   glUnmapBuffer(GL_ARRAY_BUFFER);
 
-  glPointSize(9);
+  glPointSize(POINT_SIZE);
   glBindVertexArray(VAO);
   glDrawArrays(GL_POINTS, 0, grid_size_x*grid_size_y);
 

@@ -130,8 +130,14 @@ config['viscosity'] = 1.8e-5
 config['c'] = 347.0
 config['force'] = 0.
 config['run_graphics'] = 1
-config['render_grid_size_x'] = 512#*config['real_size_x']
-config['render_grid_size_y'] = 512
+
+base_render = 512
+if grid_size_x > base_render:
+    base_render = grid_size_x
+y_multiplier = config['real_size_y'] / config['real_size_x']
+config['render_grid_size_x'] = base_render
+config['render_grid_size_y'] = int(base_render*y_multiplier)
+
 config["tolerance"] = 0.00
 config["max_run_time"] = 100000
 config['thread_count'] = 4
