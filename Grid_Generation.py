@@ -54,7 +54,10 @@ rho[-1, :] = 0.
 region[0, :] = Region.EXTERNAL
 rho[0, :] = 0.
 
-#  This configuration reproduce Borg's result when using only forward differences with predictor step and using basic STATIONARY region type
+# This configuration reproduce Borg's result when using only forward differences with predictor step and using basic STATIONARY region type
+# Note that at the corners where the moving lid intersects the stationary walls, these should be marked as Moving lid points.
+# Otherwise the density at the corners will grow indefinitely- even though the rest of the simulation is stable. This is how Borg's simulations works. 
+# This is caused by this term in the density equation: (-ru[i-2][j] + 4.*ru[i-1][j] - 3.*ru[i][j])
 region[-2, 1:-1] = Region.STATIONARY_MOMENTUM_BASED
 region[1, 1:-1] = Region.STATIONARY_MOMENTUM_BASED
 region[1:-1,-2] = Region.MOVING_LID
