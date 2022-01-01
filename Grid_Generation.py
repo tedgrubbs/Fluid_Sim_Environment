@@ -16,7 +16,7 @@ class Region(IntEnum):
 
 # Use this to quickly redefine grid and config variables
 
-D = 129
+D = 256
 
 # grid_size_x = 35*D+2
 # grid_size_y = 3*D+2
@@ -58,12 +58,21 @@ rho[0, :] = 0.
 # Note that at the corners where the moving lid intersects the stationary walls, these should be marked as Moving lid points.
 # Otherwise the density at the corners will grow indefinitely- even though the rest of the simulation is stable. This is how Borg's simulations works. 
 # This is caused by this term in the density equation: (-ru[i-2][j] + 4.*ru[i-1][j] - 3.*ru[i][j])
-region[-2, 1:-1] = Region.STATIONARY_MOMENTUM_BASED
-region[1, 1:-1] = Region.STATIONARY_MOMENTUM_BASED
-region[1:-1,-2] = Region.MOVING_LID
-region[1:-1,1] = Region.STATIONARY_MOMENTUM_BASED
+# region[-2, 1:-1] = Region.STATIONARY_MOMENTUM_BASED
+# region[1, 1:-1] = Region.STATIONARY_MOMENTUM_BASED
+# region[1:-1,-2] = Region.MOVING_LID
+# region[1:-1,1] = Region.STATIONARY_MOMENTUM_BASED
+# boundary_v[1:-1,-2] = 1.0
+# u[1:-1,-2] = 1.0
+
+# flow over flat plate
+region[-2, 1:-1] = Region.OUTLET
+region[1, 2:-2] = Region.INLET
+region[1:-2,-2] = Region.MOVING_LID
+region[1:-2,1] = Region.STATIONARY_MOMENTUM_BASED
+boundary_v[1, 2:-2] = 1.0
 boundary_v[1:-1,-2] = 1.0
-u[1:-1,-2] = 1.0
+u[1:-1,1:] = 1.0
 
 # box in center
 # centerx = 15*D + D//2
@@ -124,7 +133,7 @@ config = {}
 config['grid_size_x'] = grid_size_x
 config['grid_size_y'] = grid_size_y
 config['real_size_y'] = 1
-config['real_size_x'] = 1
+config['real_size_x'] = 1.25
 # config['real_size_y'] = 3.
 config['frame_rate'] = 0
 config['dt'] = 0.000175
@@ -145,8 +154,8 @@ config['render_grid_size_y'] = int(base_render*y_multiplier)
 config["tolerance"] = 0.00
 config["max_run_time"] = 100000
 config['thread_count'] = 4
-config['Reynolds'] = 400.
-config['Mach'] = 0.1
+config['Reynolds'] = 40.
+config['Mach'] = 4.0
 
 with open('config.json','w') as fp:
     json.dump(config, fp, indent='\t')
