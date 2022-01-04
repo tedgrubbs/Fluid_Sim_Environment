@@ -4,14 +4,12 @@
 MacCormack::MacCormack() : Simulation()
 {
   double min_dim;
-  if (dx < dy)
-  {
+  if (dx < dy) {
     min_dim = dx;
-  }
-  else
-  {
+  } else {
     min_dim = dy;
   }
+
   // adding 1. here to the max speed to reproduce Borg's result
   dt = 0.5 * min_dim / (1./mach + 1.0);
   cout << "MacCormack timestep defined by stability criteria: " << dt << endl;
@@ -601,12 +599,9 @@ void MacCormack::run_solver_step()
     The alternating differences seems to be required for a stable incompressible flow around a square as described in Kundu.
   */
 
-  if (TIMESTEP % 2 == 0)
-  {
+  if (TIMESTEP % 2 == 0) {
     forward_diff_first = true;
-  }
-  else
-  {
+  } else {
     forward_diff_first = false;
   }
 

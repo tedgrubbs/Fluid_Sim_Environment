@@ -25,8 +25,7 @@ grid_type * create1dArray(unsigned int size)
 template <typename grid_type>
 void delete_2d_Array(grid_type ** v, unsigned int sizex) 
 {
-  for(int i=0; i<sizex; i++) 
-  {
+  for(int i=0; i<sizex; i++) {
     free(v[i]);
   }
   free(v);
@@ -54,8 +53,7 @@ Simulation::Simulation()
   // printf("%d threads detected\n", MAX_THREADS);
   // printf("Maximum allowed timestep by Courant stability: %lf\n", dx/c);
 
-  if (run_graphics) 
-  {
+  if (run_graphics) {
     init_graphics();
   }
 
@@ -355,26 +353,19 @@ void Simulation::render()
       absu = fabs(u[x][y]);
       absv = fabs(v[x][y]);
 
-      if (r[x][y] > max_rho)
-      {
+      if (r[x][y] > max_rho) {
         max_rho = r[x][y];
       }
 
-      if (absu > u_max && absu < MAX_RENDERABLE_SPEED) 
-      {
+      if (absu > u_max && absu < MAX_RENDERABLE_SPEED) {
         u_max = absu;
-      } 
-      else if (absu < u_min && absu > MIN_RENDERABLE_SPEED) 
-      {
+      } else if (absu < u_min && absu > MIN_RENDERABLE_SPEED) {
         u_min = absu;
       }
 
-      if (absv > v_max && absv < MAX_RENDERABLE_SPEED) 
-      {
+      if (absv > v_max && absv < MAX_RENDERABLE_SPEED) {
         v_max = absv;
-      } 
-      else if (absv < v_min && absv > MIN_RENDERABLE_SPEED) 
-      {
+      } else if (absv < v_min && absv > MIN_RENDERABLE_SPEED) {
         v_min = absv;
       }
     }
@@ -402,8 +393,7 @@ void Simulation::render()
     for (y=0; y<grid_size_y; ++y) 
     {
 
-      if (region[x][y] == EXTERNAL) 
-      {
+      if (region[x][y] == EXTERNAL) {
         continue;
       }
       absu = fabs(u[x][y]);
@@ -412,21 +402,15 @@ void Simulation::render()
       color_val_x = (absu - u_min) / (u_max - u_min);
       color_val_y = (absv - v_min) / (v_max - v_min);
 
-      if (absu < MIN_RENDERABLE_SPEED) 
-      {
+      if (absu < MIN_RENDERABLE_SPEED) {
         color_val_x = 0.;
-      }
-      else if (absu > MAX_RENDERABLE_SPEED) 
-      {
+      } else if (absu > MAX_RENDERABLE_SPEED) {
         color_val_x = 1.;
       }
 
-      if (absv < MIN_RENDERABLE_SPEED) 
-      {
+      if (absv < MIN_RENDERABLE_SPEED) {
         color_val_y = 0.;
-      }
-      else if (absv > MAX_RENDERABLE_SPEED) 
-      {
+      } else if (absv > MAX_RENDERABLE_SPEED) {
         color_val_y = 1.;
       }
 
