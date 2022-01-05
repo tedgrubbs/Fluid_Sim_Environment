@@ -13,10 +13,12 @@ class Region(IntEnum):
     INLET = 3
     OUTLET = 4
     STATIONARY_MOMENTUM_BASED = 5
+    STATIC_U = 6
+    EX_OUTLET = 7
 
 # Use this to quickly redefine grid and config variables
 
-D = 256
+D = 70
 
 # grid_size_x = 35*D+2
 # grid_size_y = 3*D+2
@@ -65,35 +67,35 @@ rho[0, :] = 0.
 # boundary_v[1:-1,-2] = 1.0
 # u[1:-1,-2] = 1.0
 
-# flow over flat plate
-region[-2, 1:-1] = Region.OUTLET
-region[1, 2:-2] = Region.INLET
-region[1:-2,-2] = Region.MOVING_LID
+# flow over flat plate. Be sure to turn down timestep for this at high mach number
+region[-2, 1:-1] = Region.EX_OUTLET
+region[1, 1:-2] = Region.STATIC_U
+region[1:-2,-2] = Region.STATIC_U
 region[1:-2,1] = Region.STATIONARY_MOMENTUM_BASED
 boundary_v[1, 2:-2] = 1.0
-boundary_v[1:-1,-2] = 1.0
+boundary_v[1:-2,-2] = 1.0
 u[1:-1,1:] = 1.0
 
 # box in center
 # centerx = 15*D + D//2
 # centery = grid_size_y // 2
-#
+
 # region[centerx-D//2 : centerx+D//2, centery-D//2 : centery+D//2] = Region.EXTERNAL
-#
+
 # region[centerx-D//2 , centery-D//2-1 : centery+D//2+1] = Region.STATIONARY_MOMENTUM_BASED
 # region[centerx-D//2 : centerx+D//2+1, centery+D//2] = Region.STATIONARY_MOMENTUM_BASED
 # region[centerx+D//2 ,centery-D//2-1 : centery+D//2] = Region.STATIONARY_MOMENTUM_BASED
 # region[centerx-D//2 : centerx+D//2, centery-D//2-1] = Region.STATIONARY_MOMENTUM_BASED
-#
-# region[-2, 2:-2] = Region.OUTLET
+
+# region[-2, 1:-2] = Region.OUTLET
 # boundary_v[-2, 2:-2] = 1.0
-#
+
 # region[1, 2:-2] = Region.INLET
 # boundary_v[1, 2:-2] = 1.0
-#
+
 # region[1:-1,1] = Region.MOVING_LID
 # boundary_v[1:-1,1] = 1.0
-#
+
 # region[1:-1,-2] = Region.MOVING_LID
 # boundary_v[1:-1,-2] = 1.0
 
@@ -133,7 +135,7 @@ config = {}
 config['grid_size_x'] = grid_size_x
 config['grid_size_y'] = grid_size_y
 config['real_size_y'] = 1
-config['real_size_x'] = 1.25
+config['real_size_x'] = 1.21
 # config['real_size_y'] = 3.
 config['frame_rate'] = 0
 config['dt'] = 0.000175
