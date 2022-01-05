@@ -11,7 +11,8 @@ MacCormack::MacCormack() : Simulation()
   }
 
   // adding 1. here to the max speed to reproduce Borg's result
-  dt = 0.5 * min_dim / (1./mach + 1.0);
+  // dt = 0.5 * min_dim / (1./mach + 1.0);
+  dt = 0.5 * min_dim / c;
   cout << "MacCormack timestep defined by stability criteria: " << dt << endl;
 
   rs = create2dArray<double>(grid_size_x, grid_size_y);
@@ -20,23 +21,42 @@ MacCormack::MacCormack() : Simulation()
   vs = create2dArray<double>(grid_size_x, grid_size_y);
   rvs = create2dArray<double>(grid_size_x, grid_size_y);
 
+  // constants that convert equations into dimensionless form
+  // a1 = dt / dx;
+  // a2 = dt / dy;
+  // a3 = dt / (dx*mach*mach);
+  // a4 = dt / (dy*mach*mach);
+  // a5 = 4. * dt / (3.*Re*dx*dx);
+  // a6 = dt / (Re*dy*dy);
+  // a7 = dt / (Re*dx*dx);
+  // a8 = 4.*dt / (3.*Re*dy*dy);
+  // a9 = dt / (12. * Re * dx*dy);
+  // a10 = 2.*(a5+a6);
+  // a11 = 2.*(a7+a8);
+
+  // b1 = 1./3.;
+  // b2 = 8.*mach*mach / (9.*dx*Re);
+  // b3 = mach*mach / (18.*dy*Re);
+  // b4 = 8.*mach*mach / (9.*dy*Re);;
+  // b5 = mach*mach / (18.*dx*Re);;
+
   a1 = dt / dx;
   a2 = dt / dy;
-  a3 = dt / (dx*mach*mach);
-  a4 = dt / (dy*mach*mach);
-  a5 = 4. * dt / (3.*Re*dx*dx);
-  a6 = dt / (Re*dy*dy);
-  a7 = dt / (Re*dx*dx);
-  a8 = 4.*dt / (3.*Re*dy*dy);
-  a9 = dt / (12. * Re * dx*dy);
+  a3 = dt*c*c / (dx);
+  a4 = dt*c*c / (dy);
+  a5 = 4. * dt * mu / (3.*dx*dx);
+  a6 = dt * mu / (dy*dy);
+  a7 = dt * mu / (dx*dx);
+  a8 = 4.*dt* mu / (3.*dy*dy);
+  a9 = dt* mu / (12. * dx*dy);
   a10 = 2.*(a5+a6);
   a11 = 2.*(a7+a8);
 
   b1 = 1./3.;
-  b2 = 8.*mach*mach / (9.*dx*Re);
-  b3 = mach*mach / (18.*dy*Re);
-  b4 = 8.*mach*mach / (9.*dy*Re);;
-  b5 = mach*mach / (18.*dx*Re);;
+  b2 = 8.*mu / (9.*dx*c*c);
+  b3 = mu / (18.*dy*c*c);
+  b4 = 8.*mu  / (9.*dy*c*c);
+  b5 = mu / (18.*dx*c*c);
 
   bool forward_diff_first = true;
 
