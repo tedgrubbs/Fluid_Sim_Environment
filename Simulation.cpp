@@ -86,6 +86,7 @@ void Simulation::run()
 
 }
 
+// Reads config.json to get global static simulation variables
 void Simulation::read_config() 
 {
   map<string,string> config;
@@ -139,7 +140,7 @@ void Simulation::read_config()
   json_file.close();
 }
 
-
+// Reads in initial conditions for simulation from grid_variables.csv
 void Simulation::read_grid_and_init_struct() 
 {
 

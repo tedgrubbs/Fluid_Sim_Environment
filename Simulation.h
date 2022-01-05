@@ -109,11 +109,16 @@ class Simulation
     double dt, dx, dy;
     double mu, c, mach, Re;
 
-    double ** r;
-    double ** u;
-    double ** ru;
-    double ** v;
-    double ** rv;
+    double ** r;          // mass density
+    double ** u;          // x-velocity
+    double ** ru;         // x-momentum density
+    double ** v;          // y-velocity
+    double ** rv;         // y-momentum density
+    double ** p;          // pressure
+    double ** energy;     // total energy
+    double ** int_energy; // internal energy
+    double ** temp;       // temperature
+
     double ** speed;
     int ** region;
     double ** boundary_v; // boundary condition velocity
