@@ -31,6 +31,7 @@ MacCormack::MacCormack() : Simulation()
   rus = create2dArray<double>(grid_size_x, grid_size_y);
   vs = create2dArray<double>(grid_size_x, grid_size_y);
   rvs = create2dArray<double>(grid_size_x, grid_size_y);
+  ps = create2dArray<double>(grid_size_x, grid_size_y);
 
   // constants that convert equations into dimensionless form
   // a1 = dt / dx;
@@ -53,8 +54,8 @@ MacCormack::MacCormack() : Simulation()
 
   a1 = dt / dx;
   a2 = dt / dy;
-  a3 = dt*c*c / (dx);
-  a4 = dt*c*c / (dy);
+  // a3 = dt*c*c / (dx);
+  // a4 = dt*c*c / (dy);
   a5 = 4. * dt * mu / (3.*dx*dx);
   a6 = dt * mu / (dy*dy);
   a7 = dt * mu / (dx*dx);
@@ -73,6 +74,9 @@ MacCormack::MacCormack() : Simulation()
 
 }
 
+/*
+  General MacCormack formulation of compressible Navier-Stokes with simple alternation of difference direction. 
+*/
 void MacCormack::free_flow_predictor(size_t i, size_t j)
 {
 
@@ -94,7 +98,7 @@ void MacCormack::free_flow_predictor(size_t i, size_t j)
 
   rs[i][j] = r[i][j] - a1 * (ru[rightx][j] - ru[leftx][j]) - a2 * (rv[i][righty] - rv[i][lefty]);
 
-  rus[i][j] = ru[i][j] - a3 * (r[rightx][j] - r[leftx][j])
+  rus[i][j] = ru[i][j] - a1 * (p[rightx][j] - p[leftx][j])
     - a1 * (r[rightx][j]*u[rightx][j]*u[rightx][j] - r[leftx][j]*u[leftx][j]*u[leftx][j])
     - a2 * (r[i][righty]*u[i][righty]*v[i][righty] - r[i][lefty]*u[i][lefty]*v[i][lefty])
     - a10 * u[i][j]
@@ -102,7 +106,7 @@ void MacCormack::free_flow_predictor(size_t i, size_t j)
     + a6 * (u[i][j+1] + u[i][j-1])
     + a9 * (v[i+1][j+1] + v[i-1][j-1] - v[i+1][j-1] - v[i-1][j+1]);
 
-  rvs[i][j] = rv[i][j] - a4 * (r[i][righty] - r[i][lefty])
+  rvs[i][j] = rv[i][j] - a2 * (p[i][righty] - p[i][lefty])
     - a1 * (r[rightx][j]*u[rightx][j]*v[rightx][j] - r[leftx][j]*u[leftx][j]*v[leftx][j])
     - a2 * (r[i][righty]*v[i][righty]*v[i][righty] - r[i][lefty]*v[i][lefty]*v[i][lefty])
     - a11 * v[i][j]
@@ -135,7 +139,7 @@ void MacCormack::free_flow_corrector(size_t i, size_t j)
     - a2 * (rvs[i][righty] - rvs[i][lefty]));
 
   ru[i][j] = 0.5 * ((ru[i][j] + rus[i][j])
-    - a3 * (rs[rightx][j] - rs[leftx][j])
+    - a1 * (ps[rightx][j] - ps[leftx][j])
     - a1 * (rs[rightx][j]*us[rightx][j]*us[rightx][j] - rs[leftx][j]*us[leftx][j]*us[leftx][j])
     - a2 * (rs[i][righty]*us[i][righty]*vs[i][righty] - rs[i][lefty]*us[i][lefty]*vs[i][lefty])
     - a10 * us[i][j]
@@ -144,7 +148,7 @@ void MacCormack::free_flow_corrector(size_t i, size_t j)
     + a9 * (vs[i+1][j+1] + vs[i-1][j-1] - vs[i+1][j-1] - vs[i-1][j+1]));
 
   rv[i][j] = 0.5 * ((rv[i][j] + rvs[i][j])
-    - a4 * (rs[i][righty] - rs[i][lefty])
+    - a2 * (ps[i][righty] - ps[i][lefty])
     - a1 * (rs[rightx][j]*us[rightx][j]*vs[rightx][j] - rs[leftx][j]*us[leftx][j]*vs[leftx][j])
     - a2 * (rs[i][righty]*vs[i][righty]*vs[i][righty] - rs[i][lefty]*vs[i][lefty]*vs[i][lefty])
     - a11 * vs[i][j]
@@ -155,6 +159,10 @@ void MacCormack::free_flow_corrector(size_t i, size_t j)
 
 }
 
+/*
+  No-slip wall conditions for velocity, with density derived from continuity equation. Using 
+  2nd-order accurate one-sided differences.
+*/
 void MacCormack::stationary_wall_predictor(size_t i, size_t j)
 {
 
@@ -352,6 +360,9 @@ void MacCormack::inlet_corrector(size_t i, size_t j)
 
 }
 
+/*
+  Static boundary condition where all variables are specified, v is 0 but u can vary - hence the 'u' in the name
+*/
 void MacCormack::static_u_predictor(size_t i, size_t j) 
 {
   rus[i][j] = r[i][j] * boundary_v[i][j];
@@ -367,19 +378,12 @@ void MacCormack::static_u_corrector(size_t i, size_t j)
 }
 
 /*
-  According to some forum posts I should not be using pure outflow BCs when modeling any compressible flows or flows with varying density.
-  With high reynold's number, this is a certainty and will cause the simulation to break.
-  Stability is restored by maintaining a constant density at the outlet. I think this is a "pressure BC".
-  Can also use velocity BC here which would make it's logic the same as the inlet.
-*/
+  velocity outlet condition. Here only the U velocity is specified but density can vary according to the continuity equation.
+  I observed more better looking results at higher reynolds numbers if I let v vary according to an average.
+  the solution is still stable if you enforce a constant v, but a noticeable increase in velocity can be seen at the outlet due to
+  the large gradient in y that occurs.
 
-/*
-velocity outlet condition. Here only the U velocity is specified but density can vary according to the continuity equation.
-I observed more better looking results at higher reynolds numbers if I let v vary according to an average.
-the solution is still stable if you enforce a constant v, but a noticeable increase in velocity can be seen at the outlet due to
-the large gradient in y that occurs.
-
-should NOT take priority at corners
+  should NOT take priority at corners
 */
 void MacCormack::outlet_predictor(size_t i, size_t j)
 {
@@ -407,9 +411,11 @@ void MacCormack::outlet_corrector(size_t i, size_t j)
 
 }
 
-// extrapolated outlet conditions aka "outflow" boundaries. May cause simulation instability if used in compressible regimes 
-// or when density or velocity varies dramatically out the outlet.
-// Should take priority at the corner points
+/*
+  extrapolated outlet conditions aka "outflow" boundaries. May cause simulation instability if used in compressible regimes 
+  or when density or velocity varies dramatically out the outlet.
+  Should take priority at the corner points
+*/
 void MacCormack::extrapolate_out_predictor(size_t i, size_t j)
 {
 
@@ -436,6 +442,14 @@ void MacCormack::extrapolate_out_corrector(size_t i, size_t j)
 
 }
 
+/*
+  No-slip conditions for stationary wall but using momentum equation to derive density. Only works if the equation of state is 
+  p = rho * c^2.
+
+  Defaults to continuity equation if at simulation corner.
+
+  But if at corner of internal object - like the corner of a square - will use simple average of surrounding points to derive density.
+*/
 void MacCormack::stationary_wall_mom_predictor(size_t i, size_t j)
 {
 
@@ -688,6 +702,7 @@ void MacCormack::run_solver_step()
     {
       us[i][j] = rus[i][j] / rs[i][j];
       vs[i][j] = rvs[i][j] / rs[i][j];
+      ps[i][j] = rs[i][j] * c * c;
     }
   }
 
@@ -741,6 +756,7 @@ void MacCormack::run_solver_step()
     {
       u[i][j] = ru[i][j] / r[i][j];
       v[i][j] = rv[i][j] / r[i][j];
+      p[i][j] = r[i][j] * c * c;
     }
   }
 }

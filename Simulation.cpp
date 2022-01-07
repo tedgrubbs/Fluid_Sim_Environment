@@ -145,6 +145,7 @@ void Simulation::read_grid_and_init_struct()
 {
 
   r = create2dArray<double>(grid_size_x, grid_size_y);
+  p = create2dArray<double>(grid_size_x, grid_size_y);
   u = create2dArray<double>(grid_size_x, grid_size_y);
   ru = create2dArray<double>(grid_size_x, grid_size_y);
   v = create2dArray<double>(grid_size_x, grid_size_y);
@@ -189,6 +190,7 @@ void Simulation::read_grid_and_init_struct()
     temp_bv = atof(tok);
 
     r[temp_xi][temp_yi] = temp_rho;
+    p[temp_xi][temp_yi] = temp_rho*c*c;
     u[temp_xi][temp_yi] = temp_u;
     ru[temp_xi][temp_yi] = temp_rho * temp_u;
     v[temp_xi][temp_yi] = temp_v;
