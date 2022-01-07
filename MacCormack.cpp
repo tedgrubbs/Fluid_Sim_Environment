@@ -3,16 +3,27 @@
 
 MacCormack::MacCormack() : Simulation()
 {
-  double min_dim;
+  // finds minimum spatial stepsize for timestep calculation
+  double min_dim = dy;
   if (dx < dy) {
     min_dim = dx;
-  } else {
-    min_dim = dy;
+  }
+
+  // quickly getting the maximum BC velocity to use for timestep calculation
+  double max_boundary_speed = c;
+  for (i=0; i<(grid_size_x); ++i)
+  {
+    for (j=0; j<(grid_size_y); ++j)
+    {
+      if (fabs(boundary_v[i][j]) > max_boundary_speed) {
+        max_boundary_speed = boundary_v[i][j];
+      }
+    }
   }
 
   // adding 1. here to the max speed to reproduce Borg's result
   // dt = 0.5 * min_dim / (1./mach + 1.0);
-  dt = 0.5 * min_dim / c;
+  dt = 0.5 * min_dim / max_boundary_speed;
   cout << "MacCormack timestep defined by stability criteria: " << dt << endl;
 
   rs = create2dArray<double>(grid_size_x, grid_size_y);

@@ -19,6 +19,7 @@ class Region(IntEnum):
 # Use this to quickly redefine grid and config variables
 
 D = 70
+SPEED = 340.28
 
 # grid_size_x = 35*D+2
 # grid_size_y = 3*D+2
@@ -60,22 +61,22 @@ rho[0, :] = 0.
 # Note that at the corners where the moving lid intersects the stationary walls, these should be marked as Moving lid points.
 # Otherwise the density at the corners will grow indefinitely- even though the rest of the simulation is stable. This is how Borg's simulations works. 
 # This is caused by this term in the density equation: (-ru[i-2][j] + 4.*ru[i-1][j] - 3.*ru[i][j])
-region[-2, 1:-1] = Region.STATIONARY_MOMENTUM_BASED
-region[1, 1:-1] = Region.STATIONARY_MOMENTUM_BASED
-region[1:-1,-2] = Region.MOVING_LID
-region[1:-1,1] = Region.STATIONARY_MOMENTUM_BASED
-boundary_v[1:-1,-2] = 34.7
+# region[-2, 1:-1] = Region.STATIONARY_MOMENTUM_BASED
+# region[1, 1:-1] = Region.STATIONARY_MOMENTUM_BASED
+# region[1:-1,-2] = Region.MOVING_LID
+# region[1:-1,1] = Region.STATIONARY_MOMENTUM_BASED
+# boundary_v[1:-1,-2] = 34.7
 
 # u[1:-1,-2] = 1.0
 
 # flow over flat plate. Be sure to turn down timestep for this at high mach number
-# region[-2, 1:-1] = Region.EX_OUTLET
-# region[1, 1:-2] = Region.STATIC_U
-# region[1:-2,-2] = Region.STATIC_U
-# region[1:-2,1] = Region.STATIONARY_MOMENTUM_BASED
-# boundary_v[1, 2:-2] = 1.0
-# boundary_v[1:-2,-2] = 1.0
-# u[1:-1,1:] = 1.0
+region[-2, 1:-1] = Region.EX_OUTLET
+region[1, 1:-2] = Region.STATIC_U
+region[1:-2,-2] = Region.STATIC_U
+region[1:-2,1] = Region.STATIONARY_MOMENTUM_BASED
+boundary_v[1, 2:-2] = SPEED* 4.0
+boundary_v[1:-2,-2] = SPEED * 4.0
+u[1:-1,1:] = SPEED * 4.0
 
 # box in center
 # centerx = 15*D + D//2
@@ -135,8 +136,8 @@ output.to_csv('grid_variables.csv',index=False)
 config = {}
 config['grid_size_x'] = grid_size_x
 config['grid_size_y'] = grid_size_y
-config['real_size_y'] = 0.01
-config['real_size_x'] = 0.01
+config['real_size_y'] = 8.33e-6
+config['real_size_x'] = 1e-5
 
 
 
@@ -144,8 +145,8 @@ config['frame_rate'] = 0
 config['dt'] = 0.000175
 config['dx'] = 1./(grid_size_x-3)*config['real_size_x']
 config['dy'] = 1./(grid_size_y-3)*config['real_size_y']
-config['viscosity'] = 1.8e-5
-config['c'] = 347.0
+config['viscosity'] = 1.7894e-5
+config['c'] = SPEED
 config['force'] = 0.
 config['run_graphics'] = 1
 
@@ -163,7 +164,7 @@ config['thread_count'] = 4
 config['Reynolds'] = 400.
 config['Mach'] = 0.1
 
-print('Reynolds number:', rho[1,-2]*boundary_v[1,-2]*config['real_size_x']/config['viscosity'])
+print('Reynolds number:', rho[1,2]*boundary_v[1, 2]*config['real_size_x']/config['viscosity'])
 
 with open('config.json','w') as fp:
     json.dump(config, fp, indent='\t')
