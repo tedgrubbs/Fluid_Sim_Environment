@@ -29,6 +29,7 @@ grid_size_y = D+2
 rho = np.zeros((grid_size_x,grid_size_y))
 u = np.zeros((grid_size_x,grid_size_y))
 v = np.zeros((grid_size_x,grid_size_y))
+temperature = np.zeros((grid_size_x,grid_size_y))
 region = np.zeros((grid_size_x,grid_size_y),dtype='int')
 boundary_v = np.zeros((grid_size_x,grid_size_y))
 indices = np.zeros((grid_size_x,grid_size_y,2),dtype='int')
@@ -37,6 +38,7 @@ for i in range(grid_size_x):
         indices[i,j] = [i,j]
 
 rho[:,:] = 1.22
+temperature[:,:] = 288.16
 # u[:,:] = 1.0
 
 # creates border for sim environment
@@ -73,7 +75,7 @@ rho[0, :] = 0.
 region[-2, 1:-1] = Region.EX_OUTLET
 region[1, 1:-2] = Region.STATIC_U
 region[1:-2,-2] = Region.STATIC_U
-region[1:-2,1] = Region.STATIONARY_MOMENTUM_BASED
+region[1:-2,1] = Region.STATIONARY
 boundary_v[1, 2:-2] = SPEED* 4.0
 boundary_v[1:-2,-2] = SPEED * 4.0
 u[1:-1,1:] = SPEED * 4.0
@@ -119,13 +121,14 @@ plt.show()
 
 
 
-output = pd.DataFrame(columns=['xi','yi','rho','u','v','region','boundary_v'])
+output = pd.DataFrame(columns=['xi','yi','rho','u','v','temperature','region','boundary_v'])
 
 output['xi'] = indices.reshape((-1,2))[:,0]
 output['yi'] = indices.reshape((-1,2))[:,1]
 output['rho'] = rho.reshape(-1)
 output['u'] = u.reshape(-1)
 output['v'] = v.reshape(-1)
+output['temperature'] = temperature.reshape(-1)
 output['region'] = region.reshape(-1)
 output['boundary_v'] = boundary_v.reshape(-1)
 
@@ -147,7 +150,8 @@ config['dx'] = 1./(grid_size_x-3)*config['real_size_x']
 config['dy'] = 1./(grid_size_y-3)*config['real_size_y']
 config['viscosity'] = 1.7894e-5
 config['c'] = SPEED
-config['force'] = 0.
+config['gamma'] = 1.4
+config['Pr'] = 0.71
 config['run_graphics'] = 1
 
 base_render = 512

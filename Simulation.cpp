@@ -115,12 +115,16 @@ void Simulation::read_config()
   dy = stod(config["dy"]);
   mu = stod(config["viscosity"]);
   c = stod(config["c"]);
+  Pr = stod(config["Pr"]);
+  gamma = stod(config["gamma"]);
+  cv = R / (gamma-1.);
+  cp = gamma * cv;
+  k = mu * cp / Pr;
 
   mach = stod(config["Mach"]);
   Re = stod(config["Reynolds"]);
 
   framerate = stoi(config["frame_rate"]);
-  force = stod(config["force"]);
   run_graphics = stoi(config["run_graphics"]);
   tolerance = stod(config["tolerance"]);
 
@@ -150,6 +154,9 @@ void Simulation::read_grid_and_init_struct()
   ru = create2dArray<double>(grid_size_x, grid_size_y);
   v = create2dArray<double>(grid_size_x, grid_size_y);
   rv = create2dArray<double>(grid_size_x, grid_size_y);
+  temp = create2dArray<double>(grid_size_x, grid_size_y);
+  energy = create2dArray<double>(grid_size_x, grid_size_y);
+  int_energy = create2dArray<double>(grid_size_x, grid_size_y);
   speed = create2dArray<double>(grid_size_x, grid_size_y);
   region = create2dArray<int>(grid_size_x, grid_size_y);
   residual = create2dArray<double>(grid_size_x, grid_size_y);
@@ -164,7 +171,7 @@ void Simulation::read_grid_and_init_struct()
   {
 
     int temp_xi, temp_yi, temp_region;
-    double temp_rho, temp_u, temp_v, temp_bv;
+    double temp_rho, temp_u, temp_v, temp_temp, temp_bv;
 
     char * tok;
 
@@ -184,17 +191,23 @@ void Simulation::read_grid_and_init_struct()
     temp_v = atof(tok);
 
     tok = strtok(NULL, ",\n");
+    temp_temp = atof(tok);
+
+    tok = strtok(NULL, ",\n");
     temp_region = atof(tok);
 
     tok = strtok(NULL, ",\n");
     temp_bv = atof(tok);
 
     r[temp_xi][temp_yi] = temp_rho;
-    p[temp_xi][temp_yi] = temp_rho*c*c;
+    p[temp_xi][temp_yi] = temp_rho*R*temp_temp;
     u[temp_xi][temp_yi] = temp_u;
     ru[temp_xi][temp_yi] = temp_rho * temp_u;
     v[temp_xi][temp_yi] = temp_v;
     rv[temp_xi][temp_yi] = temp_rho * temp_v;
+    temp[temp_xi][temp_yi] = temp_temp;
+    int_energy[temp_xi][temp_yi] = temp_temp * cv;
+    energy[temp_xi][temp_yi] = temp_rho * (int_energy[temp_xi][temp_yi] + 0.5*(temp_u*temp_u + temp_v*temp_v));
     region[temp_xi][temp_yi] = temp_region;
     boundary_v[temp_xi][temp_yi] = temp_bv;
   }
@@ -468,14 +481,17 @@ void Simulation::save_speed_to_file()
   FILE * rho_fp;
   FILE * u_fp;
   FILE * v_fp;
+  FILE * temperature_fp;
   rho_fp = fopen("Data_Output/rho_file.dat","w");
   u_fp = fopen("Data_Output/U_file.dat","w");
   v_fp = fopen("Data_Output/V_file.dat","w");
+  temperature_fp = fopen("Data_Output/temperature_file.dat","w");
   for (unsigned int y=0; y<grid_size_y; ++y) 
   {
     for (unsigned int x=0; x<grid_size_x; ++x) 
     {
       fprintf(rho_fp, "%.10lf", r[x][y]);
+      fprintf(temperature_fp, "%.10lf", temp[x][y]);
       fprintf(u_fp, "%0.3E", u[x][y]);
       fprintf(v_fp, "%0.3E", v[x][y]);
 
@@ -484,16 +500,18 @@ void Simulation::save_speed_to_file()
         fprintf(u_fp, "\n" );
         fprintf(v_fp, "\n" );
         fprintf(rho_fp, "\n" );
+        fprintf(temperature_fp, "\n" );
       } 
       else 
       {
         fprintf(u_fp, " " );
         fprintf(v_fp, " " );
         fprintf(rho_fp, " " );
+        fprintf(temperature_fp, " " );
       }
     }
   }
-  fclose(rho_fp);fclose(u_fp);fclose(v_fp);
+  fclose(rho_fp);fclose(u_fp);fclose(v_fp);fclose(temperature_fp);
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) 

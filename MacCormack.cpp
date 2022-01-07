@@ -32,6 +32,9 @@ MacCormack::MacCormack() : Simulation()
   vs = create2dArray<double>(grid_size_x, grid_size_y);
   rvs = create2dArray<double>(grid_size_x, grid_size_y);
   ps = create2dArray<double>(grid_size_x, grid_size_y);
+  temp_s = create2dArray<double>(grid_size_x, grid_size_y);
+  energy_s = create2dArray<double>(grid_size_x, grid_size_y);
+  int_energy_s = create2dArray<double>(grid_size_x, grid_size_y);
 
   // constants that convert equations into dimensionless form
   // a1 = dt / dx;
@@ -702,7 +705,9 @@ void MacCormack::run_solver_step()
     {
       us[i][j] = rus[i][j] / rs[i][j];
       vs[i][j] = rvs[i][j] / rs[i][j];
-      ps[i][j] = rs[i][j] * c * c;
+      int_energy_s[i][j] = energy_s[i][j] / rs[i][j];
+      temp_s[i][j] = int_energy_s[i][j] / cv;
+      ps[i][j] = rs[i][j] * R * temp_s[i][j];
     }
   }
 
@@ -756,7 +761,9 @@ void MacCormack::run_solver_step()
     {
       u[i][j] = ru[i][j] / r[i][j];
       v[i][j] = rv[i][j] / r[i][j];
-      p[i][j] = r[i][j] * c * c;
+      int_energy[i][j] = energy[i][j] / r[i][j];
+      temp[i][j] = int_energy[i][j] / cv;
+      p[i][j] = r[i][j] * R * temp[i][j];
     }
   }
 }
