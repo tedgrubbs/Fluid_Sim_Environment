@@ -18,7 +18,7 @@ class Region(IntEnum):
 
 # Use this to quickly redefine grid and config variables
 
-D = 70
+D = 64
 SPEED = 340.28
 
 # grid_size_x = 35*D+2
@@ -39,6 +39,7 @@ for i in range(grid_size_x):
 
 rho[:,:] = 1.22
 temperature[:,:] = 288.16
+temperature[int(D/2),int(D/2)]= 289.
 # u[:,:] = 1.0
 
 # creates border for sim environment
@@ -72,13 +73,15 @@ rho[0, :] = 0.
 # u[1:-1,-2] = 1.0
 
 # flow over flat plate. Be sure to turn down timestep for this at high mach number
-region[-2, 1:-1] = Region.EX_OUTLET
-region[1, 1:-2] = Region.STATIC_U
-region[1:-2,-2] = Region.STATIC_U
+region[-2, 1:-1] = Region.STATIONARY
+region[1, 1:-2] = Region.STATIONARY
+region[1:-2,-2] = Region.STATIONARY
 region[1:-2,1] = Region.STATIONARY
-boundary_v[1, 2:-2] = SPEED* 4.0
-boundary_v[1:-2,-2] = SPEED * 4.0
-u[1:-1,1:] = SPEED * 4.0
+# boundary_v[1, 2:-2] = SPEED * 4.0
+# boundary_v[1:-2,-2] = SPEED * 4.0
+# boundary_v[1:-2,1] = SPEED * 4.0
+# boundary_v[-2, 1:-1] = SPEED * 4.0
+# u[:,:] = SPEED * 4.0
 
 # box in center
 # centerx = 15*D + D//2
@@ -139,7 +142,7 @@ output.to_csv('grid_variables.csv',index=False)
 config = {}
 config['grid_size_x'] = grid_size_x
 config['grid_size_y'] = grid_size_y
-config['real_size_y'] = 8.33e-6
+config['real_size_y'] = 1e-5
 config['real_size_x'] = 1e-5
 
 
@@ -169,6 +172,8 @@ config['Reynolds'] = 400.
 config['Mach'] = 0.1
 
 print('Reynolds number:', rho[1,2]*boundary_v[1, 2]*config['real_size_x']/config['viscosity'])
+print('Grid x Reynolds number:', rho[1,2]*boundary_v[1, 2]*config['dx']/config['viscosity'])
+print('Grid y Reynolds number:', rho[1,2]*boundary_v[1, 2]*config['dy']/config['viscosity'])
 
 with open('config.json','w') as fp:
     json.dump(config, fp, indent='\t')

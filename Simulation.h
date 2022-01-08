@@ -17,9 +17,10 @@
 
 using namespace std;
 
-const double MIN_RENDERABLE_SPEED = 0.;
+const double MIN_RENDERABLE_SPEED = -DBL_MAX;
 const double MAX_RENDERABLE_SPEED = DBL_MAX;
 const double R = 287.0;
+const double T0 = 288.16;
 
 template <typename grid_type>
 grid_type ** create2dArray(unsigned int sizex, unsigned int sizey);
@@ -109,7 +110,7 @@ class Simulation
     unsigned int grid_size_x, grid_size_y;
     double dt, dx, dy;
     // mu and k are technically temperature dependent but for now they are considered constant
-    double mu, c, mach, Re, cv, cp, Pr, gamma, k;
+    double mu_global, c, mach, Re, cv, cp, Pr, gamma, k_global;
 
     double ** r;          // mass density
     double ** u;          // x-velocity
@@ -120,6 +121,16 @@ class Simulation
     double ** energy;     // total energy
     double ** int_energy; // internal energy
     double ** temp;       // temperature
+
+    double ** mu;
+    double ** k;
+    double ** tauxx;
+    double ** tauyy;
+    double ** tauxy;
+    double ** qx;
+    double ** qy;
+
+    double sutherland(double T);
 
     double ** speed;
     int ** region;
@@ -147,6 +158,8 @@ class MacCormack : public Simulation
     double ** temp_s;
     double ** energy_s;
     double ** int_energy_s;
+
+    
 
     double a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11, b1,b2,b3,b4,b5;
 

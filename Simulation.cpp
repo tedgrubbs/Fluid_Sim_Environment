@@ -113,13 +113,14 @@ void Simulation::read_config()
   dt = stod(config["dt"]);
   dx = stod(config["dx"]);
   dy = stod(config["dy"]);
-  mu = stod(config["viscosity"]);
+  mu_global = stod(config["viscosity"]);
   c = stod(config["c"]);
   Pr = stod(config["Pr"]);
   gamma = stod(config["gamma"]);
   cv = R / (gamma-1.);
   cp = gamma * cv;
-  k = mu * cp / Pr;
+  k_global = mu_global * cp / Pr;
+  cout << "Thermal conductivity: " << k_global << endl;
 
   mach = stod(config["Mach"]);
   Re = stod(config["Reynolds"]);
@@ -348,10 +349,12 @@ void Simulation::render()
   u_min = DBL_MAX;
   v_max = -DBL_MAX;
   v_min = DBL_MAX;
+  double T_max = -DBL_MAX;
+  double T_min = DBL_MAX;
 
   // loop indices
   int x,y;
-  double absu, absv;
+  double absu, absv, T;
   double max_rho=0.;
 
   // int particle_x_pos =  particle_x*grid_size_x;
@@ -386,10 +389,16 @@ void Simulation::render()
       }
     }
   }
-  // cout << max_rho << endl;
+  // cout << T_min << " " << T_max << endl;
   if (max_rho > 1000) 
   {
     cout << "Failed from density explosion!\n";
+    glfwSetWindowShouldClose(window, true);
+    return;
+  }
+  if (T_min < 280.)
+  {
+    cout << T_min <<  " Failed from negative temperature!\n";
     glfwSetWindowShouldClose(window, true);
     return;
   }
@@ -482,16 +491,19 @@ void Simulation::save_speed_to_file()
   FILE * u_fp;
   FILE * v_fp;
   FILE * temperature_fp;
+  FILE * energy_fp;
   rho_fp = fopen("Data_Output/rho_file.dat","w");
   u_fp = fopen("Data_Output/U_file.dat","w");
   v_fp = fopen("Data_Output/V_file.dat","w");
   temperature_fp = fopen("Data_Output/temperature_file.dat","w");
+  energy_fp = fopen("Data_Output/energy_file.dat","w");
   for (unsigned int y=0; y<grid_size_y; ++y) 
   {
     for (unsigned int x=0; x<grid_size_x; ++x) 
     {
       fprintf(rho_fp, "%.10lf", r[x][y]);
       fprintf(temperature_fp, "%.10lf", temp[x][y]);
+      fprintf(energy_fp, "%.10lf", energy[x][y]);
       fprintf(u_fp, "%0.3E", u[x][y]);
       fprintf(v_fp, "%0.3E", v[x][y]);
 
@@ -501,6 +513,7 @@ void Simulation::save_speed_to_file()
         fprintf(v_fp, "\n" );
         fprintf(rho_fp, "\n" );
         fprintf(temperature_fp, "\n" );
+        fprintf(energy_fp, "\n" );
       } 
       else 
       {
@@ -508,10 +521,11 @@ void Simulation::save_speed_to_file()
         fprintf(v_fp, " " );
         fprintf(rho_fp, " " );
         fprintf(temperature_fp, " " );
+        fprintf(energy_fp, " " );
       }
     }
   }
-  fclose(rho_fp);fclose(u_fp);fclose(v_fp);fclose(temperature_fp);
+  fclose(rho_fp);fclose(u_fp);fclose(v_fp);fclose(temperature_fp);fclose(energy_fp);
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) 
@@ -538,5 +552,10 @@ string remove_quotes(string s)
     new_s.assign(new_s.substr(0, new_s.find("\"")));
   }
   return new_s;
+}
+
+double Simulation::sutherland(double T)
+{
+  return mu_global*pow(T/T0, 3./2.) * ((T0+110.) / (T+110.));
 }
 
