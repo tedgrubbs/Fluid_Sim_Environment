@@ -150,18 +150,9 @@ class MacCormack : public Simulation
     virtual void run_solver_step();
 
     double ** rs;
-    double ** us;
     double ** rus;
-    double ** vs;
     double ** rvs;
-    double ** ps;
-    double ** temp_s;
     double ** energy_s;
-    double ** int_energy_s;
-
-    
-
-    double a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11, b1,b2,b3,b4,b5;
 
     bool forward_diff_first;
 
