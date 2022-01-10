@@ -8,18 +8,16 @@ plt.style.use('dark_background')
 class Region(IntEnum):
     EXTERNAL = -1
     FREE_FLOW = 0
-    STATIONARY = 1
-    MOVING_LID = 2
-    INLET = 3
-    OUTLET = 4
-    STATIONARY_MOMENTUM_BASED = 5
-    STATIC_U = 6
-    EX_OUTLET = 7
+    LEFT_WALL = 1
+    RIGHT_WALL = 2
+    TOP_WALL = 3
+    BOTTOM_WALL = 4
+    
 
 # Use this to quickly redefine grid and config variables
 
 D = 64
-SPEED = 340.28
+SPEED = 340.28 # speed of sound at STP
 
 # grid_size_x = 35*D+2
 # grid_size_y = 3*D+2
@@ -39,7 +37,7 @@ for i in range(grid_size_x):
 
 rho[:,:] = 1.22
 temperature[:,:] = 288.16
-temperature[int(D/2),int(D/2)]= 289.
+# temperature[int(D/2)-5:int(D/2)+5, int(D/2)-5:int(D/2)+5] = 310.
 # u[:,:] = 1.0
 
 # creates border for sim environment
@@ -73,10 +71,11 @@ rho[0, :] = 0.
 # u[1:-1,-2] = 1.0
 
 # flow over flat plate. Be sure to turn down timestep for this at high mach number
-region[-2, 1:-1] = Region.STATIONARY
-region[1, 1:-2] = Region.STATIONARY
-region[1:-2,-2] = Region.STATIONARY
-region[1:-2,1] = Region.STATIONARY
+region[-2, 1:-1] = Region.RIGHT_WALL
+region[1, 1:-2] = Region.LEFT_WALL
+region[1:-2,-2] = Region.TOP_WALL
+region[1:-2,1] = Region.BOTTOM_WALL
+temperature[1:-1,1] = 300.
 # boundary_v[1, 2:-2] = SPEED * 4.0
 # boundary_v[1:-2,-2] = SPEED * 4.0
 # boundary_v[1:-2,1] = SPEED * 4.0
@@ -168,8 +167,6 @@ config['render_grid_size_y'] = int(base_render*y_multiplier)
 config["tolerance"] = 0.00
 config["max_run_time"] = 100000
 config['thread_count'] = 4
-config['Reynolds'] = 400.
-config['Mach'] = 0.1
 
 print('Reynolds number:', rho[1,2]*boundary_v[1, 2]*config['real_size_x']/config['viscosity'])
 print('Grid x Reynolds number:', rho[1,2]*boundary_v[1, 2]*config['dx']/config['viscosity'])

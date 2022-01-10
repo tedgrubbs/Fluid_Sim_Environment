@@ -20,7 +20,7 @@ using namespace std;
 const double MIN_RENDERABLE_SPEED = -DBL_MAX;
 const double MAX_RENDERABLE_SPEED = DBL_MAX;
 const double R = 287.0;
-const double T0 = 288.16;
+const double T0 = 288.16; // constant used for viscosity calculation via Sutherland's law
 
 template <typename grid_type>
 grid_type ** create2dArray(unsigned int sizex, unsigned int sizey);
@@ -98,19 +98,22 @@ class Simulation
     {
       EXTERNAL=-1,
       FREE_FLOW=0,
-      STATIONARY=1,
-      MOVING_LID=2,
-      INLET=3,
-      OUTLET=4,
-      STATIONARY_MOM=5,
-      STATIC_U=6,
-      EX_OUTLET=7
+      LEFT_WALL=1,
+      RIGHT_WALL=2,
+      TOP_WALL=3,
+      BOTTOM_WALL=4,
+      
     };
 
     unsigned int grid_size_x, grid_size_y;
     double dt, dx, dy;
-    // mu and k are technically temperature dependent but for now they are considered constant
-    double mu_global, c, mach, Re, cv, cp, Pr, gamma, k_global;
+    
+    double mu_global;     // dynamic viscosity at STP
+    double c;             // speed of sound at STP. Currently only used to set timestep via stability criteria
+    double cv;            // specific heat at constant volume
+    double cp;            // specific heat at constant pressure
+    double Pr;            // Prandtl Number
+    double gamma;         // Ratio of specific heats
 
     double ** r;          // mass density
     double ** u;          // x-velocity
@@ -121,14 +124,19 @@ class Simulation
     double ** energy;     // total energy
     double ** int_energy; // internal energy
     double ** temp;       // temperature
-
-    double ** mu;
-    double ** k;
-    double ** tauxx;
+    double ** mu;         // dynamic viscosity
+    double ** k;          // thermal conductivity
+    
+    // relevant viscous stress tensor components
+    double ** tauxx;      
     double ** tauyy;
-    double ** tauxy;
+    double ** tauxy_E,  ** tauxy_F;
+
+    // heat conduction terms derived from Fourier's law
     double ** qx;
     double ** qy;
+
+    double k_constant; // constant used to derive thermal conductivity from viscosity
 
     double sutherland(double T);
 
@@ -136,7 +144,6 @@ class Simulation
     int ** region;
     double ** boundary_v; // boundary condition velocity
 
-    double force;
     int MAX_THREADS;
 
   public:
@@ -149,16 +156,46 @@ class MacCormack : public Simulation
   private:
     virtual void run_solver_step();
 
+    bool predictor;
     double ** rs;
     double ** rus;
     double ** rvs;
     double ** energy_s;
+    
+    /*
+      stencil vector components.
+      0 = Density equation
+      1 = X-momentum
+      2 = Y-momentum
+      3 = Energy
+    */
+    double ** E0, ** E1,  ** E2, ** E3;
+    double ** F0, ** F1,  ** F2, ** F3;
 
+    // constants that appear often in equations
+    double dt_dx;
+    double dt_dy;
+    double _dx, _dy;
+    
     bool forward_diff_first;
 
     // iteration variables defined here is faster
     size_t i;
     size_t j;
+
+    void TAUXY(bool EorF, bool forward, size_t i, size_t j);
+    void TAUXX(bool forward, size_t i, size_t j);
+    void TAUYY(bool forward, size_t i, size_t j);
+    void QX(bool forward, size_t i, size_t j);
+    void QY(bool forward, size_t i, size_t j);
+
+    void update_tau_and_q();
+    void update_E_and_F();
+    void boundary_conditions(size_t i, size_t j);
+    void BC_TOP_WALL(size_t i, size_t j);
+    void BC_BOTTOM_WALL(size_t i, size_t j);
+    void BC_RIGHT_WALL(size_t i, size_t j);
+    void BC_LEFT_WALL(size_t i, size_t j);
 
     // defining functions to handle different regions separately
     void free_flow_predictor(size_t x, size_t y);

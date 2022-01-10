@@ -119,11 +119,7 @@ void Simulation::read_config()
   gamma = stod(config["gamma"]);
   cv = R / (gamma-1.);
   cp = gamma * cv;
-  k_global = mu_global * cp / Pr;
-  cout << "Thermal conductivity: " << k_global << endl;
-
-  mach = stod(config["Mach"]);
-  Re = stod(config["Reynolds"]);
+  k_constant = cp / Pr;
 
   framerate = stoi(config["frame_rate"]);
   run_graphics = stoi(config["run_graphics"]);
@@ -363,7 +359,7 @@ void Simulation::render()
   // particle_x = particle_x + dt*u[particle_x_pos][particle_y_pos];
   // particle_y = particle_y + dt*v[particle_x_pos][particle_y_pos];
 
-  #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(x,y,absu,absv)
+  #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(x,y,absu,absv,T)
   for (x=0; x<grid_size_x; ++x) 
   {
     for (y=0; y<grid_size_y; ++y)
@@ -371,6 +367,7 @@ void Simulation::render()
 
       absu = fabs(u[x][y]);
       absv = fabs(v[x][y]);
+      T = floor(temp[x][y]*1. + 0.5) / 1.;
 
       if (r[x][y] > max_rho) {
         max_rho = r[x][y];
@@ -387,6 +384,12 @@ void Simulation::render()
       } else if (absv < v_min && absv > MIN_RENDERABLE_SPEED) {
         v_min = absv;
       }
+
+      if (T > T_max && T < MAX_RENDERABLE_SPEED) {
+        T_max = T;
+      } else if (T < T_min && T > MIN_RENDERABLE_SPEED) {
+        T_min = T;
+      }
     }
   }
   // cout << T_min << " " << T_max << endl;
@@ -396,12 +399,12 @@ void Simulation::render()
     glfwSetWindowShouldClose(window, true);
     return;
   }
-  if (T_min < 280.)
-  {
-    cout << T_min <<  " Failed from negative temperature!\n";
-    glfwSetWindowShouldClose(window, true);
-    return;
-  }
+  // if (T_min < 280.)
+  // {
+  //   cout << T_min <<  " Failed from negative temperature!\n";
+  //   glfwSetWindowShouldClose(window, true);
+  //   return;
+  // }
 
   processInput(window);
   glClearColor(0.f, 0.f, 0.f, 1.0f);
@@ -411,8 +414,9 @@ void Simulation::render()
 
   float color_val_x;
   float color_val_y;
+  float color_temp;
 
-  #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(color_val_x,color_val_y) private(x,y,absu,absv)
+  #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(color_val_x,color_val_y,color_temp) private(x,y,absu,absv,T)
   for (x=0; x<grid_size_x; ++x) 
   {
     for (y=0; y<grid_size_y; ++y) 
@@ -423,9 +427,11 @@ void Simulation::render()
       }
       absu = fabs(u[x][y]);
       absv = fabs(v[x][y]);
+      T = temp[x][y];
 
       color_val_x = (absu - u_min) / (u_max - u_min);
       color_val_y = (absv - v_min) / (v_max - v_min);
+      color_temp = (T - T_min) / (T_max - T_min);
 
       if (absu < MIN_RENDERABLE_SPEED) {
         color_val_x = 0.;
@@ -439,9 +445,19 @@ void Simulation::render()
         color_val_y = 1.;
       }
 
+      if (color_temp < MIN_RENDERABLE_SPEED) {
+        color_temp = 0.;
+      } else if (color_temp > MAX_RENDERABLE_SPEED) {
+        color_temp = 1.;
+      }
+
       vertex_data[(x*grid_size_y+y)*6 + 3] = color_val_x;
       vertex_data[(x*grid_size_y+y)*6 + 4] = 0.0;
       vertex_data[(x*grid_size_y+y)*6 + 5] = color_val_y;
+
+      // vertex_data[(x*grid_size_y+y)*6 + 3] = color_temp;
+      // vertex_data[(x*grid_size_y+y)*6 + 4] = 0.0;
+      // vertex_data[(x*grid_size_y+y)*6 + 5] = 0.0;
 
     }
   }
