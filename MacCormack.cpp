@@ -23,7 +23,7 @@ MacCormack::MacCormack() : Simulation()
 
   // adding 1. here to the max speed to reproduce Borg's result
   // dt = 0.5 * min_dim / (1./mach + 1.0);
-  dt = 0.05 * min_dim / max_boundary_speed;
+  dt = 0.5 * min_dim / max_boundary_speed;
   cout << "MacCormack timestep defined by stability criteria: " << dt << endl;
   dt_dx = dt / dx;
   dt_dy = dt / dy;
@@ -294,6 +294,7 @@ void MacCormack::update_tau_and_q()
   }
 
   // calculating tau and q over entire grid
+  #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(i,j)
   for (i=0; i<(grid_size_x); ++i)
   {
     for (j=0; j<(grid_size_y); ++j)
@@ -320,6 +321,7 @@ void MacCormack::update_E_and_F()
     rho = rs;
   }
   // calculating E and F over entire grid
+  #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(i,j)
   for (i=0; i<(grid_size_x); ++i)
   {
     for (j=0; j<(grid_size_y); ++j)
@@ -353,6 +355,8 @@ void MacCormack::boundary_conditions(size_t i, size_t j)
     BC_RIGHT_WALL(i, j);
   } else if (region[i][j] == LEFT_WALL) {
     BC_LEFT_WALL(i, j);
+  } else if (region[i][j] == TOP_MOVING_LID) {
+    BC_TOP_MOVING_LID(i, j);
   }
 
 }
@@ -401,6 +405,42 @@ void MacCormack::BC_LEFT_WALL(size_t i, size_t j)
   }
 }
 
+void MacCormack::BC_TOP_MOVING_LID(size_t i, size_t j)
+{
+  double rx_contribution, ry_contribution;
+  double ** rho, ** rhov;
+  if (predictor) {
+    rho = r;
+    rhov = rv;
+  } else {
+    rho = rs;
+    rhov = rvs;
+  }
+
+  // corner point check
+  if (region[i-1][j] != TOP_MOVING_LID) {
+    rx_contribution =  0.;//dt/dx * 0.5 * u[i][j] * (3.*rho[i][j] - 4.*rho[i+1][j] + rho[i+2][j]);
+  } else if (region[i+1][j] != TOP_MOVING_LID) {
+    rx_contribution =  0.;//dt/dx * 0.5 * u[i][j] * (3.*rho[i][j] - 4.*rho[i-1][j] + rho[i-2][j]);
+  } else {
+    rx_contribution =  dt/dx * 0.5 * u[i][j] * (rho[i+1][j] - rho[i-1][j]);
+  }
+
+  ry_contribution = dt/dy * 0.5 * (3.*rhov[i][j] - 4.*rhov[i][j-1] + rhov[i][j-2]);
+
+  if (predictor) 
+  { 
+    rs[i][j] = r[i][j] - rx_contribution - ry_contribution;
+    energy_s[i][j] = rs[i][j] * (cv * temp[i][j] + 0.5 * u[i][j] * u[i][j]);
+  } 
+  
+  else 
+  {  
+    r[i][j] = 0.5 * (r[i][j] + rs[i][j] - rx_contribution - ry_contribution);
+    energy[i][j] = r[i][j] * (cv * temp[i][j] + 0.5 * u[i][j] * u[i][j]);
+  }
+}
+
 void MacCormack::run_solver_step()
 {
 
@@ -426,6 +466,7 @@ void MacCormack::run_solver_step()
   update_E_and_F();
 
   // performing predictor step
+  #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(i,j)
   for (i=0; i<(grid_size_x); ++i)
   {
     for (j=0; j<(grid_size_y); ++j)
@@ -456,6 +497,7 @@ void MacCormack::run_solver_step()
   
   
   // recalculate primitive variables
+  #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(i,j)
   for (i=0; i<(grid_size_x); ++i)
   {
     for (j=0; j<(grid_size_y); ++j)
@@ -474,6 +516,7 @@ void MacCormack::run_solver_step()
   update_E_and_F();
 
   // performing corrector step
+  #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(i,j)
   for (i=0; i<(grid_size_x); ++i)
   {
     for (j=0; j<(grid_size_y); ++j)
@@ -503,6 +546,7 @@ void MacCormack::run_solver_step()
   }
 
   // recalculate primitive variables
+  #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(i,j)
   for (i=0; i<(grid_size_x); ++i)
   {
     for (j=0; j<(grid_size_y); ++j)

@@ -102,7 +102,7 @@ class Simulation
       RIGHT_WALL=2,
       TOP_WALL=3,
       BOTTOM_WALL=4,
-      
+      TOP_MOVING_LID=5
     };
 
     unsigned int grid_size_x, grid_size_y;
@@ -196,6 +196,7 @@ class MacCormack : public Simulation
     void BC_BOTTOM_WALL(size_t i, size_t j);
     void BC_RIGHT_WALL(size_t i, size_t j);
     void BC_LEFT_WALL(size_t i, size_t j);
+    void BC_TOP_MOVING_LID(size_t i, size_t j);
 
     // defining functions to handle different regions separately
     void free_flow_predictor(size_t x, size_t y);

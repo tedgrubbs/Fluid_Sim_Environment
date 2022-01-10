@@ -393,7 +393,7 @@ void Simulation::render()
     }
   }
   // cout << T_min << " " << T_max << endl;
-  if (max_rho > 1000) 
+  if (max_rho > 2) 
   {
     cout << "Failed from density explosion!\n";
     glfwSetWindowShouldClose(window, true);
@@ -416,7 +416,7 @@ void Simulation::render()
   float color_val_y;
   float color_temp;
 
-  #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(color_val_x,color_val_y,color_temp) private(x,y,absu,absv,T)
+  #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(color_val_x,color_val_y,color_temp,x,y,absu,absv,T)
   for (x=0; x<grid_size_x; ++x) 
   {
     for (y=0; y<grid_size_y; ++y) 

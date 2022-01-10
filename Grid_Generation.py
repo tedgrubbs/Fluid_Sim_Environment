@@ -12,6 +12,7 @@ class Region(IntEnum):
     RIGHT_WALL = 2
     TOP_WALL = 3
     BOTTOM_WALL = 4
+    TOP_MOVING_LID = 5
     
 
 # Use this to quickly redefine grid and config variables
@@ -73,9 +74,10 @@ rho[0, :] = 0.
 # flow over flat plate. Be sure to turn down timestep for this at high mach number
 region[-2, 1:-1] = Region.RIGHT_WALL
 region[1, 1:-2] = Region.LEFT_WALL
-region[1:-2,-2] = Region.TOP_WALL
+region[1:-1,-2] = Region.TOP_MOVING_LID
 region[1:-2,1] = Region.BOTTOM_WALL
-temperature[1:-1,1] = 300.
+boundary_v[1:-1,-2] = 0.1*SPEED
+u[1:-1,-2] = 0.1*SPEED
 # boundary_v[1, 2:-2] = SPEED * 4.0
 # boundary_v[1:-2,-2] = SPEED * 4.0
 # boundary_v[1:-2,1] = SPEED * 4.0
@@ -141,8 +143,8 @@ output.to_csv('grid_variables.csv',index=False)
 config = {}
 config['grid_size_x'] = grid_size_x
 config['grid_size_y'] = grid_size_y
-config['real_size_y'] = 1e-5
-config['real_size_x'] = 1e-5
+config['real_size_y'] = 1e-2
+config['real_size_x'] = 1e-2
 
 
 
@@ -150,7 +152,7 @@ config['frame_rate'] = 0
 config['dt'] = 0.000175
 config['dx'] = 1./(grid_size_x-3)*config['real_size_x']
 config['dy'] = 1./(grid_size_y-3)*config['real_size_y']
-config['viscosity'] = 1.7894e-5
+config['viscosity'] = 0.9e-3
 config['c'] = SPEED
 config['gamma'] = 1.4
 config['Pr'] = 0.71
@@ -168,9 +170,9 @@ config["tolerance"] = 0.00
 config["max_run_time"] = 100000
 config['thread_count'] = 4
 
-print('Reynolds number:', rho[1,2]*boundary_v[1, 2]*config['real_size_x']/config['viscosity'])
-print('Grid x Reynolds number:', rho[1,2]*boundary_v[1, 2]*config['dx']/config['viscosity'])
-print('Grid y Reynolds number:', rho[1,2]*boundary_v[1, 2]*config['dy']/config['viscosity'])
+print('Reynolds number:', rho[1,-2]*boundary_v[1,-2]*config['real_size_x']/config['viscosity'])
+# print('Grid x Reynolds number:', rho[1,2]*boundary_v[1, 2]*config['dx']/config['viscosity'])
+# print('Grid y Reynolds number:', rho[1,2]*boundary_v[1, 2]*config['dy']/config['viscosity'])
 
 with open('config.json','w') as fp:
     json.dump(config, fp, indent='\t')
