@@ -71,7 +71,7 @@ MacCormack::MacCormack() : Simulation()
     }
   }
 
-  bool forward_diff_first = true;
+  forward_diff_first = true;
 
 }
 
@@ -465,6 +465,13 @@ void MacCormack::run_solver_step()
   update_tau_and_q();
   update_E_and_F();
 
+  int leftx, rightx, upy, downy;
+
+  leftx = forward_diff_first;
+  upy = forward_diff_first;
+  rightx = !leftx;
+  downy = !upy;
+  
   // performing predictor step
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(i,j)
   for (i=0; i<(grid_size_x); ++i)
@@ -473,20 +480,10 @@ void MacCormack::run_solver_step()
     {
       if (region[i][j] == FREE_FLOW)
       { 
-        if (forward_diff_first)
-        {
-          rs[i][j] = r[i][j] - dt/dx * (E0[i+1][j] - E0[i][j]) - dt/dy * (F0[i][j+1] - F0[i][j]);
-          rus[i][j] = ru[i][j] - dt/dx * (E1[i+1][j] - E1[i][j]) - dt/dy * (F1[i][j+1] - F1[i][j]);
-          rvs[i][j] = rv[i][j] - dt/dx * (E2[i+1][j] - E2[i][j]) - dt/dy * (F2[i][j+1] - F2[i][j]);
-          energy_s[i][j] = energy[i][j] - dt/dx * (E3[i+1][j] - E3[i][j]) - dt/dy * (F3[i][j+1] - F3[i][j]);
-        }
-        else
-        {
-          rs[i][j] = r[i][j] - dt/dx * (E0[i][j] - E0[i-1][j]) - dt/dy * (F0[i][j] - F0[i][j-1]);
-          rus[i][j] = ru[i][j] - dt/dx * (E1[i][j] - E1[i-1][j]) - dt/dy * (F1[i][j] - F1[i][j-1]);
-          rvs[i][j] = rv[i][j] - dt/dx * (E2[i][j] - E2[i-1][j]) - dt/dy * (F2[i][j] - F2[i][j-1]);
-          energy_s[i][j] = energy[i][j] - dt/dx * (E3[i][j] - E3[i-1][j]) - dt/dy * (F3[i][j] - F3[i][j-1]);
-        }
+        rs[i][j] = r[i][j] - dt/dx * (E0[i+leftx][j] - E0[i-rightx][j]) - dt/dy * (F0[i][j+upy] - F0[i][j-downy]);
+        rus[i][j] = ru[i][j] - dt/dx * (E1[i+leftx][j] - E1[i-rightx][j]) - dt/dy * (F1[i][j+upy] - F1[i][j-downy]);
+        rvs[i][j] = rv[i][j] - dt/dx * (E2[i+leftx][j] - E2[i-rightx][j]) - dt/dy * (F2[i][j+upy] - F2[i][j-downy]);
+        energy_s[i][j] = energy[i][j] - dt/dx * (E3[i+leftx][j] - E3[i-rightx][j]) - dt/dy * (F3[i][j+upy] - F3[i][j-downy]);
       }
       else 
       {
@@ -515,6 +512,12 @@ void MacCormack::run_solver_step()
   update_tau_and_q();
   update_E_and_F();
 
+  // corrector runs opposite to predictor
+  leftx = !forward_diff_first;
+  upy = !forward_diff_first;
+  rightx = !leftx;
+  downy = !upy;
+
   // performing corrector step
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(i,j)
   for (i=0; i<(grid_size_x); ++i)
@@ -523,20 +526,12 @@ void MacCormack::run_solver_step()
     {
       if (region[i][j] == FREE_FLOW)
       { 
-        if (forward_diff_first)
-        {
-          r[i][j] = 0.5 * (r[i][j] + rs[i][j] - dt/dx * (E0[i][j] - E0[i-1][j]) - dt/dy * (F0[i][j] - F0[i][j-1]));
-          ru[i][j] = 0.5 * (ru[i][j] + rus[i][j] - dt/dx * (E1[i][j] - E1[i-1][j]) - dt/dy * (F1[i][j] - F1[i][j-1]));
-          rv[i][j] = 0.5 * (rv[i][j] + rvs[i][j] - dt/dx * (E2[i][j] - E2[i-1][j]) - dt/dy * (F2[i][j] - F2[i][j-1]));
-          energy[i][j] = 0.5 * (energy[i][j] + energy_s[i][j] - dt/dx * (E3[i][j] - E3[i-1][j]) - dt/dy * (F3[i][j] - F3[i][j-1]));
-        }
-        else
-        {
-          r[i][j] = 0.5 * (r[i][j] + rs[i][j] - dt/dx * (E0[i+1][j] - E0[i][j]) - dt/dy * (F0[i][j+1] - F0[i][j]));
-          ru[i][j] = 0.5 * (ru[i][j] + rus[i][j] - dt/dx * (E1[i+1][j] - E1[i][j]) - dt/dy * (F1[i][j+1] - F1[i][j]));
-          rv[i][j] = 0.5 * (rv[i][j] + rvs[i][j] - dt/dx * (E2[i+1][j] - E2[i][j]) - dt/dy * (F2[i][j+1] - F2[i][j]));
-          energy[i][j] = 0.5 * (energy[i][j] + energy_s[i][j] - dt/dx * (E3[i+1][j] - E3[i][j]) - dt/dy * (F3[i][j+1] - F3[i][j]));
-        }
+        
+        r[i][j] = 0.5 * (r[i][j] + rs[i][j] - dt/dx * (E0[i+leftx][j] - E0[i-rightx][j]) - dt/dy * (F0[i][j+upy] - F0[i][j-downy]));
+        ru[i][j] = 0.5 * (ru[i][j] + rus[i][j] - dt/dx * (E1[i+leftx][j] - E1[i-rightx][j]) - dt/dy * (F1[i][j+upy] - F1[i][j-downy]));
+        rv[i][j] = 0.5 * (rv[i][j] + rvs[i][j] - dt/dx * (E2[i+leftx][j] - E2[i-rightx][j]) - dt/dy * (F2[i][j+upy] - F2[i][j-downy]));
+        energy[i][j] = 0.5 * (energy[i][j] + energy_s[i][j] - dt/dx * (E3[i+leftx][j] - E3[i-rightx][j]) - dt/dy * (F3[i][j+upy] - F3[i][j-downy]));
+        
       }
       else 
       {
