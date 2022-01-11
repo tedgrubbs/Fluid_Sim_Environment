@@ -25,7 +25,7 @@ MacCormack::MacCormack() : Simulation()
 
   // adding 1. here to the max speed to reproduce Borg's result
   // dt = 0.5 * min_dim / (1./mach + 1.0);
-  dt = 0.5 * min_dim / max_boundary_speed;
+  dt = 0.1 * min_dim / max_boundary_speed;
   cout << "MacCormack timestep defined by stability criteria: " << dt << endl;
   dt_dx = dt / dx;
   dt_dy = dt / dy;
@@ -359,8 +359,55 @@ void MacCormack::boundary_conditions(size_t i, size_t j)
     BC_LEFT_WALL(i, j);
   } else if (region[i][j] == TOP_MOVING_LID) {
     BC_TOP_MOVING_LID(i, j);
+  } else if (region[i][j] == RIGHT_OUTFLOW) {
+    BC_RIGHT_OUTFLOW(i, j);
   }
 
+}
+
+void MacCormack::BC_RIGHT_OUTFLOW(size_t i, size_t j)
+{
+  if (predictor) 
+  {
+    rs[i][j] = 2.*r[i-1][j] - r[i-2][j];
+    rus[i][j] = 2.*ru[i-1][j] - ru[i-2][j];
+    rvs[i][j] = 2.*rv[i-1][j] - rv[i-2][j];
+    energy_s[i][j] = 2.*energy[i-1][j] - energy[i-2][j];
+
+    /*
+      According to Anderson this is how the outflow should be done. Extrapolation of u, v, T, and P.
+      This does not make sense to me since the stencil is solving for r, ru, rv, and E - then u, v, T, and P 
+      are derived from those main quantities between predictor and corrector steps.
+    */
+
+    // u[i][j] = 2.*u[i-1][j] - u[i-2][j];
+    // v[i][j] = 2.*v[i-1][j] - v[i-2][j];
+    // temp[i][j] = 2.*temp[i-1][j] - temp[i-2][j];
+    // p[i][j] = 2.*p[i-1][j] - p[i-2][j];
+
+    // rs[i][j] = p[i][j] / (R*temp[i][j]);
+    // rus[i][j] = rs[i][j] * u[i][j];
+    // rvs[i][j] = rs[i][j] * v[i][j];
+    // energy_s[i][j] = rs[i][j] * (cv * temp[i][j] + (u[i][j]*u[i][j] + v[i][j]*v[i][j]) / 2.);
+  } 
+  
+  else 
+  {
+    r[i][j] = 2.*rs[i-1][j] - rs[i-2][j];
+    ru[i][j] = 2.*rus[i-1][j] - rus[i-2][j];
+    rv[i][j] = 2.*rvs[i-1][j] - rvs[i-2][j];
+    energy[i][j] = 2.*energy_s[i-1][j] - energy_s[i-2][j];
+
+    // u[i][j] = 2.*u[i-1][j] - u[i-2][j];
+    // v[i][j] = 2.*v[i-1][j] - v[i-2][j];
+    // p[i][j] = 2.*p[i-1][j] - p[i-2][j];
+    // temp[i][j] = 2.*temp[i-1][j] - temp[i-2][j];
+
+    // r[i][j] = p[i][j] / (R*temp[i][j]);
+    // ru[i][j] = r[i][j] * u[i][j];
+    // rv[i][j] = r[i][j] * v[i][j];
+    // energy[i][j] = r[i][j] * (cv * temp[i][j] + (u[i][j]*u[i][j] + v[i][j]*v[i][j]) / 2.);
+  }
 }
 
 void MacCormack::BC_TOP_WALL(size_t i, size_t j)
@@ -376,11 +423,33 @@ void MacCormack::BC_TOP_WALL(size_t i, size_t j)
 
 void MacCormack::BC_BOTTOM_WALL(size_t i, size_t j)
 {
+  /* uncomment this for adiabatic wall condition */
+
+  // temp[i][j] = temp[i][j+1];
+  
+  /*
+    Anderson extrapolates pressure at the plate surface which can be used with temp to derive the density.
+    This does result in a smoother density and pressure near the plate, although I doubt if it's physically valid.
+    
+    Using the usual one-sided difference for the density equation results in a jagged density pattern near the plate
+    but this effect is diminished with higher grid resolution.
+  */
+  
+  // p[i][j] = 2.*p[i][j+1] - p[i][j+2];
+
   if (predictor) {
     rs[i][j] = r[i][j] + dt/dy * 0.5 * (3.*rv[i][j] - 4.*rv[i][j+1] + rv[i][j+2]);
+    // rs[i][j] = p[i][j] / (R*temp[i][j]);
+
     energy_s[i][j] = rs[i][j] * cv * temp[i][j];
-  } else {
+
+  }
+
+  else 
+  {
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] + dt/dy * 0.5 * (3.*rvs[i][j] - 4.*rvs[i][j+1] + rvs[i][j+2]));
+    // r[i][j] = p[i][j] / (R*temp[i][j]);
+
     energy[i][j] = r[i][j] * cv * temp[i][j];
   }
 }

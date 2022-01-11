@@ -388,7 +388,7 @@ void Simulation::render()
     }
   }
   // cout << T_min << " " << T_max << endl;
-  if (max_rho > 2) 
+  if (max_rho > 1000) 
   {
     cout << "Failed from density explosion!\n";
     glfwSetWindowShouldClose(window, true);
@@ -503,11 +503,13 @@ void Simulation::save_speed_to_file()
   FILE * v_fp;
   FILE * temperature_fp;
   FILE * energy_fp;
+  FILE * pressure_fp;
   rho_fp = fopen("Data_Output/rho_file.dat","w");
   u_fp = fopen("Data_Output/U_file.dat","w");
   v_fp = fopen("Data_Output/V_file.dat","w");
   temperature_fp = fopen("Data_Output/temperature_file.dat","w");
   energy_fp = fopen("Data_Output/energy_file.dat","w");
+  pressure_fp = fopen("Data_Output/pressure_file.dat","w");
   for (unsigned int y=0; y<grid_size_y; ++y) 
   {
     for (unsigned int x=0; x<grid_size_x; ++x) 
@@ -515,6 +517,7 @@ void Simulation::save_speed_to_file()
       fprintf(rho_fp, "%.10lf", r[x][y]);
       fprintf(temperature_fp, "%.10lf", temp[x][y]);
       fprintf(energy_fp, "%.10lf", energy[x][y]);
+      fprintf(pressure_fp, "%.10lf", p[x][y]);
       fprintf(u_fp, "%0.3E", u[x][y]);
       fprintf(v_fp, "%0.3E", v[x][y]);
 
@@ -525,6 +528,7 @@ void Simulation::save_speed_to_file()
         fprintf(rho_fp, "\n" );
         fprintf(temperature_fp, "\n" );
         fprintf(energy_fp, "\n" );
+        fprintf(pressure_fp, "\n" );
       } 
       else 
       {
@@ -533,10 +537,11 @@ void Simulation::save_speed_to_file()
         fprintf(rho_fp, " " );
         fprintf(temperature_fp, " " );
         fprintf(energy_fp, " " );
+        fprintf(pressure_fp, " " );
       }
     }
   }
-  fclose(rho_fp);fclose(u_fp);fclose(v_fp);fclose(temperature_fp);fclose(energy_fp);
+  fclose(rho_fp);fclose(u_fp);fclose(v_fp);fclose(temperature_fp);fclose(energy_fp);fclose(pressure_fp);
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) 

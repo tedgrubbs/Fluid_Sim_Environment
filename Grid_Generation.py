@@ -64,25 +64,21 @@ rho[0, :] = 0.
 # Note that at the corners where the moving lid intersects the stationary walls, these should be marked as Moving lid points.
 # Otherwise the density at the corners will grow indefinitely- even though the rest of the simulation is stable. This is how Borg's simulations works. 
 # This is caused by this term in the density equation: (-ru[i-2][j] + 4.*ru[i-1][j] - 3.*ru[i][j])
-# region[-2, 1:-1] = Region.STATIONARY_MOMENTUM_BASED
-# region[1, 1:-1] = Region.STATIONARY_MOMENTUM_BASED
-# region[1:-1,-2] = Region.MOVING_LID
-# region[1:-1,1] = Region.STATIONARY_MOMENTUM_BASED
-
-# u[1:-1,-2] = 1.0
+# region[-2, 1:-1] = Region.RIGHT_WALL
+# region[1, 1:-2] = Region.LEFT_WALL
+# region[1:-1,-2] = Region.TOP_MOVING_LID
+# region[1:-2,1] = Region.BOTTOM_WALL
+# u[1:-1,-2] = 0.1*SPEED
 
 # flow over flat plate. Be sure to turn down timestep for this at high mach number
-region[-2, 1:-1] = Region.RIGHT_WALL
-region[1, 1:-2] = Region.LEFT_WALL
-region[1:-1,-2] = Region.TOP_MOVING_LID
 region[1:-2,1] = Region.BOTTOM_WALL
-# temperature[-2, 1:-1] = 200.
-# temperature[1, 1:-2] = 200.
-# temperature[1:-1,-2] = 200.
-# temperature[1:-2,1] = 200.
-u[1:-1,-2] = 0.1*SPEED
-
-# u[:,:] = SPEED * 4.0
+region[-2, 1:-1] = Region.RIGHT_OUTFLOW
+region[1, 2:-2] = Region.STATIC
+region[1:-2,-2] = Region.STATIC
+u[1, 2:-2] = SPEED * 4.
+u[1:-2,-2] = SPEED * 4.
+u[1:-1,1:-1] = SPEED * 4.
+u[1:-2,1] = 0.
 
 # box in center
 # centerx = 15*D + D//2
@@ -138,8 +134,8 @@ output.to_csv('grid_variables.csv',index=False)
 config = {}
 config['grid_size_x'] = grid_size_x
 config['grid_size_y'] = grid_size_y
-config['real_size_y'] = 2e-4
-config['real_size_x'] = 2e-4
+config['real_size_y'] = 1e-5/1.218487395
+config['real_size_x'] = 1e-5
 
 
 
