@@ -130,7 +130,7 @@ class Simulation
     // relevant viscous stress tensor components
     double ** tauxx;      
     double ** tauyy;
-    double ** tauxy_E,  ** tauxy_F;
+    double ** tauxy_E,  ** tauxy_F; // xy component technically should be calculated differently for proper 2nd order accuracy
 
     // heat conduction terms derived from Fourier's law
     double ** qx;
@@ -142,7 +142,6 @@ class Simulation
 
     double ** speed;
     int ** region;
-    double ** boundary_v; // boundary condition velocity
 
     int MAX_THREADS;
 
@@ -182,6 +181,8 @@ class MacCormack : public Simulation
     // iteration variables defined here is faster
     size_t i;
     size_t j;
+
+    // These control the forward and backwards differencing in the stencil itself. This removes the need for extra if statements.
     int leftx, rightx, upy, downy;
 
     void TAUXY(bool EorF, bool forward, size_t i, size_t j);

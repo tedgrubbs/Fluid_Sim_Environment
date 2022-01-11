@@ -15,8 +15,10 @@ MacCormack::MacCormack() : Simulation()
   {
     for (j=0; j<(grid_size_y); ++j)
     {
-      if (fabs(boundary_v[i][j]) > max_boundary_speed) {
-        max_boundary_speed = boundary_v[i][j];
+      if (fabs(u[i][j]) > max_boundary_speed) {
+        max_boundary_speed = u[i][j];
+      } else if (fabs(v[i][j]) > max_boundary_speed) {
+        max_boundary_speed = v[i][j];
       }
     }
   }

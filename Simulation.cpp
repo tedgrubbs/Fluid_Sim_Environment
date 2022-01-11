@@ -157,7 +157,6 @@ void Simulation::read_grid_and_init_struct()
   speed = create2dArray<double>(grid_size_x, grid_size_y);
   region = create2dArray<int>(grid_size_x, grid_size_y);
   residual = create2dArray<double>(grid_size_x, grid_size_y);
-  boundary_v = create2dArray<double>(grid_size_x, grid_size_y);
 
   FILE * csv;
   csv = fopen("grid_variables.csv", "r");
@@ -168,7 +167,7 @@ void Simulation::read_grid_and_init_struct()
   {
 
     int temp_xi, temp_yi, temp_region;
-    double temp_rho, temp_u, temp_v, temp_temp, temp_bv;
+    double temp_rho, temp_u, temp_v, temp_temp;
 
     char * tok;
 
@@ -193,9 +192,6 @@ void Simulation::read_grid_and_init_struct()
     tok = strtok(NULL, ",\n");
     temp_region = atof(tok);
 
-    tok = strtok(NULL, ",\n");
-    temp_bv = atof(tok);
-
     r[temp_xi][temp_yi] = temp_rho;
     p[temp_xi][temp_yi] = temp_rho*R*temp_temp;
     u[temp_xi][temp_yi] = temp_u;
@@ -206,7 +202,6 @@ void Simulation::read_grid_and_init_struct()
     int_energy[temp_xi][temp_yi] = temp_temp * cv;
     energy[temp_xi][temp_yi] = temp_rho * (int_energy[temp_xi][temp_yi] + 0.5*(temp_u*temp_u + temp_v*temp_v));
     region[temp_xi][temp_yi] = temp_region;
-    boundary_v[temp_xi][temp_yi] = temp_bv;
   }
   fclose(csv);
 }

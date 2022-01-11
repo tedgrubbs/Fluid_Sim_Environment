@@ -13,11 +13,13 @@ class Region(IntEnum):
     TOP_WALL = 3
     BOTTOM_WALL = 4
     TOP_MOVING_LID = 5
+    STATIC = 6
+    RIGHT_OUTFLOW = 7
     
 
 # Use this to quickly redefine grid and config variables
 
-D = 64
+D = 70
 SPEED = 340.28 # speed of sound at STP
 
 # grid_size_x = 35*D+2
@@ -30,7 +32,6 @@ u = np.zeros((grid_size_x,grid_size_y))
 v = np.zeros((grid_size_x,grid_size_y))
 temperature = np.zeros((grid_size_x,grid_size_y))
 region = np.zeros((grid_size_x,grid_size_y),dtype='int')
-boundary_v = np.zeros((grid_size_x,grid_size_y))
 indices = np.zeros((grid_size_x,grid_size_y,2),dtype='int')
 for i in range(grid_size_x):
     for j in range(grid_size_y):
@@ -67,7 +68,6 @@ rho[0, :] = 0.
 # region[1, 1:-1] = Region.STATIONARY_MOMENTUM_BASED
 # region[1:-1,-2] = Region.MOVING_LID
 # region[1:-1,1] = Region.STATIONARY_MOMENTUM_BASED
-# boundary_v[1:-1,-2] = 34.7
 
 # u[1:-1,-2] = 1.0
 
@@ -80,12 +80,8 @@ region[1:-2,1] = Region.BOTTOM_WALL
 # temperature[1, 1:-2] = 200.
 # temperature[1:-1,-2] = 200.
 # temperature[1:-2,1] = 200.
-boundary_v[1:-1,-2] = 0.1*SPEED
 u[1:-1,-2] = 0.1*SPEED
-# boundary_v[1, 2:-2] = SPEED * 4.0
-# boundary_v[1:-2,-2] = SPEED * 4.0
-# boundary_v[1:-2,1] = SPEED * 4.0
-# boundary_v[-2, 1:-1] = SPEED * 4.0
+
 # u[:,:] = SPEED * 4.0
 
 # box in center
@@ -100,16 +96,12 @@ u[1:-1,-2] = 0.1*SPEED
 # region[centerx-D//2 : centerx+D//2, centery-D//2-1] = Region.STATIONARY_MOMENTUM_BASED
 
 # region[-2, 1:-2] = Region.OUTLET
-# boundary_v[-2, 2:-2] = 1.0
 
 # region[1, 2:-2] = Region.INLET
-# boundary_v[1, 2:-2] = 1.0
 
 # region[1:-1,1] = Region.MOVING_LID
-# boundary_v[1:-1,1] = 1.0
 
 # region[1:-1,-2] = Region.MOVING_LID
-# boundary_v[1:-1,-2] = 1.0
 
 # side block
 # region[centerx-D//2+1 : centerx+D//2, centery+D//2 : -1] = Region.EXTERNAL
@@ -129,7 +121,7 @@ plt.show()
 
 
 
-output = pd.DataFrame(columns=['xi','yi','rho','u','v','temperature','region','boundary_v'])
+output = pd.DataFrame(columns=['xi','yi','rho','u','v','temperature','region'])
 
 output['xi'] = indices.reshape((-1,2))[:,0]
 output['yi'] = indices.reshape((-1,2))[:,1]
@@ -138,7 +130,6 @@ output['u'] = u.reshape(-1)
 output['v'] = v.reshape(-1)
 output['temperature'] = temperature.reshape(-1)
 output['region'] = region.reshape(-1)
-output['boundary_v'] = boundary_v.reshape(-1)
 
 output.to_csv('grid_variables.csv',index=False)
 
@@ -174,9 +165,9 @@ config["tolerance"] = 0.00
 config["max_run_time"] = 100000
 config['thread_count'] = 4
 
-print('Reynolds number:', rho[1,-2]*boundary_v[1,-2]*config['real_size_x']/config['viscosity'])
-# print('Grid x Reynolds number:', rho[1,2]*boundary_v[1, 2]*config['dx']/config['viscosity'])
-# print('Grid y Reynolds number:', rho[1,2]*boundary_v[1, 2]*config['dy']/config['viscosity'])
+print('Reynolds number:', rho[1,-2]*u[1,-2]*config['real_size_x']/config['viscosity'])
+# print('Grid x Reynolds number:', rho[1,2]*u[1, 2]*config['dx']/config['viscosity'])
+# print('Grid y Reynolds number:', rho[1,2]*u[1, 2]*config['dy']/config['viscosity'])
 
 with open('config.json','w') as fp:
     json.dump(config, fp, indent='\t')
