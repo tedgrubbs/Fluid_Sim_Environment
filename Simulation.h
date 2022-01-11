@@ -182,6 +182,7 @@ class MacCormack : public Simulation
     // iteration variables defined here is faster
     size_t i;
     size_t j;
+    int leftx, rightx, upy, downy;
 
     void TAUXY(bool EorF, bool forward, size_t i, size_t j);
     void TAUXX(bool forward, size_t i, size_t j);
@@ -191,6 +192,7 @@ class MacCormack : public Simulation
 
     void update_tau_and_q();
     void update_E_and_F();
+    double calc_stencil(int component, size_t i, size_t j);
     void boundary_conditions(size_t i, size_t j);
     void BC_TOP_WALL(size_t i, size_t j);
     void BC_BOTTOM_WALL(size_t i, size_t j);

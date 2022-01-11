@@ -76,6 +76,10 @@ region[-2, 1:-1] = Region.RIGHT_WALL
 region[1, 1:-2] = Region.LEFT_WALL
 region[1:-1,-2] = Region.TOP_MOVING_LID
 region[1:-2,1] = Region.BOTTOM_WALL
+# temperature[-2, 1:-1] = 200.
+# temperature[1, 1:-2] = 200.
+# temperature[1:-1,-2] = 200.
+# temperature[1:-2,1] = 200.
 boundary_v[1:-1,-2] = 0.1*SPEED
 u[1:-1,-2] = 0.1*SPEED
 # boundary_v[1, 2:-2] = SPEED * 4.0
@@ -143,8 +147,8 @@ output.to_csv('grid_variables.csv',index=False)
 config = {}
 config['grid_size_x'] = grid_size_x
 config['grid_size_y'] = grid_size_y
-config['real_size_y'] = 1e-2
-config['real_size_x'] = 1e-2
+config['real_size_y'] = 2e-4
+config['real_size_x'] = 2e-4
 
 
 
@@ -152,7 +156,7 @@ config['frame_rate'] = 0
 config['dt'] = 0.000175
 config['dx'] = 1./(grid_size_x-3)*config['real_size_x']
 config['dy'] = 1./(grid_size_y-3)*config['real_size_y']
-config['viscosity'] = 0.9e-3
+config['viscosity'] = 1.81e-5
 config['c'] = SPEED
 config['gamma'] = 1.4
 config['Pr'] = 0.71

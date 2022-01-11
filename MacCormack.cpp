@@ -441,6 +441,19 @@ void MacCormack::BC_TOP_MOVING_LID(size_t i, size_t j)
   }
 }
 
+double MacCormack::calc_stencil(int component, size_t i, size_t j)
+{
+  if (component == 0) {
+    return - dt/dx * (E0[i+leftx][j] - E0[i-rightx][j]) - dt/dy * (F0[i][j+upy] - F0[i][j-downy]);
+  } else if (component == 1) {
+    return - dt/dx * (E1[i+leftx][j] - E1[i-rightx][j]) - dt/dy * (F1[i][j+upy] - F1[i][j-downy]);
+  } else if (component == 2) {
+    return - dt/dx * (E2[i+leftx][j] - E2[i-rightx][j]) - dt/dy * (F2[i][j+upy] - F2[i][j-downy]);
+  } else if (component == 3) {
+    return - dt/dx * (E3[i+leftx][j] - E3[i-rightx][j]) - dt/dy * (F3[i][j+upy] - F3[i][j-downy]);
+  }
+}
+
 void MacCormack::run_solver_step()
 {
 
@@ -465,8 +478,6 @@ void MacCormack::run_solver_step()
   update_tau_and_q();
   update_E_and_F();
 
-  int leftx, rightx, upy, downy;
-
   leftx = forward_diff_first;
   upy = forward_diff_first;
   rightx = !leftx;
@@ -480,10 +491,10 @@ void MacCormack::run_solver_step()
     {
       if (region[i][j] == FREE_FLOW)
       { 
-        rs[i][j] = r[i][j] - dt/dx * (E0[i+leftx][j] - E0[i-rightx][j]) - dt/dy * (F0[i][j+upy] - F0[i][j-downy]);
-        rus[i][j] = ru[i][j] - dt/dx * (E1[i+leftx][j] - E1[i-rightx][j]) - dt/dy * (F1[i][j+upy] - F1[i][j-downy]);
-        rvs[i][j] = rv[i][j] - dt/dx * (E2[i+leftx][j] - E2[i-rightx][j]) - dt/dy * (F2[i][j+upy] - F2[i][j-downy]);
-        energy_s[i][j] = energy[i][j] - dt/dx * (E3[i+leftx][j] - E3[i-rightx][j]) - dt/dy * (F3[i][j+upy] - F3[i][j-downy]);
+        rs[i][j] = r[i][j] + calc_stencil(0, i, j);
+        rus[i][j] = ru[i][j] + calc_stencil(1, i, j);
+        rvs[i][j] = rv[i][j] + calc_stencil(2, i, j);
+        energy_s[i][j] = energy[i][j] + calc_stencil(3, i, j);
       }
       else 
       {
@@ -525,13 +536,11 @@ void MacCormack::run_solver_step()
     for (j=0; j<(grid_size_y); ++j)
     {
       if (region[i][j] == FREE_FLOW)
-      { 
-        
-        r[i][j] = 0.5 * (r[i][j] + rs[i][j] - dt/dx * (E0[i+leftx][j] - E0[i-rightx][j]) - dt/dy * (F0[i][j+upy] - F0[i][j-downy]));
-        ru[i][j] = 0.5 * (ru[i][j] + rus[i][j] - dt/dx * (E1[i+leftx][j] - E1[i-rightx][j]) - dt/dy * (F1[i][j+upy] - F1[i][j-downy]));
-        rv[i][j] = 0.5 * (rv[i][j] + rvs[i][j] - dt/dx * (E2[i+leftx][j] - E2[i-rightx][j]) - dt/dy * (F2[i][j+upy] - F2[i][j-downy]));
-        energy[i][j] = 0.5 * (energy[i][j] + energy_s[i][j] - dt/dx * (E3[i+leftx][j] - E3[i-rightx][j]) - dt/dy * (F3[i][j+upy] - F3[i][j-downy]));
-        
+      {       
+        r[i][j] = 0.5 * (r[i][j] + rs[i][j] + calc_stencil(0, i, j));
+        ru[i][j] = 0.5 * (ru[i][j] + rus[i][j] + calc_stencil(1, i, j));
+        rv[i][j] = 0.5 * (rv[i][j] + rvs[i][j] + calc_stencil(2, i, j));
+        energy[i][j] = 0.5 * (energy[i][j] + energy_s[i][j] + calc_stencil(3, i, j));
       }
       else 
       {
