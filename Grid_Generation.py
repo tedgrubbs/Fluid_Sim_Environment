@@ -17,16 +17,17 @@ class Region(IntEnum):
     RIGHT_OUTFLOW = 7
     LEFT_INLET = 8
     RIGHT_PRESSURE_OUTLET = 9
+    CORNER_POINT = 10
     
 
 # Use this to quickly redefine grid and config variables
 
-D = 256
+D = 30
 SPEED = 340.28 # speed of sound at STP
 
 # grid_size_x = 35*D+2
 # grid_size_y = 3*D+2
-grid_size_x = D+2
+grid_size_x = D*30+2
 grid_size_y = D+2
 
 rho = np.zeros((grid_size_x,grid_size_y))
@@ -41,6 +42,7 @@ for i in range(grid_size_x):
 
 rho[:,:] = 1.22
 temperature[:,:] = 288.16
+T_Block = 1000
 # temperature[int(D/2)-5:int(D/2)+5, int(D/2)-5:int(D/2)+5] = 310.
 # u[:,:] = 1.0
 
@@ -72,12 +74,36 @@ rho[0, :] = 0.
 # region[1:-2,1] = Region.BOTTOM_WALL
 # u[1:-1,-2] = 0.1*SPEED
 
+centerx = int(0.222222222 * grid_size_x)
+centery = int(2./3.* grid_size_y)
+length = int(0.055555556 * grid_size_x)
+
 # Left Velocity inlet, right outflow
 region[-2, 2:-2] = Region.RIGHT_PRESSURE_OUTLET
 region[1, 2:-2] = Region.LEFT_INLET
 region[1:-1,-2] = Region.TOP_WALL
 region[1:-1,1] = Region.BOTTOM_WALL
-u[1, 2:-2] = 0.1*SPEED
+
+# Creating a box in the flow path
+region[centerx, 2 : centery] = Region.RIGHT_WALL
+temperature[centerx, 2 : centery] = T_Block
+
+region[centerx+1:centerx+length, 1 : centery] = Region.EXTERNAL
+
+region[centerx+length, 2 : centery] = Region.LEFT_WALL
+temperature[centerx+length, 2 : centery] = T_Block
+
+region[centerx+1:centerx+length , centery] = Region.BOTTOM_WALL
+temperature[centerx+1:centerx+length , centery] = T_Block
+
+region[centerx , centery] = Region.CORNER_POINT
+temperature[centerx , centery] = T_Block
+region[centerx+length , centery] = Region.CORNER_POINT
+temperature[centerx+length , centery] = T_Block
+
+
+
+u[1, 2:-2] = 0.1
 
 # flow over flat plate. Be sure to turn down timestep for this at high mach number
 # region[1:-2,1] = Region.BOTTOM_WALL
@@ -143,8 +169,8 @@ output.to_csv('grid_variables.csv',index=False)
 config = {}
 config['grid_size_x'] = grid_size_x
 config['grid_size_y'] = grid_size_y
-config['real_size_y'] = 1e-4#/1.218487395
-config['real_size_x'] = 1e-4
+config['real_size_y'] = 0.03#/1.218487395
+config['real_size_x'] = 0.9
 
 
 
@@ -155,7 +181,7 @@ config['dy'] = 1./(grid_size_y-3)*config['real_size_y']
 config['viscosity'] = 1.81e-5
 config['c'] = SPEED
 config['gamma'] = 1.4
-config['Pr'] = 0.71
+config['Pr'] = 0.071
 config['run_graphics'] = 1
 
 base_render = 512
@@ -164,7 +190,7 @@ if grid_size_x > base_render:
     base_render = np.clip(base_render, a_min=None, a_max=1024)
 y_multiplier = config['real_size_y'] / config['real_size_x']
 config['render_grid_size_x'] = int(base_render)
-config['render_grid_size_y'] = int(base_render*y_multiplier)
+config['render_grid_size_y'] = int(base_render*y_multiplier)*5
 
 config["tolerance"] = 0.00
 config["max_run_time"] = 100000

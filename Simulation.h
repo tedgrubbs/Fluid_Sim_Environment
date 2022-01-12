@@ -17,7 +17,7 @@
 
 using namespace std;
 
-const double MIN_RENDERABLE_SPEED = 1e-2;
+const double MIN_RENDERABLE_SPEED = -DBL_MAX;
 const double MAX_RENDERABLE_SPEED = DBL_MAX;
 const double R = 287.0;
 const double T0 = 288.16; // constant used for viscosity calculation via Sutherland's law
@@ -106,7 +106,8 @@ class Simulation
       STATIC = 6,
       RIGHT_OUTFLOW = 7,
       LEFT_INLET = 8,
-      RIGHT_PRESSURE_OUTLET = 9
+      RIGHT_PRESSURE_OUTLET = 9,
+      CORNER_POINT = 10
     };
 
     unsigned int grid_size_x, grid_size_y;
@@ -207,6 +208,7 @@ class MacCormack : public Simulation
     void BC_RIGHT_OUTFLOW(size_t i, size_t j);
     void BC_LEFT_INLET(size_t i, size_t j);
     void BC_RIGHT_PRESSURE_OUTLET(size_t i, size_t j);
+    void BC_CORNER_POINT(size_t i, size_t j);
 
   public:
     MacCormack();

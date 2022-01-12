@@ -365,8 +365,31 @@ void MacCormack::boundary_conditions(size_t i, size_t j)
     BC_LEFT_INLET(i, j);
   } else if (region[i][j] == RIGHT_PRESSURE_OUTLET) {
     BC_RIGHT_PRESSURE_OUTLET(i, j);
+  } else if (region[i][j] == CORNER_POINT) {
+    BC_CORNER_POINT(i, j);
   }
 
+}
+
+/*
+  Corner point of rectangular object in path of flow. U and V should be initialized to 0 at startup.
+  Pressure is taken to be an average of surrounding points.
+*/
+void MacCormack::BC_CORNER_POINT(size_t i, size_t j)
+{
+  p[i][j] = 0.25 * (p[i+1][j] + p[i-1][j] + p[i][j+1] + p[i][j-1]);
+
+  if (predictor)
+  {
+    rs[i][j] = p[i][j] / (R*temp[i][j]);
+    energy_s[i][j] = rs[i][j] * (cv * temp[i][j]);
+  }
+
+  else
+  {
+    r[i][j] = p[i][j] / (R*temp[i][j]);
+    energy[i][j] = r[i][j] * (cv * temp[i][j]);
+  }
 }
 
 void MacCormack::BC_RIGHT_PRESSURE_OUTLET(size_t i, size_t j)
@@ -398,18 +421,30 @@ void MacCormack::BC_RIGHT_PRESSURE_OUTLET(size_t i, size_t j)
 
 void MacCormack::BC_LEFT_INLET(size_t i, size_t j)
 {
-  // extrapolating pressure for density update
+  /*
+    extrapolating pressure for density update
+  */
   p[i][j] = 2.*p[i+1][j] - p[i+2][j];
+
+  /*
+    Need to update momentums here in order to enforce a constant velocity constraint. Otherwise you will be 
+    enforcing a constant momentum constraint. Not sure what the implications of a constant momentum constraint are. I
+    guess that would be forcing a constant mass-flow at the inlet
+  */
 
   if (predictor)
   {
     rs[i][j] = p[i][j] / (R*temp[i][j]);
+    rus[i][j] = rs[i][j] * u[i][j];
+    rvs[i][j] = 0.;
     energy_s[i][j] = rs[i][j] * (cv * temp[i][j] + (u[i][j]*u[i][j] + v[i][j]*v[i][j]) / 2.);
   }
 
   else
   {
     r[i][j] = p[i][j] / (R*temp[i][j]);
+    ru[i][j] = r[i][j] * u[i][j];
+    rv[i][j] = 0.;
     energy[i][j] = r[i][j] * (cv * temp[i][j] + (u[i][j]*u[i][j] + v[i][j]*v[i][j]) / 2.);
   }
 }
