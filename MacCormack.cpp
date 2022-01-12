@@ -361,8 +361,57 @@ void MacCormack::boundary_conditions(size_t i, size_t j)
     BC_TOP_MOVING_LID(i, j);
   } else if (region[i][j] == RIGHT_OUTFLOW) {
     BC_RIGHT_OUTFLOW(i, j);
+  } else if (region[i][j] == LEFT_INLET) {
+    BC_LEFT_INLET(i, j);
+  } else if (region[i][j] == RIGHT_PRESSURE_OUTLET) {
+    BC_RIGHT_PRESSURE_OUTLET(i, j);
   }
 
+}
+
+void MacCormack::BC_RIGHT_PRESSURE_OUTLET(size_t i, size_t j)
+{
+  // extrapolating temperature and velocity
+  temp[i][j] = 2.*temp[i-1][j] - temp[i-2][j];
+  u[i][j] = 2.*u[i-1][j] - u[i-2][j];
+  v[i][j] = 2.*v[i-1][j] - v[i-2][j];
+
+  // Using start-up initialized pressure to derive density update.
+
+  if (predictor)
+  {
+    rs[i][j] = p[i][j] / (R*temp[i][j]);
+    rus[i][j] = rs[i][j] * u[i][j];
+    rvs[i][j] = rs[i][j] * v[i][j];
+    energy_s[i][j] = rs[i][j] * (cv * temp[i][j] + (u[i][j]*u[i][j] + v[i][j]*v[i][j]) / 2.);
+  }
+
+  else
+  {
+    r[i][j] = p[i][j] / (R*temp[i][j]);
+    ru[i][j] = r[i][j] * u[i][j];
+    rv[i][j] = r[i][j] * v[i][j];
+    energy[i][j] = r[i][j] * (cv * temp[i][j] + (u[i][j]*u[i][j] + v[i][j]*v[i][j]) / 2.);
+  }
+
+}
+
+void MacCormack::BC_LEFT_INLET(size_t i, size_t j)
+{
+  // extrapolating pressure for density update
+  p[i][j] = 2.*p[i+1][j] - p[i+2][j];
+
+  if (predictor)
+  {
+    rs[i][j] = p[i][j] / (R*temp[i][j]);
+    energy_s[i][j] = rs[i][j] * (cv * temp[i][j] + (u[i][j]*u[i][j] + v[i][j]*v[i][j]) / 2.);
+  }
+
+  else
+  {
+    r[i][j] = p[i][j] / (R*temp[i][j]);
+    energy[i][j] = r[i][j] * (cv * temp[i][j] + (u[i][j]*u[i][j] + v[i][j]*v[i][j]) / 2.);
+  }
 }
 
 void MacCormack::BC_RIGHT_OUTFLOW(size_t i, size_t j)

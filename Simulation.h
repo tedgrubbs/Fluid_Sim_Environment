@@ -17,7 +17,7 @@
 
 using namespace std;
 
-const double MIN_RENDERABLE_SPEED = -DBL_MAX;
+const double MIN_RENDERABLE_SPEED = 1e-2;
 const double MAX_RENDERABLE_SPEED = DBL_MAX;
 const double R = 287.0;
 const double T0 = 288.16; // constant used for viscosity calculation via Sutherland's law
@@ -105,6 +105,8 @@ class Simulation
       TOP_MOVING_LID = 5,
       STATIC = 6,
       RIGHT_OUTFLOW = 7,
+      LEFT_INLET = 8,
+      RIGHT_PRESSURE_OUTLET = 9
     };
 
     unsigned int grid_size_x, grid_size_y;
@@ -203,29 +205,8 @@ class MacCormack : public Simulation
     void BC_LEFT_WALL(size_t i, size_t j);
     void BC_TOP_MOVING_LID(size_t i, size_t j);    
     void BC_RIGHT_OUTFLOW(size_t i, size_t j);
-
-    // defining functions to handle different regions separately
-    void free_flow_predictor(size_t x, size_t y);
-    void stationary_wall_predictor(size_t x, size_t y);
-    void moving_wall_predictor(size_t x, size_t y);
-    void free_flow_corrector(size_t x, size_t y);
-    void stationary_wall_corrector(size_t x, size_t y);
-    void moving_wall_corrector(size_t x, size_t y);
-
-    void inlet_predictor(size_t x, size_t y);
-    void inlet_corrector(size_t x, size_t y);
-    void outlet_predictor(size_t x, size_t y);
-    void outlet_corrector(size_t x, size_t y);
-
-    void extrapolate_out_predictor(size_t x, size_t y);
-    void extrapolate_out_corrector(size_t x, size_t y);
-
-    void static_u_predictor(size_t x, size_t y);
-    void static_u_corrector(size_t x, size_t y);
-
-    // stationary walls function for density equations derived from momentum navier stokes
-    void stationary_wall_mom_predictor(size_t x, size_t y);
-    void stationary_wall_mom_corrector(size_t x, size_t y);
+    void BC_LEFT_INLET(size_t i, size_t j);
+    void BC_RIGHT_PRESSURE_OUTLET(size_t i, size_t j);
 
   public:
     MacCormack();
