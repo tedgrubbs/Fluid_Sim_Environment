@@ -319,14 +319,21 @@ void MacCormack::update_tau_and_q()
 
 void MacCormack::update_E_and_F() 
 {
-  double ** rho;
+  double ** rho, ** en;
 
-  // need to use r* in corrector step calculation
-  if (predictor) {
+  // need to use r* and E* in corrector step calculation
+  if (predictor) 
+  {
     rho = r;
-  } else {
+    en = energy;
+  } 
+  
+  else 
+  {
     rho = rs;
+    en = energy_s;
   }
+
   // calculating E and F over entire grid
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(i,j)
   for (i=0; i<(grid_size_x); ++i)
@@ -340,12 +347,12 @@ void MacCormack::update_E_and_F()
       E0[i][j] = rho[i][j]*u[i][j];
       E1[i][j] = rho[i][j]*u[i][j]*u[i][j] + p[i][j] - tauxx[i][j];
       E2[i][j] = rho[i][j]*u[i][j]*v[i][j] - tauxy_E[i][j];
-      E3[i][j] = (energy[i][j] + p[i][j]) * u[i][j] - u[i][j]*tauxx[i][j] - v[i][j]*tauxy_E[i][j] + qx[i][j];
+      E3[i][j] = (en[i][j] + p[i][j]) * u[i][j] - u[i][j]*tauxx[i][j] - v[i][j]*tauxy_E[i][j] + qx[i][j];
 
       F0[i][j] = rho[i][j]*v[i][j];
       F1[i][j] = rho[i][j]*u[i][j]*v[i][j] - tauxy_F[i][j];
       F2[i][j] = rho[i][j]*v[i][j]*v[i][j] + p[i][j] - tauyy[i][j];
-      F3[i][j] = (energy[i][j] + p[i][j]) * v[i][j] - u[i][j]*tauxy_F[i][j] - v[i][j]*tauyy[i][j] + qy[i][j];
+      F3[i][j] = (en[i][j] + p[i][j]) * v[i][j] - u[i][j]*tauxy_F[i][j] - v[i][j]*tauyy[i][j] + qy[i][j];
 
     }
   }
