@@ -824,6 +824,18 @@ void MacCormack::run_solver_step()
       if (region[i][j] != RIGHT_PRESSURE_OUTLET) {
         p[i][j] = r[i][j] * R * temp[i][j];
       }
+
+      if (p[i][j] < 0.) {
+        cout << "Negative pressure at " << i << " " << j << endl;
+      }
+
+      if (temp[i][j] < 0.) {
+        cout << "Negative temperature at " << i << " " << j << endl;
+      }
+
+      if (r[i][j] < 0.) {
+        cout << "Negative density at " << i << " " << j << endl;
+      }
       
       mu[i][j] = sutherland(temp[i][j]);
       k[i][j] = mu[i][j] * k_constant;

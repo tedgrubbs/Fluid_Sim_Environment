@@ -84,32 +84,54 @@ region[0, :] = Region.EXTERNAL
 centerx = int(0.222222222 * grid_size_x)
 centery = int(2./3.* grid_size_y)
 length = int(0.055555556 * grid_size_x)
+temperature[centerx-1:,:] = (288 + T_Block) /2.
 
-# Left Velocity inlet, right outflow
-region[-2, 2:-2] = Region.RIGHT_PRESSURE_OUTLET
+# TESTING
+region[-2, 1:-1] = Region.RIGHT_PRESSURE_OUTLET
 region[1, 2:-2] = Region.LEFT_INLET
-region[1:-1,-2] = Region.PERIODIC_Y_TOP
-region[1:-1,1] = Region.PERIODIC_Y_BOTTOM
-
-# Creating a box in the flow path
-region[centerx, 2 : centery] = Region.RIGHT_WALL
-temperature[centerx, 2 : centery] = T_Block
-
-region[centerx+1:centerx+length, 1 : centery] = Region.EXTERNAL
-
-region[centerx+length, 2 : centery] = Region.LEFT_WALL
-temperature[centerx+length, 2 : centery] = T_Block
-
-region[centerx+1:centerx+length , centery] = Region.BOTTOM_WALL
-temperature[centerx+1:centerx+length , centery] = T_Block
+region[1:-2,-2] = Region.PERIODIC_Y_TOP
+region[1:-2,1] = Region.PERIODIC_Y_BOTTOM
 
 region[centerx:centerx+length+1, -2] = Region.TOP_WALL
-temperature[centerx:centerx+length+1, -2] = T_Block
+# temperature[centerx:centerx+length+1, -2] =  T_Block
 
-region[centerx , centery] = Region.CORNER_POINT
-temperature[centerx , centery] = T_Block
-region[centerx+length , centery] = Region.CORNER_POINT
-temperature[centerx+length , centery] = T_Block
+region[centerx+1:centerx+length, 1:3] = Region.EXTERNAL
+
+region[centerx+length, 2 ] = Region.LEFT_WALL
+region[centerx, 2] = Region.RIGHT_WALL
+# temperature[centerx+length, 2] = T_Block
+# temperature[centerx, 2] = T_Block
+
+region[centerx+1:centerx+length , 3] = Region.BOTTOM_WALL
+region[centerx , 3] = Region.CORNER_POINT
+region[centerx+length , 3] = Region.CORNER_POINT
+# temperature[centerx+1:centerx+length, 3 ] =  T_Block
+
+# Left Velocity inlet, right outflow
+# region[-2, 1:-1] = Region.RIGHT_PRESSURE_OUTLET
+# region[1, 2:-2] = Region.LEFT_INLET
+# region[1:-2,-2] = Region.PERIODIC_Y_TOP
+# region[1:-2,1] = Region.PERIODIC_Y_BOTTOM
+
+# Creating a box in the flow path
+# region[centerx, 2 : centery] = Region.RIGHT_WALL
+# temperature[centerx, 2 : centery] = T_Block
+
+# region[centerx+1:centerx+length, 1 : centery] = Region.EXTERNAL
+
+# region[centerx+length, 2 : centery] = Region.LEFT_WALL
+# temperature[centerx+length, 2 : centery] = T_Block
+
+# region[centerx+1:centerx+length , centery] = Region.BOTTOM_WALL
+# temperature[centerx+1:centerx+length , centery] = T_Block
+
+# region[centerx:centerx+length+1, -2] = Region.TOP_WALL
+# temperature[centerx:centerx+length+1, -2] = T_Block
+
+# region[centerx , centery] = Region.CORNER_POINT
+# temperature[centerx , centery] = T_Block
+# region[centerx+length , centery] = Region.CORNER_POINT
+# temperature[centerx+length , centery] = T_Block
 
 u[1, 2:-2] = 0.1
 
@@ -153,7 +175,7 @@ u[1, 2:-2] = 0.1
 fig = plt.figure()
 ax = fig.add_subplot(111)
 
-ax.imshow(region.transpose())
+ax.imshow(temperature.transpose())
 ax.invert_yaxis()
 plt.show()
 
