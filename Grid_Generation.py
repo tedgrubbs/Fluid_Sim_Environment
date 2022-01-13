@@ -47,8 +47,8 @@ for i in range(grid_size_x):
         indices[i,j] = [i,j]
 
 rho[:,:] = 1.22
-temperature[:,:] = 288.16
-T_Block = 500
+temperature[:,:] = 288
+T_Block = 1000
 # temperature[int(D/2)-5:int(D/2)+5, int(D/2)-5:int(D/2)+5] = 310.
 # u[:,:] = 1.0
 
@@ -86,10 +86,10 @@ centery = int(2./3.* grid_size_y)
 length = int(0.055555556 * grid_size_x)
 
 # Left Velocity inlet, right outflow
-region[-2, 1:-1] = Region.RIGHT_PRESSURE_OUTLET
+region[-2, 2:-2] = Region.RIGHT_PRESSURE_OUTLET
 region[1, 2:-2] = Region.LEFT_INLET
-region[1:-2,-2] = Region.PERIODIC_Y_TOP
-region[1:-2,1] = Region.PERIODIC_Y_BOTTOM
+region[1:-1,-2] = Region.PERIODIC_Y_TOP
+region[1:-1,1] = Region.PERIODIC_Y_BOTTOM
 
 # Creating a box in the flow path
 region[centerx, 2 : centery] = Region.RIGHT_WALL

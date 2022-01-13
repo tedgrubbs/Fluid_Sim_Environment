@@ -333,7 +333,9 @@ void MacCormack::update_E_and_F()
   {
     for (j=0; j<(grid_size_y); ++j)
     {
-      if (region[i][j] == EXTERNAL) continue;
+      if (region[i][j] == EXTERNAL) {
+        continue;
+      } 
       
       E0[i][j] = rho[i][j]*u[i][j];
       E1[i][j] = rho[i][j]*u[i][j]*u[i][j] + p[i][j] - tauxx[i][j];
@@ -345,6 +347,42 @@ void MacCormack::update_E_and_F()
       F2[i][j] = rho[i][j]*v[i][j]*v[i][j] + p[i][j] - tauyy[i][j];
       F3[i][j] = (energy[i][j] + p[i][j]) * v[i][j] - u[i][j]*tauxy_F[i][j] - v[i][j]*tauyy[i][j] + qy[i][j];
 
+    }
+  }
+}
+
+void MacCormack::update_E_and_F_Periodic()
+{
+  #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(i,j)
+  for (i=0; i<(grid_size_x); ++i)
+  {
+    for (j=0; j<(grid_size_y); ++j)
+    {
+      if (region[i][j] == PERIODIC_Y_TOP) 
+      {
+        E0[i][j] = E0[i][2];
+        E1[i][j] = E1[i][2];
+        E2[i][j] = E2[i][2];
+        E3[i][j] = E3[i][2];
+
+        F0[i][j] = F0[i][2];
+        F1[i][j] = F1[i][2];
+        F2[i][j] = F2[i][2];
+        F3[i][j] = F3[i][2];
+      } 
+      
+      else if (region[i][j] == PERIODIC_Y_BOTTOM) 
+      {
+        E0[i][j] = E0[i][grid_size_y-3];
+        E1[i][j] = E1[i][grid_size_y-3];
+        E2[i][j] = E2[i][grid_size_y-3];
+        E3[i][j] = E3[i][grid_size_y-3];
+
+        F0[i][j] = F0[i][grid_size_y-3];
+        F1[i][j] = F1[i][grid_size_y-3];
+        F2[i][j] = F2[i][grid_size_y-3];
+        F3[i][j] = F3[i][grid_size_y-3];
+      }
     }
   }
 }
@@ -451,9 +489,9 @@ void MacCormack::BC_RIGHT_PRESSURE_OUTLET(size_t i, size_t j)
   // u[i][j] = 2.*u[i-1][j] - u[i-2][j];
   // v[i][j] = 2.*v[i-1][j] - v[i-2][j];
 
-  temp[i][j] = temp[i-1][j];
-  u[i][j] = u[i-1][j];
-  v[i][j] = v[i-1][j];
+  temp[i][j] = (temp[i][j] + temp[i-1][j] + temp[i-2][j]) /3. ;
+  u[i][j] = (u[i][j] + u[i-1][j] + u[i-2][j]) /3.;
+  v[i][j] = (v[i][j] + v[i-1][j] + v[i-2][j]) /3.;
 
   // Using start-up initialized pressure to derive density update.
 
@@ -688,6 +726,7 @@ void MacCormack::run_solver_step()
   predictor = true;
   update_tau_and_q();
   update_E_and_F();
+  update_E_and_F_Periodic();
 
   leftx = forward_diff_first;
   upy = forward_diff_first;
@@ -737,6 +776,7 @@ void MacCormack::run_solver_step()
   predictor = false;
   update_tau_and_q();
   update_E_and_F();
+  update_E_and_F_Periodic();
 
   // corrector runs opposite to predictor
   leftx = !forward_diff_first;

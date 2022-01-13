@@ -213,6 +213,7 @@ class MacCormack : public Simulation
     void BC_CORNER_POINT(size_t i, size_t j);
     void BC_PERIODIC_Y_TOP(size_t i, size_t j);
     void BC_PERIODIC_Y_BOTTOM(size_t i, size_t j);
+    void update_E_and_F_Periodic();
 
   public:
     MacCormack();

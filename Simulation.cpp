@@ -398,7 +398,7 @@ void Simulation::render()
     }
   }
   // cout << T_min << " " << T_max << endl;
-  if (max_rho > 2.) 
+  if (max_rho > 10.) 
   {
     cout << "Failed from density explosion!\n";
     cout << max_rho << endl;
