@@ -485,13 +485,13 @@ void MacCormack::BC_CORNER_POINT(size_t i, size_t j)
 void MacCormack::BC_RIGHT_PRESSURE_OUTLET(size_t i, size_t j)
 {
   // extrapolating temperature and velocity
-  // temp[i][j] = 2.*temp[i-1][j] - temp[i-2][j];
-  // u[i][j] = 2.*u[i-1][j] - u[i-2][j];
-  // v[i][j] = 2.*v[i-1][j] - v[i-2][j];
+  temp[i][j] = 2.*temp[i-1][j] - temp[i-2][j];
+  u[i][j] = 2.*u[i-1][j] - u[i-2][j];
+  v[i][j] = 2.*v[i-1][j] - v[i-2][j];
 
-  temp[i][j] = (temp[i][j] + temp[i-1][j] + temp[i-2][j]) /3. ;
-  u[i][j] = (u[i][j] + u[i-1][j] + u[i-2][j]) /3.;
-  v[i][j] = (v[i][j] + v[i-1][j] + v[i-2][j]) /3.;
+  // temp[i][j] = (temp[i][j] + temp[i-1][j] + temp[i-2][j]) /3. ;
+  // u[i][j] = (u[i][j] + u[i-1][j] + u[i-2][j]) /3.;
+  // v[i][j] = (v[i][j] + v[i-1][j] + v[i-2][j]) /3.;
 
   // Using start-up initialized pressure to derive density update.
 
@@ -518,7 +518,7 @@ void MacCormack::BC_LEFT_INLET(size_t i, size_t j)
   /*
     extrapolating pressure for density update
   */
-  p[i][j] = p[i+1][j];
+  p[i][j] = 2.*p[i+1][j] - p[i+2][j];
 
   /*
     Need to update momentums here in order to enforce a constant velocity constraint. Otherwise you will be 
