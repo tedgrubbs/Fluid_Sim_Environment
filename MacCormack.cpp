@@ -3,6 +3,11 @@
 
 MacCormack::MacCormack() : Simulation()
 {
+
+  FILE * u_fp;
+  u_fp = fopen("Data_Output/Probe.dat","w");
+  fclose(u_fp);
+
   // finds minimum spatial stepsize for timestep calculation
   double min_dim = dy;
   if (dx < dy) {
@@ -367,8 +372,55 @@ void MacCormack::boundary_conditions(size_t i, size_t j)
     BC_RIGHT_PRESSURE_OUTLET(i, j);
   } else if (region[i][j] == CORNER_POINT) {
     BC_CORNER_POINT(i, j);
+  } else if (region[i][j] == PERIODIC_Y_TOP) {
+    BC_PERIODIC_Y_TOP(i, j);
+  } else if (region[i][j] == PERIODIC_Y_BOTTOM) {
+    BC_PERIODIC_Y_BOTTOM(i, j);
   }
 
+
+}
+
+/*
+  Hacky way of doing periodic boundary conditions. I create a new line of grid points that take on the values of
+  whatever is on the opposite side of the simulation.
+*/
+void MacCormack::BC_PERIODIC_Y_TOP(size_t i, size_t j)
+{
+  if (predictor) 
+  {
+    rs[i][j] = r[i][2];
+    rus[i][j] = ru[i][2];
+    rvs[i][j] = rv[i][2];
+    energy_s[i][j] = energy[i][2];
+  }
+  
+  else
+  {
+    r[i][j] = rs[i][2];
+    ru[i][j] = rus[i][2];
+    rv[i][j] = rvs[i][2];
+    energy[i][j] = energy_s[i][2];
+  }
+  }
+
+void MacCormack::BC_PERIODIC_Y_BOTTOM(size_t i, size_t j)
+{
+  if (predictor) 
+  {
+    rs[i][j] = r[i][grid_size_y-3];
+    rus[i][j] = ru[i][grid_size_y-3];
+    rvs[i][j] = rv[i][grid_size_y-3];
+    energy_s[i][j] = energy[i][grid_size_y-3];
+  }
+
+  else
+  {
+    r[i][j] = rs[i][grid_size_y-3];
+    ru[i][j] = rus[i][grid_size_y-3];
+    rv[i][j] = rvs[i][grid_size_y-3];
+    energy[i][j] = energy_s[i][grid_size_y-3];
+  }
 }
 
 /*
@@ -718,5 +770,11 @@ void MacCormack::run_solver_step()
       k[i][j] = mu[i][j] * k_constant;
     }
   }
+
+  // cout << u[223][25] << endl;
+  FILE * u_fp;
+  u_fp = fopen("Data_Output/Probe.dat","a");
+  fprintf(u_fp, "%.10lf ", u[32][32]);
+  fclose(u_fp);
 
 }

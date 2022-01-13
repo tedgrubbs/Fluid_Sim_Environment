@@ -107,7 +107,9 @@ class Simulation
       RIGHT_OUTFLOW = 7,
       LEFT_INLET = 8,
       RIGHT_PRESSURE_OUTLET = 9,
-      CORNER_POINT = 10
+      CORNER_POINT = 10,
+      PERIODIC_Y_TOP = 11,
+      PERIODIC_Y_BOTTOM = 12
     };
 
     unsigned int grid_size_x, grid_size_y;
@@ -209,6 +211,8 @@ class MacCormack : public Simulation
     void BC_LEFT_INLET(size_t i, size_t j);
     void BC_RIGHT_PRESSURE_OUTLET(size_t i, size_t j);
     void BC_CORNER_POINT(size_t i, size_t j);
+    void BC_PERIODIC_Y_TOP(size_t i, size_t j);
+    void BC_PERIODIC_Y_BOTTOM(size_t i, size_t j);
 
   public:
     MacCormack();

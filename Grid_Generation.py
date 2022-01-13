@@ -18,16 +18,22 @@ class Region(IntEnum):
     LEFT_INLET = 8
     RIGHT_PRESSURE_OUTLET = 9
     CORNER_POINT = 10
+    PERIODIC_Y_TOP = 11
+    PERIODIC_Y_BOTTOM = 12
     
 
 # Use this to quickly redefine grid and config variables
 
-D = 30
+D = 64
 SPEED = 340.28 # speed of sound at STP
 
 # grid_size_x = 35*D+2
 # grid_size_y = 3*D+2
-grid_size_x = D*30+2
+
+# grid_size_x = D*30+2
+# grid_size_y = D+2
+
+grid_size_x = D+2
 grid_size_y = D+2
 
 rho = np.zeros((grid_size_x,grid_size_y))
@@ -42,27 +48,22 @@ for i in range(grid_size_x):
 
 rho[:,:] = 1.22
 temperature[:,:] = 288.16
-T_Block = 1000
+T_Block = 288.16
 # temperature[int(D/2)-5:int(D/2)+5, int(D/2)-5:int(D/2)+5] = 310.
 # u[:,:] = 1.0
 
 # creates border for sim environment
 # top wall
 region[:,-1] = Region.EXTERNAL
-rho[:,-1] = 0.
 
 # bottom wall
 region[:,0] = Region.EXTERNAL
-rho[:,0] = 0.
 
 # right wall
 region[-1, :] = Region.EXTERNAL
-rho[-1, :] = 0.
-
 
 # left wall
 region[0, :] = Region.EXTERNAL
-rho[0, :] = 0.
 
 # This configuration reproduce Borg's result when using only forward differences with predictor step and using basic STATIONARY region type
 # Note that at the corners where the moving lid intersects the stationary walls, these should be marked as Moving lid points.
@@ -74,36 +75,41 @@ rho[0, :] = 0.
 # region[1:-2,1] = Region.BOTTOM_WALL
 # u[1:-1,-2] = 0.1*SPEED
 
-centerx = int(0.222222222 * grid_size_x)
-centery = int(2./3.* grid_size_y)
-length = int(0.055555556 * grid_size_x)
+region[-2, 1:-1] = Region.RIGHT_WALL
+region[1, 1:-1] = Region.LEFT_WALL
+region[2:-2,-2] = Region.PERIODIC_Y_TOP
+region[2:-2,1] = Region.PERIODIC_Y_BOTTOM
+# temperature[int(D/2)-5:int(D/2)+5, int(D/2)-5:int(D/2)+5] = 310.
+rho[int(D/2)-5:int(D/2)+5, int(10)-5:int(10)+5] = 2.0
 
-# Left Velocity inlet, right outflow
-region[-2, 2:-2] = Region.RIGHT_PRESSURE_OUTLET
-region[1, 2:-2] = Region.LEFT_INLET
-region[1:-1,-2] = Region.TOP_WALL
-region[1:-1,1] = Region.BOTTOM_WALL
+# centerx = int(0.222222222 * grid_size_x)
+# centery = int(2./3.* grid_size_y)
+# length = int(0.055555556 * grid_size_x)
 
-# Creating a box in the flow path
-region[centerx, 2 : centery] = Region.RIGHT_WALL
-temperature[centerx, 2 : centery] = T_Block
+# # Left Velocity inlet, right outflow
+# region[-2, 2:-2] = Region.RIGHT_PRESSURE_OUTLET
+# region[1, 2:-2] = Region.LEFT_INLET
+# region[1:-1,-2] = Region.TOP_WALL
+# region[1:-1,1] = Region.BOTTOM_WALL
 
-region[centerx+1:centerx+length, 1 : centery] = Region.EXTERNAL
+# # Creating a box in the flow path
+# region[centerx, 2 : centery] = Region.RIGHT_WALL
+# temperature[centerx, 2 : centery] = T_Block
 
-region[centerx+length, 2 : centery] = Region.LEFT_WALL
-temperature[centerx+length, 2 : centery] = T_Block
+# region[centerx+1:centerx+length, 1 : centery] = Region.EXTERNAL
 
-region[centerx+1:centerx+length , centery] = Region.BOTTOM_WALL
-temperature[centerx+1:centerx+length , centery] = T_Block
+# region[centerx+length, 2 : centery] = Region.LEFT_WALL
+# temperature[centerx+length, 2 : centery] = T_Block
 
-region[centerx , centery] = Region.CORNER_POINT
-temperature[centerx , centery] = T_Block
-region[centerx+length , centery] = Region.CORNER_POINT
-temperature[centerx+length , centery] = T_Block
+# region[centerx+1:centerx+length , centery] = Region.BOTTOM_WALL
+# temperature[centerx+1:centerx+length , centery] = T_Block
 
+# region[centerx , centery] = Region.CORNER_POINT
+# temperature[centerx , centery] = T_Block
+# region[centerx+length , centery] = Region.CORNER_POINT
+# temperature[centerx+length , centery] = T_Block
 
-
-u[1, 2:-2] = 0.1
+# u[1, 2:-2] = 0.1
 
 # flow over flat plate. Be sure to turn down timestep for this at high mach number
 # region[1:-2,1] = Region.BOTTOM_WALL
