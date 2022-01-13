@@ -30,7 +30,7 @@ MacCormack::MacCormack() : Simulation()
 
   // adding 1. here to the max speed to reproduce Borg's result
   // dt = 0.5 * min_dim / (1./mach + 1.0);
-  dt = 0.1 * min_dim / max_boundary_speed;
+  dt = 0.25 * min_dim / max_boundary_speed;
   cout << "MacCormack timestep defined by stability criteria: " << dt << endl;
   dt_dx = dt / dx;
   dt_dy = dt / dy;
@@ -447,9 +447,13 @@ void MacCormack::BC_CORNER_POINT(size_t i, size_t j)
 void MacCormack::BC_RIGHT_PRESSURE_OUTLET(size_t i, size_t j)
 {
   // extrapolating temperature and velocity
-  temp[i][j] = 2.*temp[i-1][j] - temp[i-2][j];
-  u[i][j] = 2.*u[i-1][j] - u[i-2][j];
-  v[i][j] = 2.*v[i-1][j] - v[i-2][j];
+  // temp[i][j] = 2.*temp[i-1][j] - temp[i-2][j];
+  // u[i][j] = 2.*u[i-1][j] - u[i-2][j];
+  // v[i][j] = 2.*v[i-1][j] - v[i-2][j];
+
+  temp[i][j] = temp[i-1][j];
+  u[i][j] = u[i-1][j];
+  v[i][j] = v[i-1][j];
 
   // Using start-up initialized pressure to derive density update.
 
@@ -476,7 +480,7 @@ void MacCormack::BC_LEFT_INLET(size_t i, size_t j)
   /*
     extrapolating pressure for density update
   */
-  p[i][j] = 2.*p[i+1][j] - p[i+2][j];
+  p[i][j] = p[i+1][j];
 
   /*
     Need to update momentums here in order to enforce a constant velocity constraint. Otherwise you will be 
@@ -720,7 +724,11 @@ void MacCormack::run_solver_step()
       u[i][j] = rus[i][j] / rs[i][j];
       v[i][j] = rvs[i][j] / rs[i][j];
       temp[i][j] = (energy_s[i][j] / rs[i][j] - (u[i][j] * u[i][j] + v[i][j] * v[i][j]) / 2.) / cv;
-      p[i][j] = rs[i][j] * R * temp[i][j];
+      
+      if (region[i][j] != RIGHT_PRESSURE_OUTLET) {
+        p[i][j] = rs[i][j] * R * temp[i][j];
+      }
+      
       mu[i][j] = sutherland(temp[i][j]);
       k[i][j] = mu[i][j] * k_constant;
     }
@@ -765,7 +773,11 @@ void MacCormack::run_solver_step()
       u[i][j] = ru[i][j] / r[i][j];
       v[i][j] = rv[i][j] / r[i][j];
       temp[i][j] = (energy[i][j] / r[i][j] - (u[i][j] * u[i][j] + v[i][j] * v[i][j]) / 2.) / cv;
-      p[i][j] = r[i][j] * R * temp[i][j];
+
+      if (region[i][j] != RIGHT_PRESSURE_OUTLET) {
+        p[i][j] = r[i][j] * R * temp[i][j];
+      }
+      
       mu[i][j] = sutherland(temp[i][j]);
       k[i][j] = mu[i][j] * k_constant;
     }
@@ -774,7 +786,7 @@ void MacCormack::run_solver_step()
   // cout << u[223][25] << endl;
   FILE * u_fp;
   u_fp = fopen("Data_Output/Probe.dat","a");
-  fprintf(u_fp, "%.10lf ", u[32][32]);
+  fprintf(u_fp, "%.10lf ", p[450][15]);
   fclose(u_fp);
 
 }

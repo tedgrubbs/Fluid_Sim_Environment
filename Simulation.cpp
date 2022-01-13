@@ -360,12 +360,22 @@ void Simulation::render()
     for (y=0; y<grid_size_y; ++y)
     {
 
+      if (region[x][y] == EXTERNAL) {
+        continue;
+      }
+
       absu = fabs(u[x][y]);
       absv = fabs(v[x][y]);
       T = floor(temp[x][y]*1. + 0.5) / 1.;
 
       if (r[x][y] > max_rho) {
         max_rho = r[x][y];
+      }
+
+      if (! (r[x][y] == r[x][y])) {
+        cout << "Failed from density explosion!\n";
+        cout << x << " " << y << endl;
+        glfwSetWindowShouldClose(window, true);
       }
 
       if (absu > u_max && absu < MAX_RENDERABLE_SPEED) {
@@ -388,9 +398,10 @@ void Simulation::render()
     }
   }
   // cout << T_min << " " << T_max << endl;
-  if (max_rho > 1000) 
+  if (max_rho > 2.) 
   {
     cout << "Failed from density explosion!\n";
+    cout << max_rho << endl;
     glfwSetWindowShouldClose(window, true);
     return;
   }
