@@ -26,6 +26,7 @@ class Region(IntEnum):
 
 D = 30
 SPEED = 340.28 # speed of sound at STP
+R = 287.
 
 # grid_size_x = 35*D+2
 # grid_size_y = 3*D+2
@@ -40,6 +41,7 @@ rho = np.zeros((grid_size_x,grid_size_y))
 u = np.zeros((grid_size_x,grid_size_y))
 v = np.zeros((grid_size_x,grid_size_y))
 temperature = np.zeros((grid_size_x,grid_size_y))
+pressure = np.zeros((grid_size_x,grid_size_y))
 region = np.zeros((grid_size_x,grid_size_y),dtype='int')
 indices = np.zeros((grid_size_x,grid_size_y,2),dtype='int')
 for i in range(grid_size_x):
@@ -151,9 +153,9 @@ ax.invert_yaxis()
 plt.show()
 
 
+pressure = R * rho * temperature
 
-
-output = pd.DataFrame(columns=['xi','yi','rho','u','v','temperature','region'])
+output = pd.DataFrame(columns=['xi','yi','rho','u','v','temperature','pressure','region'])
 
 output['xi'] = indices.reshape((-1,2))[:,0]
 output['yi'] = indices.reshape((-1,2))[:,1]
@@ -161,6 +163,7 @@ output['rho'] = rho.reshape(-1)
 output['u'] = u.reshape(-1)
 output['v'] = v.reshape(-1)
 output['temperature'] = temperature.reshape(-1)
+output['pressure'] = pressure.reshape(-1)
 output['region'] = region.reshape(-1)
 
 output.to_csv('grid_variables.csv',index=False)
@@ -196,6 +199,7 @@ config['render_grid_size_y'] = int(base_render*y_multiplier)*5
 config["tolerance"] = 0.00
 config["max_run_time"] = 2000000
 config['thread_count'] = 4
+config['load_previous_run'] = 0
 
 print('Reynolds number:', rho[1,-2]*u[1,2]*config['real_size_y']/config['viscosity'])
 print('C Reynolds number:', rho[1,-2]*SPEED*config['real_size_x']/config['viscosity'])

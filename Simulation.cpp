@@ -41,7 +41,12 @@ Simulation::Simulation()
 {
 
   read_config();
-  read_grid_and_init_struct();
+
+  char * grid_file = "grid_variables.csv";
+  if (load_previous_run) {
+    grid_file = "grid_variables_state.csv";
+  }
+  read_grid_and_init_struct(grid_file);
 
   // printf("Framerate: %d\n", framerate);
   // printf("Grid size: %d x %d\n", grid_size_x, grid_size_y);
@@ -68,22 +73,39 @@ void Simulation::run()
     // cout << TIMESTEP << endl;
     run_solver_step();
 
-    // if ((TIMESTEP+1) % 100 == 0 && tolerance != 0.) {
-    //   check_residual();
-    // }
-
     if (run_graphics) 
     {
       render();
       if (glfwWindowShouldClose(window)) break;
     }
 
+    if (TIMESTEP % 10000 == 0) {
+      save_grid_variables();
+    }
+
   }
 
   // Handling end of sim operations
   save_speed_to_file();
+  save_grid_variables();
 
+}
 
+void Simulation::save_grid_variables()
+{
+  FILE * outputfp;
+  char * filename = "grid_variables_state.csv";
+  outputfp = fopen(filename, "w");
+  fprintf(outputfp, "xi,yi,rho,u,v,temperature,pressure,region\n");
+
+  for (int x=0; x<grid_size_x; ++x) 
+  {
+    for (int y=0; y<grid_size_y; ++y) 
+    {
+      fprintf(outputfp, "%d,%d,%lf,%lf,%lf,%lf,%lf,%d\n", x, y, r[x][y], u[x][y], v[x][y], temp[x][y], p[x][y], region[x][y]);
+    }
+  }
+  fclose(outputfp);
 }
 
 // Reads config.json to get global static simulation variables
@@ -124,6 +146,7 @@ void Simulation::read_config()
   framerate = stoi(config["frame_rate"]);
   run_graphics = stoi(config["run_graphics"]);
   tolerance = stod(config["tolerance"]);
+  load_previous_run = stoi(config["load_previous_run"]);
 
   /*
     Laptop definitely runs fastest with all threads being used. More threads also helps
@@ -142,7 +165,7 @@ void Simulation::read_config()
 }
 
 // Reads in initial conditions for simulation from grid_variables.csv
-void Simulation::read_grid_and_init_struct() 
+void Simulation::read_grid_and_init_struct(char * grid_file) 
 {
 
   r = create2dArray<double>(grid_size_x, grid_size_y);
@@ -159,7 +182,7 @@ void Simulation::read_grid_and_init_struct()
   residual = create2dArray<double>(grid_size_x, grid_size_y);
 
   FILE * csv;
-  csv = fopen("grid_variables.csv", "r");
+  csv = fopen(grid_file, "r");
   char line[4096];
   fgets(line, 4096, csv); // run once to get rid of header
 
@@ -167,7 +190,7 @@ void Simulation::read_grid_and_init_struct()
   {
 
     int temp_xi, temp_yi, temp_region;
-    double temp_rho, temp_u, temp_v, temp_temp;
+    double temp_rho, temp_u, temp_v, temp_temp, temp_p;
 
     char * tok;
 
@@ -190,10 +213,13 @@ void Simulation::read_grid_and_init_struct()
     temp_temp = atof(tok);
 
     tok = strtok(NULL, ",\n");
+    temp_p = atof(tok);
+
+    tok = strtok(NULL, ",\n");
     temp_region = atof(tok);
 
     r[temp_xi][temp_yi] = temp_rho;
-    p[temp_xi][temp_yi] = temp_rho*R*temp_temp;
+    p[temp_xi][temp_yi] = temp_p;
     u[temp_xi][temp_yi] = temp_u;
     ru[temp_xi][temp_yi] = temp_rho * temp_u;
     v[temp_xi][temp_yi] = temp_v;

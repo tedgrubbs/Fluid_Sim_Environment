@@ -54,6 +54,7 @@ class Simulation
     unsigned int render_grid_size_x;
     unsigned int render_grid_size_y;
     unsigned int max_run_time;
+    unsigned int load_previous_run;
 
 
     // Graphics functions and persistent variables
@@ -82,12 +83,14 @@ class Simulation
         "   FragColor = vec4(ourColor, 1.0f);\n"
         "}\n\0";
 
-    void read_grid_and_init_struct();
+    void read_grid_and_init_struct(char * grid_file);
     void read_config();
     void check_residual();
     void record_speed(size_t x, size_t y);
     void save_speed_to_file();
     inline size_t s_i(size_t x, size_t y);
+
+    void save_grid_variables();
 
     virtual void run_solver_step()=0;
 
