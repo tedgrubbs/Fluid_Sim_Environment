@@ -2,8 +2,6 @@
 
 double T_STACK = 1000.;
 double HEAT_RATE = 0.0712;
-double T_RIGHT = (288. + 1000.) /2.;
-
 
 MacCormack::MacCormack() : Simulation()
 {
@@ -856,11 +854,6 @@ void MacCormack::run_solver_step()
     {
       u[i][j] = ru[i][j] / r[i][j];
       v[i][j] = rv[i][j] / r[i][j];
-      
-
-      if (i > 500 && temp[i][j] <= T_RIGHT) {
-        energy[i][j] += rs[i][j]*HEAT_RATE*cv*.1;
-      }
 
       temp[i][j] = (energy[i][j] / r[i][j] - (u[i][j] * u[i][j] + v[i][j] * v[i][j]) / 2.) / cv;
 
