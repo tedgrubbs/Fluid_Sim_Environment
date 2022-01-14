@@ -39,7 +39,6 @@ void delete_1d_Array(grid_type * v)
 
 Simulation::Simulation() 
 {
-
   read_config();
 
   char * grid_file = "grid_variables.csv";
@@ -81,6 +80,7 @@ void Simulation::run()
 
     if (TIMESTEP % 10000 == 0) {
       save_grid_variables();
+      save_speed_to_file();
     }
 
   }
@@ -160,14 +160,14 @@ void Simulation::read_config()
   render_grid_size_x = stoi(config["render_grid_size_x"]);
   render_grid_size_y = stoi(config["render_grid_size_y"]);
   max_run_time = stoi(config["max_run_time"]);
+  bottom = create1dArray<int>(grid_size_x);
 
   json_file.close();
 }
 
 // Reads in initial conditions for simulation from grid_variables.csv
 void Simulation::read_grid_and_init_struct(char * grid_file) 
-{
-
+{ 
   r = create2dArray<double>(grid_size_x, grid_size_y);
   p = create2dArray<double>(grid_size_x, grid_size_y);
   u = create2dArray<double>(grid_size_x, grid_size_y);

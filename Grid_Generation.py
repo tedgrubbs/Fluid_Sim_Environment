@@ -101,7 +101,7 @@ region[centerx+length, 2 : centery] = Region.LEFT_WALL
 
 region[centerx+1:centerx+length , centery] = Region.BOTTOM_WALL
 
-region[centerx:centerx+length+1, -2] = Region.TOP_WALL
+# region[centerx:centerx+length+1, -2] = Region.TOP_WALL
 
 region[centerx , centery] = Region.CORNER_POINT
 region[centerx+length , centery] = Region.CORNER_POINT
@@ -185,7 +185,7 @@ config['dy'] = 1./(grid_size_y-3)*config['real_size_y']
 config['viscosity'] = 1.81e-5
 config['c'] = SPEED
 config['gamma'] = 1.4
-config['Pr'] = 0.071
+config['Pr'] = 0.0071
 config['run_graphics'] = 1
 
 base_render = 512

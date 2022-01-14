@@ -153,6 +153,12 @@ class Simulation
     double ** speed;
     int ** region;
 
+    /*
+      Stores the j index of the first occurrence of a free flow region. 
+      Used for periodic top BC.
+    */
+    int * bottom;
+
     int MAX_THREADS;
 
   public:
