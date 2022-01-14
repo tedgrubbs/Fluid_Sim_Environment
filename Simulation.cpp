@@ -372,7 +372,7 @@ void Simulation::render()
         max_rho = r[x][y];
       }
 
-      if (! (r[x][y] == r[x][y])) {
+      if (! (r[x][y] == r[x][y]) || r[x][y] < 0.) {
         cout << "Failed from density explosion!\n";
         cout << x << " " << y << endl;
         glfwSetWindowShouldClose(window, true);

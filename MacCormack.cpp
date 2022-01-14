@@ -1,5 +1,9 @@
 #include "Simulation.h"
 
+double T_STACK = 1000.;
+double HEAT_RATE = 0.0712;
+double T_RIGHT = (288. + 1000.) /2.;
+
 
 MacCormack::MacCormack() : Simulation()
 {
@@ -474,6 +478,9 @@ void MacCormack::BC_PERIODIC_Y_BOTTOM(size_t i, size_t j)
 */
 void MacCormack::BC_CORNER_POINT(size_t i, size_t j)
 {
+  if (temp[i][j] <= T_STACK) {
+    temp[i][j] += HEAT_RATE;
+  }
   p[i][j] = 0.25 * (p[i+1][j] + p[i-1][j] + p[i][j+1] + p[i][j-1]);
 
   if (predictor)
@@ -597,6 +604,10 @@ void MacCormack::BC_RIGHT_OUTFLOW(size_t i, size_t j)
 
 void MacCormack::BC_TOP_WALL(size_t i, size_t j)
 {
+  if (temp[i][j] <= T_STACK) {
+    temp[i][j] += HEAT_RATE;
+  }
+
   if (predictor) {
     rs[i][j] = r[i][j] - dt/dy * 0.5 * (3.*rv[i][j] - 4.*rv[i][j-1] + rv[i][j-2]);
     energy_s[i][j] = rs[i][j] * cv * temp[i][j];
@@ -608,6 +619,9 @@ void MacCormack::BC_TOP_WALL(size_t i, size_t j)
 
 void MacCormack::BC_BOTTOM_WALL(size_t i, size_t j)
 {
+  if (temp[i][j] <= T_STACK) {
+    temp[i][j] += HEAT_RATE;
+  }
   /* uncomment this for adiabatic wall condition */
 
   // temp[i][j] = temp[i][j+1];
@@ -641,6 +655,9 @@ void MacCormack::BC_BOTTOM_WALL(size_t i, size_t j)
 
 void MacCormack::BC_RIGHT_WALL(size_t i, size_t j)
 { 
+  if (temp[i][j] <= T_STACK) {
+    temp[i][j] += HEAT_RATE;
+  }
   if (predictor) {
     rs[i][j] = r[i][j] - dt/dx * 0.5 * (3.*ru[i][j] - 4.*ru[i-1][j] + ru[i-2][j]);
     energy_s[i][j] = rs[i][j] * cv * temp[i][j];
@@ -652,6 +669,9 @@ void MacCormack::BC_RIGHT_WALL(size_t i, size_t j)
 
 void MacCormack::BC_LEFT_WALL(size_t i, size_t j)
 { 
+  if (temp[i][j] <= T_STACK) {
+    temp[i][j] += HEAT_RATE;
+  }
   if (predictor) {
     rs[i][j] = r[i][j] + dt/dx * 0.5 * (3.*ru[i][j] - 4.*ru[i+1][j] + ru[i+2][j]);
     energy_s[i][j] = rs[i][j] * cv * temp[i][j];
@@ -770,7 +790,7 @@ void MacCormack::run_solver_step()
       u[i][j] = rus[i][j] / rs[i][j];
       v[i][j] = rvs[i][j] / rs[i][j];
       temp[i][j] = (energy_s[i][j] / rs[i][j] - (u[i][j] * u[i][j] + v[i][j] * v[i][j]) / 2.) / cv;
-      
+
       if (region[i][j] != RIGHT_PRESSURE_OUTLET) {
         p[i][j] = rs[i][j] * R * temp[i][j];
       }
@@ -819,6 +839,12 @@ void MacCormack::run_solver_step()
     {
       u[i][j] = ru[i][j] / r[i][j];
       v[i][j] = rv[i][j] / r[i][j];
+      
+
+      if (i > 500 && temp[i][j] <= T_RIGHT) {
+        energy[i][j] += rs[i][j]*HEAT_RATE*cv*.1;
+      }
+
       temp[i][j] = (energy[i][j] / r[i][j] - (u[i][j] * u[i][j] + v[i][j] * v[i][j]) / 2.) / cv;
 
       if (region[i][j] != RIGHT_PRESSURE_OUTLET) {
