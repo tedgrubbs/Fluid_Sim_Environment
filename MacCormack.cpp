@@ -1,7 +1,7 @@
 #include "Simulation.h"
 
 double T_STACK = 1000.;
-double HEAT_RATE = 0.0712;
+double HEAT_RATE = 0.00712;
 
 MacCormack::MacCormack() : Simulation()
 {
@@ -64,23 +64,6 @@ MacCormack::MacCormack() : Simulation()
   F2 = create2dArray<double>(grid_size_x, grid_size_y);
   F3 = create2dArray<double>(grid_size_x, grid_size_y);
   
-  for (i=0; i<(grid_size_x); ++i)
-  {
-    j = 2;
-    bottom[i] = j;
-
-    while (j < grid_size_y)
-    {
-      if (region[i][j] == CORNER_POINT || region[i][j] == BOTTOM_WALL) {
-        bottom[i] = j;
-        break;
-      } else {
-        j += 1;
-      }
-    }
-  }
-  
-
   for (i=0; i<(grid_size_x); ++i)
   {
     for (j=0; j<(grid_size_y); ++j)
@@ -386,15 +369,15 @@ void MacCormack::update_E_and_F_Periodic()
     {
       if (region[i][j] == PERIODIC_Y_TOP) 
       {
-        E0[i][j] = E0[i][bottom[i]];
-        E1[i][j] = E1[i][bottom[i]];
-        E2[i][j] = E2[i][bottom[i]];
-        E3[i][j] = E3[i][bottom[i]];
+        E0[i][j] = E0[i][2];
+        E1[i][j] = E1[i][2];
+        E2[i][j] = E2[i][2];
+        E3[i][j] = E3[i][2];
 
-        F0[i][j] = F0[i][bottom[i]];
-        F1[i][j] = F1[i][bottom[i]];
-        F2[i][j] = F2[i][bottom[i]];
-        F3[i][j] = F3[i][bottom[i]];
+        F0[i][j] = F0[i][2];
+        F1[i][j] = F1[i][2];
+        F2[i][j] = F2[i][2];
+        F3[i][j] = F3[i][2];
       } 
       
       else if (region[i][j] == PERIODIC_Y_BOTTOM) 
@@ -453,18 +436,18 @@ void MacCormack::BC_PERIODIC_Y_TOP(size_t i, size_t j)
 {
   if (predictor) 
   { 
-    rs[i][j] = r[i][bottom[i]];
-    rus[i][j] = ru[i][bottom[i]];
-    rvs[i][j] = rv[i][bottom[i]];
-    energy_s[i][j] = energy[i][bottom[i]];
+    rs[i][j] = r[i][2];
+    rus[i][j] = ru[i][2];
+    rvs[i][j] = rv[i][2];
+    energy_s[i][j] = energy[i][2];
   }
   
   else
   {
-    r[i][j] = rs[i][bottom[i]];
-    ru[i][j] = rus[i][bottom[i]];
-    rv[i][j] = rvs[i][bottom[i]];
-    energy[i][j] = energy_s[i][bottom[i]];
+    r[i][j] = rs[i][2];
+    ru[i][j] = rus[i][2];
+    rv[i][j] = rvs[i][2];
+    energy[i][j] = energy_s[i][2];
   }
 }
 
@@ -514,7 +497,7 @@ void MacCormack::BC_CORNER_POINT(size_t i, size_t j)
 void MacCormack::BC_RIGHT_PRESSURE_OUTLET(size_t i, size_t j)
 {
   // extrapolating temperature and velocity
-  temp[i][j] = 2.*temp[i-1][j] - temp[i-2][j];
+  // temp[i][j] = 2.*temp[i-1][j] - temp[i-2][j];
   u[i][j] = 2.*u[i-1][j] - u[i-2][j];
   v[i][j] = 2.*v[i-1][j] - v[i-2][j];
 
@@ -747,6 +730,11 @@ double MacCormack::calc_stencil(int component, size_t i, size_t j)
 
 void MacCormack::run_solver_step()
 {
+  if (TIMESTEP < 10000) {
+    HEAT_RATE = 0.;
+  } else {
+    HEAT_RATE = 0.00712;
+  }
 
   /*
     Using forward differences for all predictor steps produces a slightly different

@@ -160,7 +160,6 @@ void Simulation::read_config()
   render_grid_size_x = stoi(config["render_grid_size_x"]);
   render_grid_size_y = stoi(config["render_grid_size_y"]);
   max_run_time = stoi(config["max_run_time"]);
-  bottom = create1dArray<int>(grid_size_x);
 
   json_file.close();
 }
