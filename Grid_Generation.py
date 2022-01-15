@@ -32,7 +32,7 @@ R = 287.
 # grid_size_y = 3*D+2
 
 grid_size_x = D*30+2
-grid_size_y = D+2
+grid_size_y = 18+2
 
 # grid_size_x = D+2
 # grid_size_y = D+2
@@ -106,7 +106,7 @@ region[centerx:centerx+length+1, -2] = Region.TOP_WALL
 region[centerx , centery] = Region.CORNER_POINT
 region[centerx+length , centery] = Region.CORNER_POINT
 
-u[1, 2:-2] = .1
+# u[1, 2:-2] = .1
 
 # flow over flat plate. Be sure to turn down timestep for this at high mach number
 # region[1:-2,1] = Region.BOTTOM_WALL
@@ -154,6 +154,7 @@ plt.show()
 
 
 pressure = R * rho * temperature
+# pressure[1,2:-2] += 0.5
 
 output = pd.DataFrame(columns=['xi','yi','rho','u','v','temperature','pressure','region'])
 

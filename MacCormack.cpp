@@ -497,7 +497,7 @@ void MacCormack::BC_CORNER_POINT(size_t i, size_t j)
 void MacCormack::BC_RIGHT_PRESSURE_OUTLET(size_t i, size_t j)
 {
   // extrapolating temperature and velocity
-  // temp[i][j] = 2.*temp[i-1][j] - temp[i-2][j];
+  temp[i][j] = 2.*temp[i-1][j] - temp[i-2][j];
   u[i][j] = 2.*u[i-1][j] - u[i-2][j];
   v[i][j] = 2.*v[i-1][j] - v[i-2][j];
 
@@ -730,7 +730,7 @@ double MacCormack::calc_stencil(int component, size_t i, size_t j)
 
 void MacCormack::run_solver_step()
 {
-  if (TIMESTEP < 10000) {
+  if (TIMESTEP < 100) {
     HEAT_RATE = 0.;
   } else {
     HEAT_RATE = 0.00712;
@@ -866,7 +866,7 @@ void MacCormack::run_solver_step()
     }
   }
 
-  // cout << u[223][25] << endl;
+  cout << u[225][15] << endl;
   FILE * u_fp;
   u_fp = fopen("Data_Output/Probe.dat","a");
   fprintf(u_fp, "%.10lf ", p[450][15]);
