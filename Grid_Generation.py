@@ -106,7 +106,7 @@ region[centerx:centerx+length+1, -2] = Region.TOP_WALL
 region[centerx , centery] = Region.CORNER_POINT
 region[centerx+length , centery] = Region.CORNER_POINT
 
-# u[1, 2:-2] = .1
+u[1, 2:-2] = .1
 
 # flow over flat plate. Be sure to turn down timestep for this at high mach number
 # region[1:-2,1] = Region.BOTTOM_WALL

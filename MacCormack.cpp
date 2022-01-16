@@ -1,7 +1,6 @@
 #include "Simulation.h"
 
 double T_STACK = 1000.;
-double HEAT_RATE = 0.00712;
 
 MacCormack::MacCormack() : Simulation()
 {
@@ -476,21 +475,20 @@ void MacCormack::BC_PERIODIC_Y_BOTTOM(size_t i, size_t j)
 */
 void MacCormack::BC_CORNER_POINT(size_t i, size_t j)
 {
-  if (temp[i][j] <= T_STACK) {
-    temp[i][j] += HEAT_RATE;
-  }
   p[i][j] = 0.25 * (p[i+1][j] + p[i-1][j] + p[i][j+1] + p[i][j-1]);
+
+  double heat = k[i][j] * ((T_STACK - temp[i][j]) / dx) * dt;
 
   if (predictor)
   {
     rs[i][j] = p[i][j] / (R*temp[i][j]);
-    energy_s[i][j] = rs[i][j] * (cv * temp[i][j]);
+    energy_s[i][j] = rs[i][j] * (cv * temp[i][j]) + heat;
   }
 
   else
   {
     r[i][j] = p[i][j] / (R*temp[i][j]);
-    energy[i][j] = r[i][j] * (cv * temp[i][j]);
+    energy[i][j] = r[i][j] * (cv * temp[i][j]) + heat;
   }
 }
 
@@ -500,6 +498,8 @@ void MacCormack::BC_RIGHT_PRESSURE_OUTLET(size_t i, size_t j)
   temp[i][j] = 2.*temp[i-1][j] - temp[i-2][j];
   u[i][j] = 2.*u[i-1][j] - u[i-2][j];
   v[i][j] = 2.*v[i-1][j] - v[i-2][j];
+  // p[i][j] = 100840.32 + 30.;
+  // p[i][j] = 101325.;//100840.32 + 500;
 
   // temp[i][j] = (temp[i][j] + temp[i-1][j] + temp[i-2][j]) /3. ;
   // u[i][j] = (u[i][j] + u[i-1][j] + u[i-2][j]) /3.;
@@ -602,24 +602,20 @@ void MacCormack::BC_RIGHT_OUTFLOW(size_t i, size_t j)
 
 void MacCormack::BC_TOP_WALL(size_t i, size_t j)
 {
-  if (temp[i][j] <= T_STACK) {
-    temp[i][j] += HEAT_RATE;
-  }
+  
+  double heat = k[i][j] * ((T_STACK - temp[i][j]) / dx) * dt;
 
   if (predictor) {
     rs[i][j] = r[i][j] - dt/dy * 0.5 * (3.*rv[i][j] - 4.*rv[i][j-1] + rv[i][j-2]);
-    energy_s[i][j] = rs[i][j] * cv * temp[i][j];
+    energy_s[i][j] = rs[i][j] * cv * temp[i][j] + heat;
   } else {
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] - dt/dy * 0.5 * (3.*rvs[i][j] - 4.*rvs[i][j-1] + rvs[i][j-2]));
-    energy[i][j] = r[i][j] * cv * temp[i][j];
+    energy[i][j] = r[i][j] * cv * temp[i][j] + heat;
   }
 }
 
 void MacCormack::BC_BOTTOM_WALL(size_t i, size_t j)
 {
-  if (temp[i][j] <= T_STACK) {
-    temp[i][j] += HEAT_RATE;
-  }
   /* uncomment this for adiabatic wall condition */
 
   // temp[i][j] = temp[i][j+1];
@@ -634,11 +630,14 @@ void MacCormack::BC_BOTTOM_WALL(size_t i, size_t j)
   
   // p[i][j] = 2.*p[i][j+1] - p[i][j+2];
 
+  double heat = k[i][j] * ((T_STACK - temp[i][j]) / dx) * dt;
+
+
   if (predictor) {
     rs[i][j] = r[i][j] + dt/dy * 0.5 * (3.*rv[i][j] - 4.*rv[i][j+1] + rv[i][j+2]);
     // rs[i][j] = p[i][j] / (R*temp[i][j]);
 
-    energy_s[i][j] = rs[i][j] * cv * temp[i][j];
+    energy_s[i][j] = rs[i][j] * cv * temp[i][j] + heat;
 
   }
 
@@ -647,35 +646,37 @@ void MacCormack::BC_BOTTOM_WALL(size_t i, size_t j)
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] + dt/dy * 0.5 * (3.*rvs[i][j] - 4.*rvs[i][j+1] + rvs[i][j+2]));
     // r[i][j] = p[i][j] / (R*temp[i][j]);
 
-    energy[i][j] = r[i][j] * cv * temp[i][j];
+    energy[i][j] = r[i][j] * cv * temp[i][j] + heat;
   }
 }
 
 void MacCormack::BC_RIGHT_WALL(size_t i, size_t j)
 { 
-  if (temp[i][j] <= T_STACK) {
-    temp[i][j] += HEAT_RATE;
-  }
+
+  double heat = k[i][j] * ((T_STACK - temp[i][j]) / dx) * dt;
+
+
   if (predictor) {
     rs[i][j] = r[i][j] - dt/dx * 0.5 * (3.*ru[i][j] - 4.*ru[i-1][j] + ru[i-2][j]);
-    energy_s[i][j] = rs[i][j] * cv * temp[i][j];
+    energy_s[i][j] = rs[i][j] * cv * temp[i][j] + heat;
   } else {
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] - dt/dx * 0.5 * (3.*rus[i][j] - 4.*rus[i-1][j] + rus[i-2][j]));
-    energy[i][j] = r[i][j] * cv * temp[i][j];
+    energy[i][j] = r[i][j] * cv * temp[i][j] + heat;
   }
 }
 
 void MacCormack::BC_LEFT_WALL(size_t i, size_t j)
 { 
-  if (temp[i][j] <= T_STACK) {
-    temp[i][j] += HEAT_RATE;
-  }
+
+  double heat = k[i][j] * ((T_STACK - temp[i][j]) / dx) * dt;
+
+
   if (predictor) {
     rs[i][j] = r[i][j] + dt/dx * 0.5 * (3.*ru[i][j] - 4.*ru[i+1][j] + ru[i+2][j]);
-    energy_s[i][j] = rs[i][j] * cv * temp[i][j];
+    energy_s[i][j] = rs[i][j] * cv * temp[i][j] + heat;
   } else {
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] + dt/dx * 0.5 * (3.*rus[i][j] - 4.*rus[i+1][j] + rus[i+2][j]));
-    energy[i][j] = r[i][j] * cv * temp[i][j];
+    energy[i][j] = r[i][j] * cv * temp[i][j] + heat;
   }
 }
 
@@ -730,11 +731,6 @@ double MacCormack::calc_stencil(int component, size_t i, size_t j)
 
 void MacCormack::run_solver_step()
 {
-  if (TIMESTEP < 100) {
-    HEAT_RATE = 0.;
-  } else {
-    HEAT_RATE = 0.00712;
-  }
 
   /*
     Using forward differences for all predictor steps produces a slightly different
@@ -866,7 +862,7 @@ void MacCormack::run_solver_step()
     }
   }
 
-  cout << u[225][15] << endl;
+  // cout << u[225][15] << endl;
   FILE * u_fp;
   u_fp = fopen("Data_Output/Probe.dat","a");
   fprintf(u_fp, "%.10lf ", p[450][15]);
