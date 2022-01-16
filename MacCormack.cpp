@@ -1,6 +1,6 @@
 #include "Simulation.h"
 
-double T_STACK = 1000.;
+double T_STACK = 288.;
 
 MacCormack::MacCormack() : Simulation()
 {
@@ -31,7 +31,7 @@ MacCormack::MacCormack() : Simulation()
 
   // adding 1. here to the max speed to reproduce Borg's result
   // dt = 0.5 * min_dim / (1./mach + 1.0);
-  dt = 0.25 * min_dim / max_boundary_speed;
+  dt = 0.5 * min_dim / max_boundary_speed;
   cout << "MacCormack timestep defined by stability criteria: " << dt << endl;
   dt_dx = dt / dx;
   dt_dy = dt / dy;
@@ -607,10 +607,10 @@ void MacCormack::BC_TOP_WALL(size_t i, size_t j)
 
   if (predictor) {
     rs[i][j] = r[i][j] - dt/dy * 0.5 * (3.*rv[i][j] - 4.*rv[i][j-1] + rv[i][j-2]);
-    energy_s[i][j] = rs[i][j] * cv * temp[i][j] + heat;
+    energy_s[i][j] = rs[i][j] * cv * temp[i][j] ;
   } else {
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] - dt/dy * 0.5 * (3.*rvs[i][j] - 4.*rvs[i][j-1] + rvs[i][j-2]));
-    energy[i][j] = r[i][j] * cv * temp[i][j] + heat;
+    energy[i][j] = r[i][j] * cv * temp[i][j] ;
   }
 }
 
@@ -637,7 +637,7 @@ void MacCormack::BC_BOTTOM_WALL(size_t i, size_t j)
     rs[i][j] = r[i][j] + dt/dy * 0.5 * (3.*rv[i][j] - 4.*rv[i][j+1] + rv[i][j+2]);
     // rs[i][j] = p[i][j] / (R*temp[i][j]);
 
-    energy_s[i][j] = rs[i][j] * cv * temp[i][j] + heat;
+    energy_s[i][j] = rs[i][j] * cv * temp[i][j] ;
 
   }
 
@@ -646,7 +646,7 @@ void MacCormack::BC_BOTTOM_WALL(size_t i, size_t j)
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] + dt/dy * 0.5 * (3.*rvs[i][j] - 4.*rvs[i][j+1] + rvs[i][j+2]));
     // r[i][j] = p[i][j] / (R*temp[i][j]);
 
-    energy[i][j] = r[i][j] * cv * temp[i][j] + heat;
+    energy[i][j] = r[i][j] * cv * temp[i][j] ;
   }
 }
 
@@ -658,10 +658,10 @@ void MacCormack::BC_RIGHT_WALL(size_t i, size_t j)
 
   if (predictor) {
     rs[i][j] = r[i][j] - dt/dx * 0.5 * (3.*ru[i][j] - 4.*ru[i-1][j] + ru[i-2][j]);
-    energy_s[i][j] = rs[i][j] * cv * temp[i][j] + heat;
+    energy_s[i][j] = rs[i][j] * cv * temp[i][j];
   } else {
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] - dt/dx * 0.5 * (3.*rus[i][j] - 4.*rus[i-1][j] + rus[i-2][j]));
-    energy[i][j] = r[i][j] * cv * temp[i][j] + heat;
+    energy[i][j] = r[i][j] * cv * temp[i][j] ;
   }
 }
 
@@ -673,10 +673,10 @@ void MacCormack::BC_LEFT_WALL(size_t i, size_t j)
 
   if (predictor) {
     rs[i][j] = r[i][j] + dt/dx * 0.5 * (3.*ru[i][j] - 4.*ru[i+1][j] + ru[i+2][j]);
-    energy_s[i][j] = rs[i][j] * cv * temp[i][j] + heat;
+    energy_s[i][j] = rs[i][j] * cv * temp[i][j] ;
   } else {
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] + dt/dx * 0.5 * (3.*rus[i][j] - 4.*rus[i+1][j] + rus[i+2][j]));
-    energy[i][j] = r[i][j] * cv * temp[i][j] + heat;
+    energy[i][j] = r[i][j] * cv * temp[i][j] ;
   }
 }
 
@@ -863,9 +863,9 @@ void MacCormack::run_solver_step()
   }
 
   // cout << u[225][15] << endl;
-  FILE * u_fp;
-  u_fp = fopen("Data_Output/Probe.dat","a");
-  fprintf(u_fp, "%.10lf ", p[450][15]);
-  fclose(u_fp);
+  // FILE * u_fp;
+  // u_fp = fopen("Data_Output/Probe.dat","a");
+  // fprintf(u_fp, "%.10lf ", p[450][15]);
+  // fclose(u_fp);
 
 }
