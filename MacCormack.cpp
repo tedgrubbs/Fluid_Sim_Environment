@@ -400,8 +400,14 @@ void MacCormack::boundary_conditions(size_t i, size_t j)
   
   if (region[i][j] == EXTERNAL) {
     return;
-  } else if (region[i][j] == WALL) {
-    BC_WALL(i, j);
+  } else if (region[i][j] == TOP_WALL) {
+    BC_TOP_WALL(i, j);
+  } else if (region[i][j] == BOTTOM_WALL) {
+    BC_BOTTOM_WALL(i, j);
+  } else if (region[i][j] == RIGHT_WALL) {
+    BC_RIGHT_WALL(i, j);
+  } else if (region[i][j] == LEFT_WALL) {
+    BC_LEFT_WALL(i, j);
   } else if (region[i][j] == TOP_MOVING_LID) {
     BC_TOP_MOVING_LID(i, j);
   } else if (region[i][j] == RIGHT_OUTFLOW) {
@@ -594,9 +600,21 @@ void MacCormack::BC_RIGHT_OUTFLOW(size_t i, size_t j)
   }
 }
 
+void MacCormack::BC_TOP_WALL(size_t i, size_t j)
+{
+  
+  double heat = k[i][j] * ((T_STACK - temp[i][j]) / dx) * dt;
 
+  if (predictor) {
+    rs[i][j] = r[i][j] - dt/dy * 0.5 * (3.*rv[i][j] - 4.*rv[i][j-1] + rv[i][j-2]);
+    energy_s[i][j] = rs[i][j] * cv * temp[i][j] ;
+  } else {
+    r[i][j] = 0.5 * (r[i][j] + rs[i][j] - dt/dy * 0.5 * (3.*rvs[i][j] - 4.*rvs[i][j-1] + rvs[i][j-2]));
+    energy[i][j] = r[i][j] * cv * temp[i][j] ;
+  }
+}
 
-void MacCormack::BC_WALL(size_t i, size_t j)
+void MacCormack::BC_BOTTOM_WALL(size_t i, size_t j)
 {
   /* uncomment this for adiabatic wall condition */
 
@@ -611,16 +629,55 @@ void MacCormack::BC_WALL(size_t i, size_t j)
   */
   
   // p[i][j] = 2.*p[i][j+1] - p[i][j+2];
-  
-  
 
   double heat = k[i][j] * ((T_STACK - temp[i][j]) / dx) * dt;
 
-  rus[i][j] = 0.;
-  rvs[i][j] = 0.;
-  ru[i][j] = 0.;
-  rv[i][j] = 0.;
 
+  if (predictor) {
+    rs[i][j] = r[i][j] + dt/dy * 0.5 * (3.*rv[i][j] - 4.*rv[i][j+1] + rv[i][j+2]);
+    // rs[i][j] = p[i][j] / (R*temp[i][j]);
+
+    energy_s[i][j] = rs[i][j] * cv * temp[i][j] ;
+
+  }
+
+  else 
+  {
+    r[i][j] = 0.5 * (r[i][j] + rs[i][j] + dt/dy * 0.5 * (3.*rvs[i][j] - 4.*rvs[i][j+1] + rvs[i][j+2]));
+    // r[i][j] = p[i][j] / (R*temp[i][j]);
+
+    energy[i][j] = r[i][j] * cv * temp[i][j] ;
+  }
+}
+
+void MacCormack::BC_RIGHT_WALL(size_t i, size_t j)
+{ 
+
+  double heat = k[i][j] * ((T_STACK - temp[i][j]) / dx) * dt;
+
+
+  if (predictor) {
+    rs[i][j] = r[i][j] - dt/dx * 0.5 * (3.*ru[i][j] - 4.*ru[i-1][j] + ru[i-2][j]);
+    energy_s[i][j] = rs[i][j] * cv * temp[i][j];
+  } else {
+    r[i][j] = 0.5 * (r[i][j] + rs[i][j] - dt/dx * 0.5 * (3.*rus[i][j] - 4.*rus[i-1][j] + rus[i-2][j]));
+    energy[i][j] = r[i][j] * cv * temp[i][j] ;
+  }
+}
+
+void MacCormack::BC_LEFT_WALL(size_t i, size_t j)
+{ 
+
+  double heat = k[i][j] * ((T_STACK - temp[i][j]) / dx) * dt;
+
+
+  if (predictor) {
+    rs[i][j] = r[i][j] + dt/dx * 0.5 * (3.*ru[i][j] - 4.*ru[i+1][j] + ru[i+2][j]);
+    energy_s[i][j] = rs[i][j] * cv * temp[i][j] ;
+  } else {
+    r[i][j] = 0.5 * (r[i][j] + rs[i][j] + dt/dx * 0.5 * (3.*rus[i][j] - 4.*rus[i+1][j] + rus[i+2][j]));
+    energy[i][j] = r[i][j] * cv * temp[i][j] ;
+  }
 }
 
 void MacCormack::BC_TOP_MOVING_LID(size_t i, size_t j)
@@ -635,9 +692,7 @@ void MacCormack::BC_TOP_MOVING_LID(size_t i, size_t j)
     rhov = rvs;
   }
 
-  /*
-    Corner point check. For some reason, this only works if the rx contribution is set to 0 at the corner points.
-  */ 
+  // corner point check
   if (region[i-1][j] != TOP_MOVING_LID) {
     rx_contribution =  0.;//dt/dx * 0.5 * u[i][j] * (3.*rho[i][j] - 4.*rho[i+1][j] + rho[i+2][j]);
   } else if (region[i+1][j] != TOP_MOVING_LID) {
@@ -651,89 +706,32 @@ void MacCormack::BC_TOP_MOVING_LID(size_t i, size_t j)
   if (predictor) 
   { 
     rs[i][j] = r[i][j] - rx_contribution - ry_contribution;
-    rus[i][j] = r[i][j] * u[i][j];
-    rvs[i][j] = 0.;
     energy_s[i][j] = rs[i][j] * (cv * temp[i][j] + 0.5 * u[i][j] * u[i][j]);
   } 
   
   else 
   {  
     r[i][j] = 0.5 * (r[i][j] + rs[i][j] - rx_contribution - ry_contribution);
-    ru[i][j] = rs[i][j] * u[i][j];
-    rv[i][j] = 0.;
     energy[i][j] = r[i][j] * (cv * temp[i][j] + 0.5 * u[i][j] * u[i][j]);
   }
 }
 
-double MacCormack::calc_stencil(int component, bool forward, size_t i, size_t j)
+double MacCormack::calc_stencil(int component, size_t i, size_t j)
 {
-  double E_comp, F_comp;
-  double ** E, ** F;
-  if (component == 0) 
-  {
-    E = E0;
-    F = F0;
-  } 
-  else if (component == 1) 
-  {
-    E = E1;
-    F = F1;
-  } 
-  else if (component == 2) 
-  {
-    E = E2;
-    F = F2;
-  } 
-  else if (component == 3) 
-  {
-    E = E3;
-    F = F3;
+  if (component == 0) {
+    return - dt/dx * (E0[i+leftx][j] - E0[i-rightx][j]) - dt/dy * (F0[i][j+upy] - F0[i][j-downy]);
+  } else if (component == 1) {
+    return - dt/dx * (E1[i+leftx][j] - E1[i-rightx][j]) - dt/dy * (F1[i][j+upy] - F1[i][j-downy]);
+  } else if (component == 2) {
+    return - dt/dx * (E2[i+leftx][j] - E2[i-rightx][j]) - dt/dy * (F2[i][j+upy] - F2[i][j-downy]);
+  } else if (component == 3) {
+    return - dt/dx * (E3[i+leftx][j] - E3[i-rightx][j]) - dt/dy * (F3[i][j+upy] - F3[i][j-downy]);
   }
-  
-  // These control the normal forward and backwards differencing in the stencil itself. This removes the need for extra if statements.
-  int leftx = forward;
-  int upy = forward;
-  int rightx = !leftx;
-  int downy = !upy;
-
-  /*
-    Using 2nd-order accurate one-sided differences in stencil for any wall points. This allows me to avoid writing a plethora of special
-    functions for each boundary condition.
-  */
-
-  // E calculation
-  if (region[i-1][j] == EXTERNAL)
-  {
-    E_comp = - dt/dx * 0.5 * (-3.*E[i][j] + 4.*E[i+1][j] - E[i+2][j]);
-  }
-  else if (region[i+1][j] == EXTERNAL)
-  {
-    E_comp = - dt/dx * 0.5 * (3.*E[i][j] - 4.*E[i-1][j] + E[i-2][j]);
-  }
-  else
-  {
-    E_comp = - dt/dx * (E[i+leftx][j] - E[i-rightx][j]);
-  }
-
-  // F calculation
-  if (region[i][j-1] == EXTERNAL)
-  {
-    F_comp = - dt/dy * 0.5 * (-3.*F[i][j] + 4.*F[i][j+1] - F[i][j+2]);
-  }
-  else if (region[i][j+1] == EXTERNAL)
-  {
-    F_comp = - dt/dy * 0.5 * (3.*F[i][j] - 4.*F[i][j-1] + F[i][j-2]);
-  }
-  else
-  {
-    F_comp = - dt/dy * (F[i][j+upy] - F[i][j-downy]);
-  }
-
-  return E_comp + F_comp;
 }
 
 void MacCormack::run_solver_step()
 {
+
   /*
     Using forward differences for all predictor steps produces a slightly different
     result from using only backward differences. However the 2 are nearly the same when
@@ -755,6 +753,11 @@ void MacCormack::run_solver_step()
   update_tau_and_q();
   update_E_and_F();
   update_E_and_F_Periodic();
+
+  leftx = forward_diff_first;
+  upy = forward_diff_first;
+  rightx = !leftx;
+  downy = !upy;
   
   // performing predictor step
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(i,j)
@@ -762,21 +765,20 @@ void MacCormack::run_solver_step()
   {
     for (j=0; j<(grid_size_y); ++j)
     {
-      if (region[i][j] != EXTERNAL)
+      if (region[i][j] == FREE_FLOW)
       { 
-        rs[i][j] = r[i][j] + calc_stencil(0, forward_diff_first, i, j);
-        rus[i][j] = ru[i][j] + calc_stencil(1, forward_diff_first, i, j);
-        rvs[i][j] = rv[i][j] + calc_stencil(2, forward_diff_first, i, j);
-        energy_s[i][j] = energy[i][j] + calc_stencil(3, forward_diff_first, i, j);
-
-        if (region[i][j] != FREE_FLOW)
-        {
-          boundary_conditions(i, j);
-        }
+        rs[i][j] = r[i][j] + calc_stencil(0, i, j);
+        rus[i][j] = ru[i][j] + calc_stencil(1, i, j);
+        rvs[i][j] = rv[i][j] + calc_stencil(2, i, j);
+        energy_s[i][j] = energy[i][j] + calc_stencil(3, i, j);
       }
-       
+      else 
+      {
+        boundary_conditions(i, j);
+      } 
     }
   }
+  
   
   // recalculate primitive variables
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(i,j)
@@ -802,6 +804,11 @@ void MacCormack::run_solver_step()
   update_E_and_F();
   update_E_and_F_Periodic();
 
+  // corrector runs opposite to predictor
+  leftx = !forward_diff_first;
+  upy = !forward_diff_first;
+  rightx = !leftx;
+  downy = !upy;
 
   // performing corrector step
   #pragma omp parallel for num_threads(MAX_THREADS) collapse(2) private(i,j)
@@ -809,18 +816,17 @@ void MacCormack::run_solver_step()
   {
     for (j=0; j<(grid_size_y); ++j)
     {
-       if (region[i][j] != EXTERNAL)
+      if (region[i][j] == FREE_FLOW)
       {       
-        r[i][j] = 0.5 * (r[i][j] + rs[i][j] + calc_stencil(0, !forward_diff_first, i, j));
-        ru[i][j] = 0.5 * (ru[i][j] + rus[i][j] + calc_stencil(1, !forward_diff_first, i, j));
-        rv[i][j] = 0.5 * (rv[i][j] + rvs[i][j] + calc_stencil(2, !forward_diff_first, i, j));
-        energy[i][j] = 0.5 * (energy[i][j] + energy_s[i][j] + calc_stencil(3, !forward_diff_first, i, j));
-
-        if (region[i][j] != FREE_FLOW)
-        {
-          boundary_conditions(i, j);
-        } 
+        r[i][j] = 0.5 * (r[i][j] + rs[i][j] + calc_stencil(0, i, j));
+        ru[i][j] = 0.5 * (ru[i][j] + rus[i][j] + calc_stencil(1, i, j));
+        rv[i][j] = 0.5 * (rv[i][j] + rvs[i][j] + calc_stencil(2, i, j));
+        energy[i][j] = 0.5 * (energy[i][j] + energy_s[i][j] + calc_stencil(3, i, j));
       }
+      else 
+      {
+        boundary_conditions(i, j);
+      } 
     }
   }
 

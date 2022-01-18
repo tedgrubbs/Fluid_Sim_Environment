@@ -8,7 +8,10 @@ plt.style.use('dark_background')
 class Region(IntEnum):
     EXTERNAL = -1
     FREE_FLOW = 0
-    WALL = 1
+    LEFT_WALL = 1
+    RIGHT_WALL = 2
+    TOP_WALL = 3
+    BOTTOM_WALL = 4
     TOP_MOVING_LID = 5
     STATIC = 6
     RIGHT_OUTFLOW = 7
@@ -21,7 +24,7 @@ class Region(IntEnum):
 
 # Use this to quickly redefine grid and config variables
 
-D = 64
+D = 256
 SPEED = 340.28 # speed of sound at STP
 R = 287.
 
@@ -47,7 +50,7 @@ for i in range(grid_size_x):
 
 rho[:,:] = 1.22
 temperature[:,:] = 288
-# temperature[int(D/2)-1:int(D/2)+1, int(D/2)-1:int(D/2)+1] = 310.
+# temperature[int(D/2)-5:int(D/2)+5, int(D/2)-5:int(D/2)+5] = 310.
 # u[:,:] = 1.0
 
 # creates border for sim environment
@@ -67,16 +70,17 @@ region[0, :] = Region.EXTERNAL
 # Note that at the corners where the moving lid intersects the stationary walls, these should be marked as Moving lid points.
 # Otherwise the density at the corners will grow indefinitely- even though the rest of the simulation is stable. This is how Borg's simulations works. 
 # This is caused by this term in the density equation: (-ru[i-2][j] + 4.*ru[i-1][j] - 3.*ru[i][j])
-region[-2, 1:-1] = Region.WALL
-region[1, 1:-2] = Region.WALL
+region[-2, 1:-1] = Region.RIGHT_WALL
+region[1, 1:-2] = Region.LEFT_WALL
 region[1:-1,-2] = Region.TOP_MOVING_LID
-region[1:-2,1] = Region.WALL
+region[1:-2,1] = Region.BOTTOM_WALL
 u[1:-1,-2] = 0.1*SPEED
 
 # region[-2, 1:-1] = Region.RIGHT_WALL
 # region[1, 1:-1] = Region.LEFT_WALL
 # region[2:-2,-2] = Region.PERIODIC_Y_TOP
 # region[2:-2,1] = Region.PERIODIC_Y_BOTTOM
+# rho[int(D/2)-5:int(D/2)+5, int(10)-5:int(10)+5] = 2.0
 
 # centerx = int(0.222222222 * grid_size_x)
 # centery = int(2./3.* grid_size_y)
@@ -109,9 +113,9 @@ u[1:-1,-2] = 0.1*SPEED
 # region[-2, 1:-1] = Region.RIGHT_OUTFLOW
 # region[1, 2:-2] = Region.STATIC
 # region[1:-2,-2] = Region.STATIC
-# u[1, 2:-2] = SPEED * 0.01
-# u[1:-2,-2] = SPEED * 0.01
-# u[1:-1,1:-1] = SPEED * 0.01
+# u[1, 2:-2] = SPEED * 4.
+# u[1:-2,-2] = SPEED * 4.
+# u[1:-1,1:-1] = SPEED * 4.
 # u[1:-2,1] = 0.
 
 # box in center
@@ -194,7 +198,7 @@ config['render_grid_size_x'] = int(base_render)
 config['render_grid_size_y'] = int(base_render*y_multiplier)
 
 config["tolerance"] = 0.00
-config["max_run_time"] = 100000
+config["max_run_time"] = 2000000
 config['thread_count'] = 4
 config['load_previous_run'] = 0
 

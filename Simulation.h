@@ -101,7 +101,10 @@ class Simulation
     {
       EXTERNAL = -1,
       FREE_FLOW = 0,
-      WALL = 1,
+      LEFT_WALL = 1,
+      RIGHT_WALL = 2,
+      TOP_WALL = 3,
+      BOTTOM_WALL = 4,
       TOP_MOVING_LID = 5,
       STATIC = 6,
       RIGHT_OUTFLOW = 7,
@@ -189,7 +192,8 @@ class MacCormack : public Simulation
     size_t i;
     size_t j;
 
-    
+    // These control the forward and backwards differencing in the stencil itself. This removes the need for extra if statements.
+    int leftx, rightx, upy, downy;
 
     void TAUXY(bool EorF, bool forward, size_t i, size_t j);
     void TAUXX(bool forward, size_t i, size_t j);
@@ -199,9 +203,12 @@ class MacCormack : public Simulation
 
     void update_tau_and_q();
     void update_E_and_F();
-    double calc_stencil(int component, bool forward, size_t i, size_t j);
+    double calc_stencil(int component, size_t i, size_t j);
     void boundary_conditions(size_t i, size_t j);
-    void BC_WALL(size_t i, size_t j);
+    void BC_TOP_WALL(size_t i, size_t j);
+    void BC_BOTTOM_WALL(size_t i, size_t j);
+    void BC_RIGHT_WALL(size_t i, size_t j);
+    void BC_LEFT_WALL(size_t i, size_t j);
     void BC_TOP_MOVING_LID(size_t i, size_t j);    
     void BC_RIGHT_OUTFLOW(size_t i, size_t j);
     void BC_LEFT_INLET(size_t i, size_t j);
