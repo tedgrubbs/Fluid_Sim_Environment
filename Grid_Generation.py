@@ -20,11 +20,12 @@ class Region(IntEnum):
     CORNER_POINT = 10
     PERIODIC_Y_TOP = 11
     PERIODIC_Y_BOTTOM = 12
+    HEATED_WALL = 13
     
 
 # Use this to quickly redefine grid and config variables
 
-D = 256
+D = 64
 SPEED = 340.28 # speed of sound at STP
 R = 287.
 
@@ -76,6 +77,16 @@ region[1:-1,-2] = Region.TOP_MOVING_LID
 region[1:-2,1] = Region.BOTTOM_WALL
 u[1:-1,-2] = 0.1*SPEED
 
+# flow through a tube
+# region[-2, 1:-1] = Region.RIGHT_PRESSURE_OUTLET
+# region[1, 2:-2] = Region.LEFT_INLET
+# region[1:-2,-2] = Region.TOP_WALL
+# region[1:-2,1] = Region.BOTTOM_WALL
+# region[100:120,-2] = Region.HEATED_WALL
+# region[100:120,1] = Region.HEATED_WALL
+
+# u[1, 2:-2] = 0.1
+
 # region[-2, 1:-1] = Region.RIGHT_WALL
 # region[1, 1:-1] = Region.LEFT_WALL
 # region[2:-2,-2] = Region.PERIODIC_Y_TOP
@@ -83,8 +94,8 @@ u[1:-1,-2] = 0.1*SPEED
 # rho[int(D/2)-5:int(D/2)+5, int(10)-5:int(10)+5] = 2.0
 
 # centerx = int(0.222222222 * grid_size_x)
-# centery = int(2./3.* grid_size_y)
-# length = int(0.055555556 * grid_size_x)
+# centery = int(0.5* grid_size_y)
+# length = int(1./3. * grid_size_y / 2.)
 
 # # Left Velocity inlet, right outflow
 # region[-2, 1:-1] = Region.RIGHT_PRESSURE_OUTLET
@@ -93,18 +104,20 @@ u[1:-1,-2] = 0.1*SPEED
 # region[1:-2,1] = Region.PERIODIC_Y_BOTTOM
 
 # # Creating a box in the flow path
-# region[centerx, 2 : centery] = Region.RIGHT_WALL
+# region[centerx, centery - length : centery + length] = Region.RIGHT_WALL
 
-# region[centerx+1:centerx+length, 1 : centery] = Region.EXTERNAL
+# region[centerx+1:centerx+length, centery - length-1 : centery + length+1] = Region.EXTERNAL
 
-# region[centerx+length, 2 : centery] = Region.LEFT_WALL
+# region[centerx+length, centery - length : centery + length] = Region.LEFT_WALL
 
-# region[centerx+1:centerx+length , centery] = Region.BOTTOM_WALL
+# region[centerx+1:centerx+length , centery - length-1 ] = Region.BOTTOM_WALL
 
-# region[centerx:centerx+length+1, -2] = Region.TOP_WALL
+# region[centerx+1:centerx+length, centery + length] = Region.TOP_WALL
 
-# region[centerx , centery] = Region.CORNER_POINT
-# region[centerx+length , centery] = Region.CORNER_POINT
+# region[centerx , centery+length] = Region.CORNER_POINT
+# region[centerx , centery-length-1] = Region.CORNER_POINT
+# region[centerx+length , centery+length] = Region.CORNER_POINT
+# region[centerx+length , centery-length-1] = Region.CORNER_POINT
 
 # u[1, 2:-2] = .1
 
@@ -202,7 +215,7 @@ config["max_run_time"] = 2000000
 config['thread_count'] = 4
 config['load_previous_run'] = 0
 
-print('Reynolds number:', rho[1,-2]*u[1,-2]*config['real_size_x']/config['viscosity'])
+print('Reynolds number:', rho[1,-2]*u[1,-2]*config['real_size_y']/config['viscosity'])
 print('C Reynolds number:', rho[1,-2]*SPEED*config['real_size_x']/config['viscosity'])
 # print('Grid x Reynolds number:', rho[1,2]*u[1, 2]*config['dx']/config['viscosity'])
 # print('Grid y Reynolds number:', rho[1,2]*u[1, 2]*config['dy']/config['viscosity'])

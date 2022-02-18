@@ -23,16 +23,41 @@ const double R = 287.0;
 const double T0 = 288.16; // constant used for viscosity calculation via Sutherland's law
 
 template <typename grid_type>
-grid_type ** create2dArray(unsigned int sizex, unsigned int sizey);
+grid_type ** create2dArray(unsigned int sizex, unsigned int sizey) 
+{
+  grid_type ** v;
+  v = (grid_type **) calloc(sizex, sizeof(grid_type *));
+
+  for(int i=0; i<sizex; ++i) 
+  {
+    v[i] = (grid_type *) calloc(sizey, sizeof(grid_type));
+  }
+
+  return v;
+}
 
 template <typename grid_type>
-grid_type * create1dArray(unsigned int size);
+grid_type * create1dArray(unsigned int size) 
+{
+  grid_type * v;
+  v = (grid_type *) calloc(size, sizeof(grid_type));
+  return v;
+}
 
 template <typename grid_type>
-void delete_2d_Array(grid_type ** v, unsigned int sizex);
+void delete_2d_Array(grid_type ** v, unsigned int sizex) 
+{
+  for(int i=0; i<sizex; i++) {
+    free(v[i]);
+  }
+  free(v);
+}
 
 template <typename grid_type>
-void delete_1d_Array(grid_type * v);
+void delete_1d_Array(grid_type * v) 
+{
+  free(v);
+}
 
 void leave_glut(unsigned char key, int xx, int yy);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
