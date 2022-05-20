@@ -6,8 +6,7 @@ allows for new CFD methods to be added without much copying and pasting of the s
 A base Simulation class is used to store all variables that should be present in all solvers. Solver classes inherit the Simulation class and must define the virtual run_solver_step() method in order to be valid. An example here is given with a simple MacCormack solver. One can see that in the MacCormack.cpp file the new class simply defines extra variables that are specific to the MacCormack scheme and then defines the run_solver_step() method. All other all simulation functions- graphics, data recording, stop conditions, etc - is handled by the base Simulation class. 
 
 ## Requirements
-OpenMP - [https://www.openmp.org/](https://www.openmp.org/)
-GLFW/Glad. Installation is described [here](https://learnopengl.com/)
+OpenMP - [https://www.openmp.org/](https://www.openmp.org/). And GLFW/Glad can be installed as described [here](https://learnopengl.com/)
 
 ## Usage
 Build the grid with "python Grid_Generation.py" which defines the simulation grid and initial/boundary conditions. This is written to "grid_variables.csv" which you can inspect yourself and is easily interpretable. Certain parameters like runtime and a graphics switch are written to "config.json". You should not change variables related to the grid sizes in this file.
