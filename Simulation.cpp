@@ -214,7 +214,7 @@ int Simulation::init_graphics()
   glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
   glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
 
-  window = glfwCreateWindow(render_grid_size_x, render_grid_size_y, "BIG BOY", NULL, NULL);
+  window = glfwCreateWindow(render_grid_size_x, render_grid_size_y, "Finite Difference CFD", NULL, NULL);
   if (window == NULL) 
   {
     std::cout << "Failed to create GLFW window" << std::endl;

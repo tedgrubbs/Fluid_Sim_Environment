@@ -21,7 +21,7 @@ class Region(IntEnum):
     PERIODIC_Y_TOP = 11
     PERIODIC_Y_BOTTOM = 12
     HEATED_WALL = 13
-    
+
 
 # Use this to quickly redefine grid and config variables
 
@@ -35,8 +35,8 @@ R = 287.
 grid_size_x = D+2
 grid_size_y = D+2
 
-# grid_size_x = D+2
-# grid_size_y = D+2
+# grid_size_x = 900+2
+# grid_size_y = 100+2
 
 rho = np.zeros((grid_size_x,grid_size_y))
 u = np.zeros((grid_size_x,grid_size_y))
@@ -69,7 +69,7 @@ region[0, :] = Region.EXTERNAL
 
 # This configuration reproduce Borg's result when using only forward differences with predictor step and using basic STATIONARY region type
 # Note that at the corners where the moving lid intersects the stationary walls, these should be marked as Moving lid points.
-# Otherwise the density at the corners will grow indefinitely- even though the rest of the simulation is stable. This is how Borg's simulations works. 
+# Otherwise the density at the corners will grow indefinitely- even though the rest of the simulation is stable. This is how Borg's simulations works.
 # This is caused by this term in the density equation: (-ru[i-2][j] + 4.*ru[i-1][j] - 3.*ru[i][j])
 region[-2, 1:-1] = Region.RIGHT_WALL
 region[1, 1:-2] = Region.LEFT_WALL
@@ -96,29 +96,30 @@ u[1:-1,-2] = 0.1*SPEED
 # centerx = int(0.222222222 * grid_size_x)
 # centery = int(0.5* grid_size_y)
 # length = int(1./3. * grid_size_y / 2.)
+# lengthx = int(0.05 * grid_size_x / 2.)
 
-# # Left Velocity inlet, right outflow
+# Left Velocity inlet, right outflow
 # region[-2, 1:-1] = Region.RIGHT_PRESSURE_OUTLET
 # region[1, 2:-2] = Region.LEFT_INLET
 # region[1:-2,-2] = Region.PERIODIC_Y_TOP
 # region[1:-2,1] = Region.PERIODIC_Y_BOTTOM
 
-# # Creating a box in the flow path
+# Creating a box in the flow path
 # region[centerx, centery - length : centery + length] = Region.RIGHT_WALL
-
-# region[centerx+1:centerx+length, centery - length-1 : centery + length+1] = Region.EXTERNAL
-
-# region[centerx+length, centery - length : centery + length] = Region.LEFT_WALL
-
-# region[centerx+1:centerx+length , centery - length-1 ] = Region.BOTTOM_WALL
-
-# region[centerx+1:centerx+length, centery + length] = Region.TOP_WALL
-
+#
+# region[centerx+1:centerx+lengthx, centery - length-1 : centery + length+1] = Region.EXTERNAL
+#
+# region[centerx+lengthx, centery - length : centery + length] = Region.LEFT_WALL
+#
+# region[centerx+1:centerx+lengthx , centery - length-1 ] = Region.BOTTOM_WALL
+#
+# region[centerx+1:centerx+lengthx, centery + length] = Region.TOP_WALL
+#
 # region[centerx , centery+length] = Region.CORNER_POINT
 # region[centerx , centery-length-1] = Region.CORNER_POINT
-# region[centerx+length , centery+length] = Region.CORNER_POINT
-# region[centerx+length , centery-length-1] = Region.CORNER_POINT
-
+# region[centerx+lengthx , centery+length] = Region.CORNER_POINT
+# region[centerx+lengthx , centery-length-1] = Region.CORNER_POINT
+#
 # u[1, 2:-2] = .1
 
 # flow over flat plate. Be sure to turn down timestep for this at high mach number
@@ -187,8 +188,8 @@ output.to_csv('grid_variables.csv',index=False)
 config = {}
 config['grid_size_x'] = grid_size_x
 config['grid_size_y'] = grid_size_y
-config['real_size_y'] = 2e-4#/1.218487395
-config['real_size_x'] = 2e-4
+config['real_size_y'] = 0.0003#/1.218487395
+config['real_size_x'] = 0.0003
 
 
 
